@@ -1,0 +1,36 @@
+/* src/pages/landing/sections/WelcomeSection.css */
+.welcome-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    height: 100vh; /* full viewport height */
+    padding: 2vw;
+    box-sizing: border-box;
+  }
+  
+  .text-side {
+    flex: 1;
+    color: #fff;
+    padding: 2rem;
+    /* Optional: add some responsive typography */
+  }
+  
+  .text-side h1 {
+    font-size: clamp(2rem, 4vw, 4rem);
+    margin: 0.5rem 0;
+  }
+  
+  .asset-side {
+    flex: 1;
+    height: 80vh;
+    min-height: 300px;
+    /* Ensure the Canvas fills the container */
+    position: relative;
+  }
+  
+  .asset-side canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+  }

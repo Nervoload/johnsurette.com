@@ -1,0 +1,73 @@
+/* Ensure the section fills the viewport with a white background */
+.passion-section {
+  background-color: #fff;
+  color: #000;
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Header styling: full-width, no margins or padding, so text touches the edges */
+.passion-header {
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+.passion-header h1 {
+  font-size: 12vw;        /* Scales with viewport width */
+  font-weight: bold;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+  letter-spacing: -0.5vw; /* Adjust as needed to reduce space between letters */
+  text-align: center;
+}
+
+.subheader-quote {
+  font-size: 2vw;
+  margin-top: vh;
+  text-align: center;
+  font-style:italic;
+  max-width: 80ch;
+}
+
+/* Ticker container fixed at the bottom */
+.ticker-container {
+  width: 100%;
+  overflow: hidden;
+  position: absolute;
+  bottom: 3rem;
+  left: 0;
+}
+
+/* Ticker styling: inline-block with no gaps between items */
+.ticker {
+  display: inline-block;
+  white-space: nowrap;
+  /* Animate over half its total width to seamlessly loop the duplicated content */
+  animation: ticker 10s linear infinite;
+}
+
+.ticker span {
+  display: inline-block;
+  /* Using horizontal padding to maintain spacing without gaps */
+  padding: 0 1rem;
+  font-weight: bolder;
+  font-size: clamp(1rem, 2vw, 2rem);
+}
+
+/* Keyframes: shift left by 50% of the ticker's total width (assuming the content is duplicated) */
+@keyframes ticker {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
