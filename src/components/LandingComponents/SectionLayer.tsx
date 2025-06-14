@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { sections } from "./sections";
+import { sections } from "../sections";
 
 type Props = {
   onHover:  (name: string | null) => void;

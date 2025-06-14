@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from "react";
-import { sections } from "./sections";
+import { sections } from "../sections";
 
 interface AnimatedDotFieldCanvasProps {
   activeSection: string | null;
