@@ -1,44 +1,50 @@
 import React, { useRef, useEffect } from "react";
 import { sections } from "./sections";
 
-interface AnimatedDotFieldCanvasProps {
+interface RadialDotFieldCanvasProps {
   activeSection: string | null;
-  spawnRate?: number;            // dots per second
-  maxDots?: number;              // cap of simultaneous dots
-  randomness?: number;           // orbit speed variation
-  waveformAmplitude?: number;    // radial pulsation px
-  initialDotSize?: number;       // starting diameter px
-  shrinkRate?: number;           // px per second
-  fadeRate?: number;             // opacity units per second
-  orbitSpeed?: number;           // radians per second
+  /** dots spawned per second */
+  spawnRate?: number;
+  /** maximum number of simultaneous dots */
+  maxDots?: number;
+  /** variation factor for initial velocity */
+  randomness?: number;
+  /** starting diameter in pixels */
+  initialDotSize?: number;
+  /** shrink rate in pixels per second */
+  shrinkRate?: number;
+  /** fade-out rate in opacity units per second */
+  fadeRate?: number;
+  /** base speed in pixels per second */
+  baseSpeed?: number;
+  /** fraction of smaller canvas dimension that dots can reach before despawning */
+  maxRadiusMultiplier?: number;
 }
 
 interface Dot {
   angle: number;
-  baseRadius: number;
   radius: number;
+  velocity: number;
   size: number;
   alpha: number;
-  offset: number;
-  velocity: number;
   creation: number;
 }
 
-const AnimatedDotFieldCanvas: React.FC<AnimatedDotFieldCanvasProps> = ({
+const RadialDotFieldCanvas: React.FC<RadialDotFieldCanvasProps> = ({
   activeSection,
   spawnRate = 20,
-  maxDots = 80,
-  randomness = 0.3,
-  waveformAmplitude = 10,
+  maxDots = 100,
+  randomness = 0.2,
   initialDotSize = 6,
   shrinkRate = 8,
   fadeRate = 0.2,
-  orbitSpeed = 0.2,
+  baseSpeed = 120,
+  maxRadiusMultiplier = 0.75,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeRef = useRef<string | null>(activeSection);
 
-  // Update active section in ref to avoid resetting dots
+  // Keep latest section color reference without resetting dots
   useEffect(() => {
     activeRef.current = activeSection;
   }, [activeSection]);
@@ -48,7 +54,6 @@ const AnimatedDotFieldCanvas: React.FC<AnimatedDotFieldCanvasProps> = ({
     if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
 
-    // Resize to match center orb container
     const parent = canvas.parentElement as HTMLElement;
     const resize = () => {
       canvas.width = parent.clientWidth;
@@ -57,15 +62,16 @@ const AnimatedDotFieldCanvas: React.FC<AnimatedDotFieldCanvasProps> = ({
     resize();
     window.addEventListener("resize", resize);
 
-    // Radii based on the center orb
+    // Compute center orb radius; adjust factor to match your CenterOrb size
     const orbRadius = () => parent.clientWidth * 0.23;
-    const outerRadius = () => orbRadius() * 1.23;
 
     let lastTime = performance.now();
     const dots: Dot[] = [];
     let spawnAcc = 0;
 
-    // Reset on tab visibility change
+    const maxRadius = () => Math.min(canvas.width, canvas.height) * maxRadiusMultiplier;
+
+    // Reset dots when tab returns
     const handleVisibility = () => {
       if (!document.hidden) {
         dots.length = 0;
@@ -79,21 +85,15 @@ const AnimatedDotFieldCanvas: React.FC<AnimatedDotFieldCanvasProps> = ({
       const dt = (ts - lastTime) / 1000;
       lastTime = ts;
 
-      // Spawn up to spawnRate per second
+      // Spawn dots at orb perimeter
       spawnAcc += spawnRate * dt;
       while (dots.length < maxDots && spawnAcc >= 1) {
-        const angle = Math.random() * Math.PI * 2;
-        const innerR = orbRadius();
-        const outerR = outerRadius();
-        const baseRadius = innerR + Math.random() * (outerR - innerR);
         dots.push({
-          angle,
-          baseRadius,
-          radius: baseRadius,
+          angle: Math.random() * Math.PI * 2,
+          radius: orbRadius(),
+          velocity: baseSpeed + (Math.random() - 0.5) * baseSpeed * randomness,
           size: initialDotSize,
           alpha: 1,
-          offset: Math.random() * Math.PI * 2,
-          velocity: orbitSpeed + (Math.random() - 0.5) * orbitSpeed * randomness,
           creation: ts,
         });
         spawnAcc -= 1;
@@ -103,32 +103,26 @@ const AnimatedDotFieldCanvas: React.FC<AnimatedDotFieldCanvasProps> = ({
       ctx.save();
       ctx.translate(canvas.width / 2, canvas.height / 2);
 
-      // Update & draw dots
+      // Update and draw each dot
       for (let i = dots.length - 1; i >= 0; i--) {
         const d = dots[i];
-        const age = (ts - d.creation) / 1000;
-
-        d.radius = d.baseRadius + waveformAmplitude * Math.sin(age + d.offset);
-        d.angle += d.velocity * dt;
+        d.radius += d.velocity * dt;
         d.size = Math.max(0, d.size - shrinkRate * dt);
         d.alpha = Math.max(0, d.alpha - fadeRate * dt);
 
-        if (d.size <= 0 || d.alpha <= 0) {
+        if (d.size <= 0 || d.alpha <= 0 || d.radius > maxRadius()) {
           dots.splice(i, 1);
           continue;
         }
 
-        // Determine color (default black)
         const hex = sections.find((s) => s.name === activeRef.current)?.color ?? "#000000";
         const r = parseInt(hex.slice(1, 3), 16);
         const g = parseInt(hex.slice(3, 5), 16);
         const b = parseInt(hex.slice(5, 7), 16);
 
-        // Glow effect
         ctx.shadowBlur = d.size;
         ctx.shadowColor = `rgba(${r},${g},${b},${d.alpha * 0.3})`;
 
-        // Draw dot
         ctx.beginPath();
         ctx.arc(
           d.radius * Math.cos(d.angle),
@@ -139,7 +133,6 @@ const AnimatedDotFieldCanvas: React.FC<AnimatedDotFieldCanvasProps> = ({
         );
         ctx.fillStyle = `rgba(${r},${g},${b},${d.alpha})`;
         ctx.fill();
-
         ctx.shadowBlur = 0;
       }
 
@@ -153,9 +146,9 @@ const AnimatedDotFieldCanvas: React.FC<AnimatedDotFieldCanvasProps> = ({
       window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [spawnRate, maxDots, randomness, waveformAmplitude, initialDotSize, shrinkRate, fadeRate, orbitSpeed]);
+  }, [spawnRate, maxDots, randomness, initialDotSize, shrinkRate, fadeRate, baseSpeed, maxRadiusMultiplier]);
 
   return <canvas ref={canvasRef} className="absolute inset-0 z-0" />;
 };
 
-export default AnimatedDotFieldCanvas;
+export default RadialDotFieldCanvas;

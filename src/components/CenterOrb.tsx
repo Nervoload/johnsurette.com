@@ -33,6 +33,7 @@ const CenterOrb: React.FC<CenterOrbProps> = ({ label }) => {
               0 0 2px ${glowColor}15   /* outer spread */
             `,
             color: "rgba(20, 15, 69, 0.82)",            /* dark text for contrast */
+            fontSize: "3vh"
           }}
         >
           {label ?? "John Surette"}
