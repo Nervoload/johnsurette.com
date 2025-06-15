@@ -1,11 +1,13 @@
 // src/components/NavBar/NavBar.tsx
 import React, { useState, useEffect, useRef } from "react";
 import LandingOrb from "./LandingOrb";
+import { WipeOptions } from "../Transitions/TransitionWipe";
 
 export interface NavBarProps {
   pages: string[];
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, opts?: WipeOptions) => void;
 }
+
 
 const NavBar: React.FC<NavBarProps> = ({ pages, onNavigate }) => {
   const [visible, setVisible] = useState(false);

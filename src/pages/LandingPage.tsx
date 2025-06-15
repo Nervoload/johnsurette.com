@@ -1,14 +1,15 @@
-// src/pages/LandingPage.tsx
 import React, { useState } from "react";
 import AnimatedDotFieldCanvas from "../components/LandingComponents/AnimatedDotFieldCanvas";
 import RadialDotFieldCanvas   from "../components/LandingComponents/RadialDotFieldCanvas";
 import GradientRing           from "../components/LandingComponents/GradientRing";
 import SectionLayer           from "../components/LandingComponents/SectionLayer";
 import CenterOrb              from "../components/LandingComponents/CenterOrb";
+import { sections }           from "../components/sections";
+import { WipeOptions }        from "../components/Transitions/TransitionWipe";
 
-/** Callback fires when the user clicks a section */
+/** now accepts opts: WipeOptions */
 export interface LandingPageProps {
-  onNavigate: (sectionName: string) => void;
+  onNavigate: (sectionName: string, opts?: WipeOptions) => void;
 }
 
 const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
@@ -16,7 +17,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
 
   return (
     <div className="relative w-screen h-screen flex items-center justify-center bg-white overflow-hidden">
-      {/* --- background dot layers --- */}
+      {/* background dots */}
       <AnimatedDotFieldCanvas
         activeSection={active}
         spawnRate={30}
@@ -39,16 +40,23 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
         maxRadiusMultiplier={0.8}
       />
 
-      {/* --- foreground 60 vmin stack --- */}
+      {/* foreground */}
       <div className="relative w-[60vmin] h-[60vmin]">
-        <GradientRing    activeSection={active} />
+        <GradientRing activeSection={active} />
+
         <SectionLayer
           onHover={setActive}
           onSelect={(name) => {
-            setActive(name);     // keep glow in sync
-            onNavigate(name);    // bubble up to App
+            setActive(name);
+            const sec = sections.find((s) => s.name === name)!;
+            onNavigate(name, {
+              color: sec.color,
+              direction: "right",
+              duration: 500,
+            });
           }}
         />
+
         <CenterOrb label={active} />
       </div>
     </div>

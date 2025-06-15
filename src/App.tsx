@@ -1,9 +1,11 @@
-// src/App.tsx
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import LandingPage from "./pages/LandingPage";
-import NavBar        from "./components/NavBar/NavBar";
+import NavBar       from "./components/NavBar/NavBar";
+import TransitionWipe, {
+  TransitionHandle,
+  WipeOptions,
+} from "./components/Transitions/TransitionWipe";
 
-/** Very small site-state machine for now */
 type Page =
   | "landing"
   | "Overview"
@@ -12,7 +14,6 @@ type Page =
   | "Connect"
   | "Research Blog";
 
-/** The list of pages we want in the NavBar (excluding "landing") */
 const pages: Page[] = [
   "Overview",
   "My Projects",
@@ -23,23 +24,29 @@ const pages: Page[] = [
 
 function App() {
   const [page, setPage] = useState<Page>("landing");
+  const wipeRef = useRef<TransitionHandle>(null);
 
-  /** Called by both LandingPage and NavBar when the user wants to switch */
-  const handleNavigate = (target: Page) => {
-    setPage(target);
+  const handleNavigate = (target: string, opts?: WipeOptions): void => {
+    wipeRef.current
+      ?.start(opts)
+      .then(() => {
+        setPage(target as Page);
+        // allow React to mount new content, then reverse the wipe
+        setTimeout(() => wipeRef.current?.done(), 50);
+      });
   };
 
   return (
     <div className="relative w-screen h-screen">
-      {/* Always-on NavBar */}
-      <NavBar
-        pages={pages}
-        onNavigate={(p) => handleNavigate(p as Page)}
-      />
+      {/* full-screen wipe overlay */}
+      <TransitionWipe ref={wipeRef} />
 
-      {/* Page content switch */}
+      {/* nav bar (always on) */}
+      <NavBar pages={pages} onNavigate={handleNavigate} />
+
+      {/* main content */}
       {page === "landing" ? (
-        <LandingPage onNavigate={(sec) => handleNavigate(sec as Page)} />
+        <LandingPage onNavigate={handleNavigate} />
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-white">
           <h1 className="text-4xl">{page} Page</h1>

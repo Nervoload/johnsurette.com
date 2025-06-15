@@ -6,7 +6,7 @@ type CenterOrbProps = { label: string | null };
 const CenterOrb: React.FC<CenterOrbProps> = ({ label }) => {
   // Find the matching section colour, defaulting to white
   const glowColor =
-    sections.find((s) => s.name === label)?.color ?? "#FFFFFF";
+    sections.find((s) => s.name === label)?.color ?? "rgba(39, 35, 35, 0.8)";
 
   return (
     /* wrapper keeps orb perfectly centred */
@@ -20,7 +20,7 @@ const CenterOrb: React.FC<CenterOrbProps> = ({ label }) => {
         "
         style={{
           boxShadow: `
-            inset 0 0 30px rgba(255,255,255,0.2),
+            inset 0 0 30px rgba(255, 255, 255, 0.27),
             0 0 20px 4px ${glowColor}30    /* subtle halo around orb */
           `,
         }}
