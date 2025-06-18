@@ -4,6 +4,7 @@ import React, {
   useImperativeHandle,
   useState,
   useLayoutEffect,
+  useRef,
 } from "react";
 
 export type WipeOptions = {
@@ -19,50 +20,63 @@ export type TransitionHandle = {
 
 const BASE_DURATION = 500;
 
-type State =
-  | { phase: "idle" }
-  | { phase: "entering"; opts: Required<WipeOptions>; resolve: () => void }
-  | { phase: "entered"; opts: Required<WipeOptions> }
-  | { phase: "exiting"; opts: Required<WipeOptions> };
+type IdleState = { phase: "idle" };
+type EnteringState = { phase: "entering"; opts: Required<WipeOptions> };
+type EnteredState  = { phase: "entered";  opts: Required<WipeOptions> };
+type ExitingState  = { phase: "exiting";  opts: Required<WipeOptions> };
+
+type State = IdleState | EnteringState | EnteredState | ExitingState;
 
 const TransitionWipe = forwardRef<TransitionHandle>((_, ref) => {
   const [state, setState] = useState<State>({ phase: "idle" });
+  const resolveRef = useRef<() => void>();
 
   const defaultOpts = (o?: WipeOptions): Required<WipeOptions> => ({
-    color: o?.color ?? "#fff",
+    color: o?.color ?? "#ffffff",
     direction: o?.direction ?? "right",
     duration: o?.duration ?? BASE_DURATION,
   });
 
-  // Expose start() and done()
-  useImperativeHandle(ref, () => ({
-    start(opts) {
-      return new Promise<void>((resolve) => {
-        setState({ phase: "entering", opts: defaultOpts(opts), resolve });
-      });
-    },
-    done() {
-      if (state.phase === "entered") {
-        setState({ phase: "exiting", opts: state.opts });
-      }
-    },
-  }), [state]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      start(opts) {
+        return new Promise<void>((resolve) => {
+          resolveRef.current = resolve;
+          setState({
+            phase: "entering",
+            opts: defaultOpts(opts),
+          });
+        });
+      },
+      done() {
+        if (state.phase === "entered") {
+          setState({ phase: "exiting", opts: state.opts });
+        }
+      },
+    }),
+    [state]
+  );
 
-  // Once mounted as "entering", kick into "entered" so CSS transition fires
+  // bump from "entering" → "entered" on next frame
   useLayoutEffect(() => {
     if (state.phase === "entering") {
-      // next tick, animate on-screen
-      requestAnimationFrame(() => {
-        setState({ phase: "entered", opts: state.opts });
-      });
+      requestAnimationFrame(() =>
+        setState({ phase: "entered", opts: state.opts })
+      );
     }
   }, [state.phase]);
 
-  if (state.phase === "idle") return null;
+  // don't render anything when idle
+  if (state.phase === "idle") {
+    return null;
+  }
 
-  const { color, direction, duration } = state.opts;
+  // from here, phase ∈ {"entering","entered","exiting"} so opts exists
+  const { opts } = state;
+  const { color, direction, duration } = opts;
 
-  // Map direction → off-screen transform
+  // determine off-screen transform
   const offscreen =
     direction === "left"
       ? "-translate-x-full"
@@ -72,21 +86,23 @@ const TransitionWipe = forwardRef<TransitionHandle>((_, ref) => {
       ? "-translate-y-full"
       : "translate-y-full";
 
-  // Determine transform + transition classes
+  // build transform + transition classes per phase
   let transformClass: string;
   let transitionClass: string;
-  if (state.phase === "entering") {
-    // mount off-screen, no transition
-    transformClass = offscreen;
-    transitionClass = "";
-  } else if (state.phase === "entered") {
-    // animate on-screen
-    transformClass = "translate-x-0 translate-y-0";
-    transitionClass = `transition-transform duration-[${duration}ms] ease-out`;
-  } else {
-    // exiting: animate off-screen again
-    transformClass = offscreen;
-    transitionClass = `transition-transform duration-[${duration}ms] ease-out`;
+
+  switch (state.phase) {
+    case "entering":
+      transformClass = offscreen;
+      transitionClass = "";
+      break;
+    case "entered":
+      transformClass = "translate-x-0 translate-y-0";
+      transitionClass = `transition-transform duration-[${duration}ms] ease-out`;
+      break;
+    case "exiting":
+      transformClass = offscreen;
+      transitionClass = `transition-transform duration-[${duration}ms] ease-out`;
+      break;
   }
 
   const style: React.CSSProperties = {
@@ -101,10 +117,9 @@ const TransitionWipe = forwardRef<TransitionHandle>((_, ref) => {
       style={style}
       onTransitionEnd={() => {
         if (state.phase === "entered") {
-          state.resolve();              // covered → resolve promise
-        }
-        if (state.phase === "exiting") {
-          setState({ phase: "idle" });  // done exiting → unmount
+          resolveRef.current?.();
+        } else if (state.phase === "exiting") {
+          setState({ phase: "idle" });
         }
       }}
     />
