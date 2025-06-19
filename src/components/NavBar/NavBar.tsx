@@ -1,6 +1,8 @@
 // src/components/NavBar/NavBar.tsx
 import React, { useState, useEffect, useRef } from "react";
-import LandingOrb from "./LandingOrb";
+import { motion } from "framer-motion";
+import NavLogo from "./NavLogo";
+import { sections } from "../sections";
 import { WipeOptions } from "../Transitions/TransitionWipe";
 
 export interface NavBarProps {
@@ -12,6 +14,12 @@ export interface NavBarProps {
 const NavBar: React.FC<NavBarProps> = ({ pages, onNavigate }) => {
   const [visible, setVisible] = useState(false);
   const [showGradientZone, setShowGradientZone] = useState(false);
+
+  const colorMap = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    sections.forEach((s) => (map[s.name] = s.color));
+    return map;
+  }, []);
 
   // Timers
   const autoTimerRef = useRef<number | null>(null);
@@ -159,7 +167,7 @@ const NavBar: React.FC<NavBarProps> = ({ pages, onNavigate }) => {
       />
 
       {/* 3) Nav container */}
-      <div
+      <motion.div
         ref={navRef}
         className={
           `fixed top-0 left-0 right-0 z-50 transform ` +
@@ -167,22 +175,32 @@ const NavBar: React.FC<NavBarProps> = ({ pages, onNavigate }) => {
           (visible ? "translate-y-5" : "-translate-y-full")
         }
       >
-        <div className="mx-auto max-w-4xl bg-white rounded-3xl shadow-lg p-2 flex justify-center space-x-8">
-          <LandingOrb onClick={() => onNavigate("landing")} />
+        <div
+          className="mx-auto max-w-4xl rounded-3xl border border-white/30 bg-white/20 backdrop-blur-lg shadow-lg p-2 flex justify-center space-x-8"
+        >
+          <div className="cursor-pointer" onClick={() => onNavigate("landing")}> 
+            <NavLogo />
+          </div>
           {pages.map((page) => (
-            <button
+            <motion.button
               key={page}
-              className="text-lg font-medium hover:underline"
+              className="text-lg font-medium px-2"
+              whileHover={{
+                scale: 1.1,
+                color: colorMap[page],
+                textShadow: `0 0 8px ${colorMap[page]}`,
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
               onClick={() => {
                 setVisible(false);
                 onNavigate(page);
               }}
             >
               {page}
-            </button>
+            </motion.button>
           ))}
         </div>
-      </div>
+      </motion.div>
     </>
   );
 };
