@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import AnimatedDotFieldCanvas from "../components/LandingComponents/AnimatedDotFieldCanvas";
 import RadialDotFieldCanvas   from "../components/LandingComponents/RadialDotFieldCanvas";
 import GradientRing           from "../components/LandingComponents/GradientRing";
@@ -6,6 +6,7 @@ import SectionLayer           from "../components/LandingComponents/SectionLayer
 import CenterOrb              from "../components/LandingComponents/CenterOrb";
 import { sections }           from "../components/sections";
 import { WipeOptions }        from "../components/Transitions/TransitionWipe";
+import Footer from "../components/Footer";
 
 /** now accepts opts: WipeOptions */
 export interface LandingPageProps {
@@ -14,9 +15,10 @@ export interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
   const [active, setActive] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="relative w-screen h-screen flex items-center justify-center bg-white overflow-hidden">
+    <div ref={containerRef} className="relative w-screen h-screen flex items-center justify-center bg-white overflow-hidden">
       {/* background dots */}
       <AnimatedDotFieldCanvas
         activeSection={active}
@@ -59,6 +61,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
 
         <CenterOrb label={active} />
       </div>
+      <Footer scrollContainerRef={containerRef} />
     </div>
   );
 };
