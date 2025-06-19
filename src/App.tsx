@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import LandingPage from "./pages/LandingPage";
+import ProjectsPage from "./pages/ProjectsPage";
 import NavBar       from "./components/NavBar/NavBar";
 import TransitionWipe, {
   TransitionHandle,
@@ -47,6 +48,8 @@ function App() {
       {/* main content */}
       {page === "landing" ? (
         <LandingPage onNavigate={handleNavigate} />
+      ) : page === "My Projects" ? (
+        <ProjectsPage />
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-white">
           <h1 className="text-4xl">{page} Page</h1>
