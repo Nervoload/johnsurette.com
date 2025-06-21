@@ -18,7 +18,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div ref={containerRef} className="relative w-screen h-screen flex items-center justify-center bg-white overflow-hidden">
+    <div ref={containerRef} className="relative w-screen min-h-screen flex items-center justify-center bg-white overflow-auto">
       {/* background dots */}
       <AnimatedDotFieldCanvas
         activeSection={active}
@@ -61,7 +61,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
 
         <CenterOrb label={active} />
       </div>
-      <Footer scrollContainerRef={containerRef} />
+      <Footer />
     </div>
   );
 };

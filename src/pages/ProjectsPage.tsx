@@ -1,19 +1,21 @@
-import React, { useState, useRef } from "react";
-import IntroShuffle from "../components/Projects/IntroShuffle";
-import ProjectScroller from "../components/Projects/ProjectScroller";
+// src/pages/ProjectsPage.tsx
+import React, { useRef } from "react";
+import ProjectStoryboard from "../components/Projects/ProjectStoryboard";
 import Footer from "../components/Footer";
 
 const ProjectsPage: React.FC = () => {
-  const [showIntro, setShowIntro] = useState(true);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div ref={containerRef} className="relative w-screen h-screen overflow-y-auto bg-white">
-      {showIntro && (
-        <IntroShuffle />
-      )}
-      <ProjectScroller />
-      <Footer scrollContainerRef={containerRef} />
+    <div
+      ref={scrollRef}
+      className="relative w-screen h-screen overflow-y-auto bg-white"
+    >
+      {/* all 3-D & animation lives in the storyboard */}
+      <ProjectStoryboard scrollContainer={scrollRef} />
+
+      {/* you can stack regular HTML content below if desired */}
+      <Footer scrollContainerRef={scrollRef} />
     </div>
   );
 };
