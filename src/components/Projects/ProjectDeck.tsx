@@ -2,6 +2,8 @@
 import React from "react";
 import { MotionValue, useTransform } from "framer-motion";
 import Card3D from "./Card3D";
+import frontPlaceholder from "./textures/fronttemp.png";
+import backPlaceholder from "./textures/backtemp.png";
 
 interface ProjectMeta {
   id: string;
@@ -17,9 +19,9 @@ interface ProjectDeckProps {
 }
 
 const sampleProjects: ProjectMeta[] = [
-  { id: "a", front: "/textures/fronttemp.png", back: "//textures/backtemp.png" },
-  { id: "b", front: "/textures/fronttemp.png", back: "/textures/backtemp.png" },
-  { id: "c", front: "/textures/fronttemp.png", back: "/textures/backtemp.png" },
+  { id: "a", front: frontPlaceholder, back: backPlaceholder },
+  { id: "b", front: frontPlaceholder, back: backPlaceholder },
+  { id: "c", front: frontPlaceholder, back: backPlaceholder },
 ];
 
 const ProjectDeck: React.FC<ProjectDeckProps> = ({

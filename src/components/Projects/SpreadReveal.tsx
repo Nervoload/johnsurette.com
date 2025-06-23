@@ -2,6 +2,8 @@
 import React from "react";
 import { MotionValue, useTransform } from "framer-motion";
 import Card3D from "./Card3D";
+import frontPlaceholder from "./textures/fronttemp.png";
+import backPlaceholder from "./textures/backtemp.png";
 
 interface SpreadRevealProps {
   progress: MotionValue<number>;
@@ -14,8 +16,8 @@ interface SpreadRevealProps {
 }
 
 const defaultCards = [...Array(5)].map((_, i) => ({
-  front: "/textures/fronttemp.png",
-  back:  "/textures/backtemp.png",
+  front: frontPlaceholder,
+  back:  backPlaceholder,
   elementScale: 1.2 + i * 0.05,
 }));
 

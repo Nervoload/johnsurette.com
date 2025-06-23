@@ -2,7 +2,9 @@
 import React, { useMemo } from "react";
 import { MotionValue, useTransform, useSpring } from "framer-motion";
 import Card3D from "./Card3D";
- import { Html } from "@react-three/drei"; 
+import { Html } from "@react-three/drei";
+import frontPlaceholder from "./textures/fronttemp.png";
+import backPlaceholder from "./textures/backtemp.png";
 
 interface InfoCard {
   id: string;
@@ -21,8 +23,8 @@ interface ProjectCardInfoProps {
 const sampleInfo: InfoCard[] = [
   {
     id: "a",
-    front: "/textures/front-placeholder.png",
-    back: "/textures/back-placeholder.png",
+    front: frontPlaceholder,
+    back: backPlaceholder,
     title: "First Project",
     description: "Lorem ipsum dolor sit amet.",
   },
