@@ -5,8 +5,13 @@ import { useTexture } from "@react-three/drei";
 import { MotionValue } from "framer-motion";
 import * as THREE from "three";
 
+import frontPlaceholder from "./textures/fronttemp.png";
+import backPlaceholder from "./textures/backtemp.png";
+
 /* ───────────────────────────── Types */
-export interface Card3DProps {
+type GroupProps = ThreeElements['group'];
+
+export interface Card3DProps extends GroupProps {
   frontSrc?: string;          // texture url (can be data-url)
   backSrc?:  string;
   width?:    number;          // world units
@@ -33,12 +38,13 @@ const Card3D: React.FC<Card3DProps> = ({
   pop,
   popScale = 1.15,
   onClick,
+  ...rest
 }) => {
   const group = useRef<THREE.Group>(null);
 
   /* textures (lazy) */
-  const [frontMap] = useTexture([frontSrc ?? "/textures/front-placeholder.png"]);
-  const [backMap]  = useTexture([backSrc  ?? "/textures/back-placeholder.png"]);
+  const [frontMap] = useTexture([frontSrc ?? frontPlaceholder]);
+  const [backMap]  = useTexture([backSrc  ?? backPlaceholder]);
 
   /* animation on every frame (cheap) */
   useFrame(() => {
@@ -57,7 +63,7 @@ const Card3D: React.FC<Card3DProps> = ({
 
   /* ───────────────────────────── Render */
   return (
-    <group ref={group} onClick={onClick}>
+    <group ref={group} onClick={onClick} {...rest}>
       {/* subtle bevel: thin box for the rim */}
       <mesh>
         <boxGeometry args={[width, height, thickness]} />

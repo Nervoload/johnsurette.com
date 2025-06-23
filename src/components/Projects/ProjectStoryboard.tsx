@@ -1,7 +1,7 @@
 // src/components/Projects/ProjectStoryboard.tsx
 import React, { useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { MotionValue, useScroll, useTransform, useMotionValue } from "framer-motion";
+import { MotionValue, useScroll, useTransform } from "framer-motion";
 import IntroDeck from "./IntroDeck";
 import SpreadReveal from "./SpreadReveal";
 import ProjectDeck from "./ProjectDeck";
@@ -49,6 +49,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
       className="fixed inset-0 z-10 pointer-events-none"
       camera={{ position: [0, 0, 5], fov: 45 }}
     >
+      <ambientLight intensity={0.6} />
       {/* Scene 0 */}
       <IntroDeck progress={s0} />
 

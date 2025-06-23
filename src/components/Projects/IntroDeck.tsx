@@ -2,6 +2,8 @@
 import React, { useMemo } from "react";
 import { MotionValue, useTransform } from "framer-motion";
 import Card3D from "./Card3D";
+import frontPlaceholder from "./textures/fronttemp.png";
+import backPlaceholder from "./textures/backtemp.png";
 
 interface IntroDeckProps {
   progress: MotionValue<number>; // local 0‒1
@@ -53,8 +55,8 @@ const IntroDeck: React.FC<IntroDeckProps> = ({
             flip={flipMv}
             pop={fanProg}        // small scale-up while fanning
             onClick={() => null}
-            frontSrc={"/textures/fronttemp.png"}
-            backSrc={"/textures/backtemp.png"}
+            frontSrc={frontPlaceholder}
+            backSrc={backPlaceholder}
             /* Three-JS style prop spread */
             position-x={fanX}
             position-y={fanY}
