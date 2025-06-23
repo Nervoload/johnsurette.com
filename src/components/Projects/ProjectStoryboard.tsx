@@ -1,5 +1,5 @@
 // src/components/Projects/ProjectStoryboard.tsx
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { MotionValue, useScroll, useTransform } from "framer-motion";
 import IntroDeck from "./IntroDeck";
@@ -28,6 +28,7 @@ export interface ProjectStoryboardProps {
 const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   scrollContainer,
   sectionBreaks = [0.15, 0.30, 0.60, 1.0],
+  autoScrollDelay = 500,
 }) => {
   /* global scroll */
   const { scrollYProgress } = useScroll({
@@ -42,6 +43,17 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
     slice(scrollYProgress, [sectionBreaks[1], sectionBreaks[2]]),
     slice(scrollYProgress, [sectionBreaks[2], sectionBreaks[3]]),
   ];
+
+  /* Kick off intro animation by scrolling to first section */
+  useEffect(() => {
+    const el = scrollContainer?.current;
+    if (!el) return;
+    const timer = setTimeout(() => {
+      const target = el.scrollHeight * sectionBreaks[0];
+      el.scrollTo({ top: target, behavior: "smooth" });
+    }, autoScrollDelay);
+    return () => clearTimeout(timer);
+  }, [scrollContainer, sectionBreaks, autoScrollDelay]);
 
   /* ───────────────────────────── Render */
   return (
