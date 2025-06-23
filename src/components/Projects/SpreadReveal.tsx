@@ -14,8 +14,8 @@ interface SpreadRevealProps {
 }
 
 const defaultCards = [...Array(5)].map((_, i) => ({
-  front: "/textures/front-placeholder.png",
-  back:  "/textures/back-placeholder.png",
+  front: "/textures/fronttemp.png",
+  back:  "/textures/backtemp.png",
   elementScale: 1.2 + i * 0.05,
 }));
 

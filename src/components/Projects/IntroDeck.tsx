@@ -53,8 +53,8 @@ const IntroDeck: React.FC<IntroDeckProps> = ({
             flip={flipMv}
             pop={fanProg}        // small scale-up while fanning
             onClick={() => null}
-            frontSrc={"/textures/front-placeholder.png"}
-            backSrc={"/textures/back-placeholder.png"}
+            frontSrc={"/textures/fronttemp.png"}
+            backSrc={"/textures/backtemp.png"}
             /* Three-JS style prop spread */
             position-x={fanX}
             position-y={fanY}

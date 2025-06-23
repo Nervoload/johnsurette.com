@@ -43,7 +43,7 @@ function App() {
       <TransitionWipe ref={wipeRef} />
 
       {/* nav bar (always on) */}
-     <NavBar pages={pages} onNavigate={handleNavigate} scale={1.0} />
+     <NavBar pages={pages} onNavigate={handleNavigate} />
 
 
       {/* main content */}

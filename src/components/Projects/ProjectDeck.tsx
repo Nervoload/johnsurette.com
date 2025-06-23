@@ -17,9 +17,9 @@ interface ProjectDeckProps {
 }
 
 const sampleProjects: ProjectMeta[] = [
-  { id: "a", front: "/textures/front-placeholder.png", back: "/textures/back-placeholder.png" },
-  { id: "b", front: "/textures/front-placeholder.png", back: "/textures/back-placeholder.png" },
-  { id: "c", front: "/textures/front-placeholder.png", back: "/textures/back-placeholder.png" },
+  { id: "a", front: "/textures/fronttemp.png", back: "//textures/backtemp.png" },
+  { id: "b", front: "/textures/fronttemp.png", back: "/textures/backtemp.png" },
+  { id: "c", front: "/textures/fronttemp.png", back: "/textures/backtemp.png" },
 ];
 
 const ProjectDeck: React.FC<ProjectDeckProps> = ({
