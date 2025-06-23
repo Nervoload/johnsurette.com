@@ -11,8 +11,10 @@ const ProjectsPage: React.FC = () => {
       ref={scrollRef}
       className="relative w-screen h-screen overflow-y-auto bg-white"
     >
-      {/* all 3-D & animation lives in the storyboard */}
-      <ProjectStoryboard scrollContainer={scrollRef} />
+      {/* scroll track provides enough space for storyboard scenes */}
+      <div className="relative h-[400vh]">
+        <ProjectStoryboard scrollContainer={scrollRef} />
+      </div>
 
       {/* you can stack regular HTML content below if desired */}
       <Footer scrollContainerRef={scrollRef} />
