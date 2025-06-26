@@ -1,9 +1,10 @@
-// src/components/Projects/ProjectDeck.tsx
-import React from "react";
-import { MotionValue, useTransform } from "framer-motion";
+import React, { useRef } from "react";
+import { MotionValue } from "framer-motion";
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 import Card3D from "./Card3D";
 import frontPlaceholder from "./textures/fronttemp.png";
-import backPlaceholder from "./textures/backtemp.png";
+import backPlaceholder  from "./textures/backtemp.png";
 
 interface ProjectMeta {
   id: string;
@@ -14,8 +15,8 @@ interface ProjectMeta {
 interface ProjectDeckProps {
   progress: MotionValue<number>;
   projects?: ProjectMeta[];
-  gap?: number;           // vertical spacing between cards
-  dealAngle?: number;     // radians tilt during flight
+  gap?: number;
+  dealAngle?: number;
 }
 
 const sampleProjects: ProjectMeta[] = [
@@ -30,33 +31,31 @@ const ProjectDeck: React.FC<ProjectDeckProps> = ({
   gap = 2,
   dealAngle = 0.4,
 }) => {
-  /* Each card gets its own appearance window inside the scene range ------ */
+  const refs = useRef<THREE.Group[]>([]);
   const step = 1 / projects.length;
 
+  useFrame(() => {
+    const t = progress.get();
+    projects.forEach((_, i) => {
+      const g = refs.current[i];
+      if (!g) return;
+      const low = i * step;
+      const high = (i + 1) * step;
+      const ph = Math.min(Math.max((t - low) / (high - low), 0), 1);
+
+      g.position.y = 10 + (-i * gap - 10) * ph;
+      g.rotation.z = dealAngle * (1 - ph);
+    });
+  });
+
   return (
-    <group>
-      {projects.map((proj, i) => {
-        const appear = useTransform(progress, [i * step, (i + 1) * step], [0, 1], {
-          clamp: true,
-        });
-
-        /* vertical drop-in */
-        const yMv = useTransform(appear, [0, 1], [10, -i * gap]);
-        const rotZ = useTransform(appear, [0, 1], [dealAngle, 0]);
-
-        return (
-          <Card3D
-            key={proj.id}
-            frontSrc={proj.front}
-            backSrc={proj.back}
-            flip={undefined}  // initially face-down
-            pop={undefined}
-            position-y={yMv}
-            rotation-z={rotZ}
-          />
-        );
-      })}
-    </group>
+    <>
+      {projects.map((p, i) => (
+        <group key={p.id} ref={(el) => (refs.current[i] = el!)}>
+          <Card3D frontSrc={p.front} backSrc={p.back} />
+        </group>
+      ))}
+    </>
   );
 };
 

@@ -4,20 +4,21 @@ import ProjectStoryboard from "../components/Projects/ProjectStoryboard";
 import Footer from "../components/Footer";
 
 const ProjectsPage: React.FC = () => {
+  // This div is now the real, full-screen scroll container
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <div
       ref={scrollRef}
-      className="relative w-screen h-screen overflow-y-auto bg-white"
+      className="relative w-screen h-screen bg-white overflow-y-auto overflow-x-hidden"
     >
-      {/* scroll track provides enough space for storyboard scenes */}
-      <div className="relative h-[400vh]">
-        <ProjectStoryboard scrollContainer={scrollRef} />
-      </div>
+      {/* Fixed Canvas reads from this scroll container */}
+      <ProjectStoryboard scrollContainer={scrollRef} />
 
-      {/* you can stack regular HTML content below if desired */}
-      <Footer scrollContainerRef={scrollRef} />
+      {/* 4 scenes → 4× viewport scroll */}
+      <div style={{ height: "400vh" }} />
+
+      <Footer />
     </div>
   );
 };

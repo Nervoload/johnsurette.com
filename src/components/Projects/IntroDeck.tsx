@@ -1,71 +1,64 @@
-// src/components/Projects/IntroDeck.tsx
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
 import { MotionValue, useTransform } from "framer-motion";
+import { useFrame, useThree } from "@react-three/fiber";
+import * as THREE from "three";
 import Card3D from "./Card3D";
-import frontPlaceholder from "./textures/fronttemp.png";
-import backPlaceholder from "./textures/backtemp.png";
 
 interface IntroDeckProps {
-  progress: MotionValue<number>; // local 0‒1
+  progress: MotionValue<number>;
   cardCount?: number;
   shuffleCount?: number;
-  radius?: number;               // fan-out radius
+  radius?: number;
 }
 
 const IntroDeck: React.FC<IntroDeckProps> = ({
   progress,
   cardCount = 6,
   shuffleCount = 3,
-  radius = 2,
+  radius,
 }) => {
-  /* Phase slicing ------------------------------------------------------ */
+  const { viewport } = useThree();
+  const fanRadius = radius ?? viewport.width * 0.85;   // 45 % of screen width
   const shuffleProg = useTransform(progress, [0, 0.3], [0, 1], { clamp: true });
-  const fanProg     = useTransform(progress, [0.3, 0.7], [0, 1], { clamp: true });
-  const flipProg    = useTransform(progress, [0.7, 1], [0, 1], { clamp: true });
+  const fanProg = useTransform(progress, [0.3, 0.7], [0, 1], { clamp: true });
+  const flipProg = useTransform(progress, [0.7, 1], [0, 1], { clamp: true });
 
-  /* Pre-compute card indices array */
-  const cards = useMemo(() => [...Array(cardCount).keys()], [cardCount]);
+  const cards = useMemo(() => Array.from({ length: cardCount }, (_, i) => i), [cardCount]);
+  const groupRefs = useRef<THREE.Group[]>([]);
 
-  /* Render ------------------------------------------------------------- */
+  useFrame(() => {
+    cards.forEach((idx) => {
+      const g = groupRefs.current[idx];
+      if (!g) return;
+
+      // Shuffle jitter on Z
+      const tS = shuffleProg.get();
+      g.position.z = Math.sin(tS * shuffleCount * Math.PI * 2 + idx * 0.5) * 0.3;
+
+      // Fan-out on XY + rotation
+      const tF = fanProg.get();
+      const angle = (idx / cardCount) * Math.PI * 2;
+      g.position.x = Math.cos(angle) * fanRadius * tF;
+      g.position.y = Math.sin(angle) * fanRadius * tF;
+      g.rotation.z = angle * tF;
+
+      // Flip Y-axis
+      g.rotation.y = flipProg.get() * Math.PI;
+
+      // Pop-scale
+      const scaleFactor = 1 + (1.15 - 1) * tF;
+      g.scale.setScalar(scaleFactor);
+    });
+  });
+
   return (
-    <group>
-      {cards.map((idx) => {
-        /* ——— SHUFFLE ——— */
-        const shuffleOffset = useTransform(
-          shuffleProg,
-          (t) => {
-            // create 'shuffleCount' sine bumps in z
-            const freq = shuffleCount * Math.PI * 2;
-            return Math.sin(t * freq + idx * 0.5) * 0.3; // 0.3 world units
-          }
-        );
-
-        /* ——— FAN-OUT ——— */
-        const fanAngle   = (idx / cardCount) * Math.PI * 2;
-        const fanX = useTransform(fanProg, [0, 1], [0, Math.cos(fanAngle) * radius]);
-        const fanY = useTransform(fanProg, [0, 1], [0, Math.sin(fanAngle) * radius]);
-        const fanRotZ = useTransform(fanProg, [0, 1], [0, fanAngle]);
-
-        /* ——— FLIP ——— */
-        const flipMv = flipProg; // reuse directly (0→1)
-
-        return (
-          <Card3D
-            key={idx}
-            flip={flipMv}
-            pop={fanProg}        // small scale-up while fanning
-            onClick={() => null}
-            frontSrc={frontPlaceholder}
-            backSrc={backPlaceholder}
-            /* Three-JS style prop spread */
-            position-x={fanX}
-            position-y={fanY}
-            position-z={shuffleOffset}
-            rotation-z={fanRotZ}
-          />
-        );
-      })}
-    </group>
+    <>
+      {cards.map((idx) => (
+        <group key={idx} ref={(el) => (groupRefs.current[idx] = el!)}>
+          <Card3D />
+        </group>
+      ))}
+    </>
   );
 };
 
