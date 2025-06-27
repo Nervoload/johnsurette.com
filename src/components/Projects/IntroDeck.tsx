@@ -31,9 +31,11 @@ const IntroDeck: React.FC<IntroDeckProps> = ({
       const g = groupRefs.current[idx];
       if (!g) return;
 
-      // Shuffle jitter on Z
+      // Shuffle jitter + spin/scale
       const tS = shuffleProg.get();
       g.position.z = Math.sin(tS * shuffleCount * Math.PI * 2 + idx * 0.5) * 0.3;
+      const p = Math.min(Math.max(tS - idx * 0.1, 0), 1);
+      g.rotation.x = p * Math.PI * 2;
 
       // Fan-out on XY + rotation
       const tF = fanProg.get();
@@ -46,7 +48,8 @@ const IntroDeck: React.FC<IntroDeckProps> = ({
       g.rotation.y = flipProg.get() * Math.PI;
 
       // Pop-scale
-      const scaleFactor = 1 + (1.15 - 1) * tF;
+      const baseScale = 0.5 + 0.5 * p;
+      const scaleFactor = baseScale * (1 + (1.15 - 1) * tF);
       g.scale.setScalar(scaleFactor);
     });
   });
