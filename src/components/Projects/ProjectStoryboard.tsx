@@ -20,7 +20,7 @@ const slice = (mv: MotionValue<number>, range: [number, number]) =>
 
 const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   scrollContainer,
-  sectionBreaks = [0.15, 0.30, 0.60, 1.0],
+  sectionBreaks = [0.3, 0.6, 0.85, 1.0],
   autoScrollDelay = 500,
 }) => {
   // Listen to the wrapper’s actual scroll
@@ -75,8 +75,8 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
 
       {/* No manual Y-offset; group is centered at [0,0,0] */}
       <group scale={1.4}>
-        <IntroDeck progress={s0} />
-        <SpreadReveal progress={s1} />
+        <IntroDeck progress={s0} cardCount={6} />
+        <SpreadReveal progress={s1} cards={undefined} />
         <ProjectDeck progress={s2} />
         <ProjectCardInfo progress={s3} />
       </group>
