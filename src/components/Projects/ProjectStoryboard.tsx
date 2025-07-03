@@ -8,6 +8,7 @@ import IntroDeck from "./IntroDeck";
 import SpreadReveal from "./SpreadReveal";
 import ProjectDeck from "./ProjectDeck";
 import ProjectCardInfo from "./ProjectCardInfo";
+import IntroShuffle from "./IntroShuffle";
 
 interface ProjectStoryboardProps {
   scrollContainer: React.RefObject<HTMLElement>;
@@ -60,6 +61,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   }, [scrollContainer, sectionBreaks, autoScrollDelay]);
 
   return (
+    <>
     <Canvas className="fixed inset-0 z-10 pointer-events-none" shadows>
       {/* Full-viewport Canvas */}
       <AdaptiveDpr pixelated />
@@ -81,6 +83,8 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
         <ProjectCardInfo progress={s3} />
       </group>
     </Canvas>
+    <IntroShuffle progress={s0} />
+    </>
   );
 };
 

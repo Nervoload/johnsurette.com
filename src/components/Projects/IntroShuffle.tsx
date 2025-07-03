@@ -1,3 +1,4 @@
+
 import React, { useMemo, useRef } from "react";
 import { MotionValue, useTransform } from "framer-motion";
 import { useFrame } from "@react-three/fiber";
@@ -89,6 +90,7 @@ const IntroShuffle: React.FC<IntroShuffleProps> = ({
         </group>
       ))}
     </group>
+
   );
 };
 

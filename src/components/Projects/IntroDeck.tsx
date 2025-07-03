@@ -63,6 +63,7 @@ const IntroDeck: React.FC<IntroDeckProps> = ({
       const g = groupRefs.current[idx];
       if (!g) return;
 
+
       const off = shuffleOffsets[idx];
       const targetIndex = shuffleOrder[idx];
 
@@ -74,10 +75,6 @@ const IntroDeck: React.FC<IntroDeckProps> = ({
       g.position.x = off.x * out;
       g.position.y = off.y * out;
       g.position.z = THREE.MathUtils.lerp(baseZ, targetZ, localS) + out * 0.05;
-
-      const angle = (idx / cardCount) * Math.PI * 2;
-      g.position.x += Math.cos(angle) * fanRadius * tFan;
-      g.position.y += Math.sin(angle) * fanRadius * tFan;
       g.rotation.z = angle * tFan;
 
       g.rotation.y = tFlip * Math.PI;

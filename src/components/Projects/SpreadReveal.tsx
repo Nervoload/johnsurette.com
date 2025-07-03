@@ -3,7 +3,6 @@ import { MotionValue, motionValue } from "framer-motion";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import Card3D from "./Card3D";
-import frontPlaceholder from "./textures/fronttemp.png";
 import backPlaceholder  from "./textures/backtemp.png";
 
 interface SpreadRevealProps {
@@ -11,6 +10,7 @@ interface SpreadRevealProps {
   cards?: { front: string; back: string; elementScale?: number }[];
   baseRadius?: number;
 }
+
 
 const colors = ["red", "blue", "green", "yellow", "purple", "pink"];
 const colorTex = (c: string) =>
@@ -20,6 +20,7 @@ const colorTex = (c: string) =>
 
 const defaultCards = Array.from({ length: 6 }, (_, i) => ({
   front: colorTex(colors[i % colors.length]),
+  front: backPlaceholder,
   back: backPlaceholder,
   elementScale: 1.2 + i * 0.05,
 }));
