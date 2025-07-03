@@ -3,7 +3,6 @@ import { MotionValue } from "framer-motion";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import Card3D from "./Card3D";
-import frontPlaceholder from "./textures/fronttemp.png";
 import backPlaceholder  from "./textures/backtemp.png";
 
 interface SpreadRevealProps {
@@ -13,7 +12,7 @@ interface SpreadRevealProps {
 }
 
 const defaultCards = Array.from({ length: 5 }, (_, i) => ({
-  front: frontPlaceholder,
+  front: backPlaceholder,
   back: backPlaceholder,
   elementScale: 1.2 + i * 0.05,
 }));
