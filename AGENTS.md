@@ -30,7 +30,7 @@ at engineering magnificent software systems.
 
 The codebase is currently structured as follows:
 
-## /johnsurette.com: (most of these files are just import files and libraries, except AGENTS.md, and /src which are particularly important to you.)
+/johnsurette.com: (most of these files are just import files and libraries, except AGENTS.md, and /src which are particularly important to you.)
   /dist
   /node_modules
   /src
@@ -44,8 +44,11 @@ The codebase is currently structured as follows:
   /tsconfig.json
   vite.config.ts
 
-## /johnsurette.com/src (The Webapp directory. This is where the code for the website lies!)
-  ### /components
+## THE WEBAPP CODE
+
+
+/johnsurette.com/src (The Webapp directory. This is where the code for the website lies!)
+  /components
     /LandingComponents (components for the landing page.)
       AnimatedDotFieldCanvas.tsx
       CenterOrb.tsx
@@ -53,7 +56,7 @@ The codebase is currently structured as follows:
       RadialDotFieldCanvas.tsx
       SectionLayer.tsx
     /NavBar (components for the navbar.)
-  ### /Projects (components for the landing page)
+  /Projects (components for the landing page)
       /textures (textures or assets for the project page)
       Card3D.tsx (3D card model template for the animations in the project page. it has size (dimensions), colour, texture, order, and more.)
       IntroDeck.tsx (Intro animation upon loading the page generates a stack (or deck) of Card3D instances. It colours them, and adds textures to them, and gives them an order in the deck)
