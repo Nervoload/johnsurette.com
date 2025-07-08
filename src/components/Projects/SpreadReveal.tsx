@@ -20,7 +20,6 @@ const colorTex = (c: string) =>
 
 const defaultCards = Array.from({ length: 6 }, (_, i) => ({
   front: colorTex(colors[i % colors.length]),
-  front: backPlaceholder,
   back: backPlaceholder,
   elementScale: 1.2 + i * 0.05,
 }));

@@ -66,6 +66,7 @@ const IntroDeck: React.FC<IntroDeckProps> = ({
       const g = groupRefs.current[idx];
       if (!g) return;
 
+      const angle = (idx / cards.length) * Math.PI * 2;
 
       const off = shuffleOffsets[idx];
       const targetIndex = shuffleOrder[idx];
@@ -94,19 +95,19 @@ const IntroDeck: React.FC<IntroDeckProps> = ({
     )}'/></svg>`;
 
   return (
-
-    <IntroShuffle />
-
-    <group ref={deckRef}>
-      {cards.map((idx) => (
-        <group key={idx} ref={(el) => (groupRefs.current[idx] = el!)}>
-          <Card3D
-            frontSrc={colorTex(colors[idx % colors.length])}
-            backSrc={undefined}
-          />
-        </group>
-      ))}
-    </group>
+    <>
+      <IntroShuffle progress={progress} cardCount={cardCount} />
+      <group ref={deckRef}>
+        {cards.map((idx) => (
+          <group key={idx} ref={(el) => (groupRefs.current[idx] = el!)}>
+            <Card3D
+              frontSrc={colorTex(colors[idx % colors.length])}
+              backSrc={undefined}
+            />
+          </group>
+        ))}
+      </group>
+    </>
   );
 };
 
