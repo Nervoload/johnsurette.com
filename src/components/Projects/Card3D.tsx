@@ -28,6 +28,7 @@ export interface Card3DProps {
 }
 
 /* ───────────────────────────── Component */
+
 const Card3D = forwardRef<THREE.Group, Card3DProps>(({ 
   frontSrc,
   backSrc,
@@ -47,7 +48,9 @@ const Card3D = forwardRef<THREE.Group, Card3DProps>(({
   const w = width ?? base * 0.08;      // 25 % of the shorter side
   const h = height ?? w * 1.4;
   const innerRef = useRef<THREE.Group>(null);
+
   useImperativeHandle(ref, () => innerRef.current as THREE.Group | null, []);
+
 
   /* textures (lazy) */
   const [frontMap] = useTexture([frontSrc ?? frontPlaceholder]);
@@ -55,7 +58,9 @@ const Card3D = forwardRef<THREE.Group, Card3DProps>(({
 
   /* animation on every frame (cheap) */
   useFrame(() => {
+    
     const g = innerRef.current;
+
     if (!g) return;
 
     /* flip */
@@ -71,7 +76,9 @@ const Card3D = forwardRef<THREE.Group, Card3DProps>(({
   /* ───────────────────────────── Render */
   return (
     <group
+
       ref={innerRef}
+        
       onClick={onClick}
       {...rest}
     >
