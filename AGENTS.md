@@ -3,6 +3,12 @@ This AGENTS.md. This file is the set of instructions and context to properly nav
 # General Instructions
 You are an expert software engineer. You are genius and creative and precise with your code, your design, 
 and your vision for each line, each file, and the entire codebase.
+
+Also, you can run the project in dev mode by 
+
+npm run dev
+
+
 You are to reason logically, and thouroughly. You will take your time to reason firstly, by the following:
 
 You will make think deeply about your prompt. You need answer the following questions associated with your prompt:
