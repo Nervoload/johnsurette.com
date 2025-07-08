@@ -1,52 +1,53 @@
-
 import React, { useMemo, useRef } from "react";
 import { MotionValue, useTransform } from "framer-motion";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-import Card3D from "./Card3D";
+import IntroDeck from "./IntroDeck";
+import { Card3DProps } from "./Card3D";
 
-interface IntroShuffleProps {
+export interface IntroShuffleProps {
   progress: MotionValue<number>;
-  cardCount?: number;
+  /** Optional custom cards */
+  cards?: Card3DProps[];
 }
 
 /**
- * Basic 3D card shuffle animation. Each card is pulled out of the deck and
- * returned at a different position while the whole deck tilts forward.
- *
- * This component is intentionally simple and keeps the shuffle logic separate
- * from the rest of the intro animations.
+ * Animates the IntroDeck with a shuffle, fan and flip sequence.
  */
 const IntroShuffle: React.FC<IntroShuffleProps> = ({
   progress,
-  cardCount = 6,
+  cards,
 }) => {
-  const cards = useMemo(() => Array.from({ length: cardCount }, (_, i) => i), [
-    cardCount,
-  ]);
-  const groupRefs = useRef<THREE.Group[]>([]);
+
   const deckRef = useRef<THREE.Group>(null);
+  const cardRefs = useRef<THREE.Group[]>([]);
+
+  const cardCount = cards?.length ?? 6;
+  const indices = useMemo(() => Array.from({ length: cardCount }, (_, i) => i), [cardCount]);
 
   const shuffleOffsets = useMemo(
     () =>
-      cards.map(() => ({
+      indices.map(() => ({
         x: (Math.random() - 0.5) * 0.8,
         y: (Math.random() - 0.5) * 0.2,
       })),
-    [cards]
+    [indices]
   );
 
   const shuffleOrder = useMemo(() => {
-    const arr = cards.map((_, i) => i);
+    const arr = indices.map((_, i) => i);
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr;
-  }, [cards]);
+  }, [indices]);
 
-  const rotateProg = useTransform(progress, [0, 1], [0, 1]);
+  const shuffleProg = useTransform(progress, [0, 0.3], [0, 1], { clamp: true });
+  const rotateProg = useTransform(progress, [0.05, 0.35], [0, 1], { clamp: true });
+  const fanProg = useTransform(progress, [0.35, 0.7], [0, 1], { clamp: true });
+  const flipProg = useTransform(progress, [0.7, 1], [0, 1], { clamp: true });
 
   const deckSpacing = 0.03;
 
@@ -54,44 +55,36 @@ const IntroShuffle: React.FC<IntroShuffleProps> = ({
     const dr = deckRef.current;
     if (dr) dr.rotation.x = rotateProg.get() * Math.PI * 0.5;
 
-    const t = progress.get();
-    const step = 1 / cards.length;
+    const step = 1 / cardCount;
+    const tShuffle = shuffleProg.get();
+    const tFan = fanProg.get();
+    const tFlip = flipProg.get();
 
-    cards.forEach((idx) => {
-      const g = groupRefs.current[idx];
+    indices.forEach((idx) => {
+      const g = cardRefs.current[idx];
       if (!g) return;
 
+      const angle = (idx / cardCount) * Math.PI * 2;
       const off = shuffleOffsets[idx];
       const targetIndex = shuffleOrder[idx];
 
-      const local = THREE.MathUtils.clamp((t - step * idx) / step, 0, 1);
-      const out = Math.sin(local * Math.PI);
+      const localS = THREE.MathUtils.clamp((tShuffle - step * idx) / step, 0, 1);
+      const out = Math.sin(localS * Math.PI);
       const baseZ = -idx * deckSpacing;
       const targetZ = -targetIndex * deckSpacing;
 
       g.position.x = off.x * out;
       g.position.y = off.y * out;
-      g.position.z = THREE.MathUtils.lerp(baseZ, targetZ, local) + out * 0.05;
+      g.position.z = THREE.MathUtils.lerp(baseZ, targetZ, localS) + out * 0.05;
+      g.rotation.z = angle * tFan;
+      g.rotation.y = tFlip * Math.PI;
+
+      const scaleFactor = 1 + (1.15 - 1) * tFan;
+      g.scale.setScalar(scaleFactor);
     });
   });
 
-  /* simple colour variety for front textures */
-  const colors = ["red", "blue", "green", "yellow", "purple", "pink"];
-  const colorTex = (c: string) =>
-    `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'><rect width='1' height='1' fill='${encodeURIComponent(
-      c
-    )}'/></svg>`;
-
-  return (
-    <group ref={deckRef}>
-      {cards.map((idx) => (
-        <group key={idx} ref={(el) => (groupRefs.current[idx] = el!)}>
-          <Card3D frontSrc={colorTex(colors[idx % colors.length])} />
-        </group>
-      ))}
-    </group>
-
-  );
+  return <IntroDeck cards={cards} deckRef={deckRef} cardRefs={cardRefs} spacing={0.03} />;
 };
 
 export default IntroShuffle;
