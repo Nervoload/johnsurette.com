@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef } from "react";
 import { MotionValue, motionValue } from "framer-motion";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
