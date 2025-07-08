@@ -1,5 +1,5 @@
 // src/components/Projects/ProjectStoryboard.tsx
-import React, { Suspense, useEffect } from "react";
+import React, { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 import { AdaptiveDpr, PerspectiveCamera, Environment } from "@react-three/drei";
@@ -12,8 +12,7 @@ import ProjectCardInfo from "./ProjectCardInfo";
 
 interface ProjectStoryboardProps {
   scrollContainer: React.RefObject<HTMLElement>;
-  sectionBreaks?: [number, number, number, number];
-  autoScrollDelay?: number;
+  sections: React.RefObject<HTMLElement>[];
 }
 
 const slice = (mv: MotionValue<number>, range: [number, number]) =>
@@ -21,44 +20,33 @@ const slice = (mv: MotionValue<number>, range: [number, number]) =>
 
 const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   scrollContainer,
-  sectionBreaks = [0.3, 0.6, 0.85, 1.0],
-  autoScrollDelay = 500,
+  sections,
 }) => {
-  // Listen to the wrapper’s actual scroll
-  const { scrollYProgress } = useScroll({
+  const { scrollYProgress: s0 } = useScroll({
     container: scrollContainer,
+    target: sections[0],
+    offset: ["start end", "end start"],
+    layoutEffect: false,
+  });
+  const { scrollYProgress: s1 } = useScroll({
+    container: scrollContainer,
+    target: sections[1],
+    offset: ["start end", "end start"],
+    layoutEffect: false,
+  });
+  const { scrollYProgress: s2 } = useScroll({
+    container: scrollContainer,
+    target: sections[2],
+    offset: ["start end", "end start"],
+    layoutEffect: false,
+  });
+  const { scrollYProgress: s3 } = useScroll({
+    container: scrollContainer,
+    target: sections[3],
+    offset: ["start end", "end start"],
     layoutEffect: false,
   });
 
-  // Break the scroll into four scene progresses
-  const s0 = slice(scrollYProgress, [0, sectionBreaks[0]]);
-  const s1 = slice(scrollYProgress, [sectionBreaks[0], sectionBreaks[1]]);
-  const s2 = slice(scrollYProgress, [sectionBreaks[1], sectionBreaks[2]]);
-  const s3 = slice(scrollYProgress, [sectionBreaks[2], sectionBreaks[3]]);
-
-  // Optional intro auto-scroll
-  useEffect(() => {
-    const el = scrollContainer.current;
-    if (!el) return;
-    const total = el.scrollHeight - el.clientHeight;
-    if (total < 1) return;
-
-    const start = el.scrollTop;
-    const goal = total * sectionBreaks[0];
-    const dur = 2000;
-    const ease = (t: number) =>
-      t < 0.5 ? 4 * t ** 3 : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    const t0 = performance.now();
-
-    const step = (now: number) => {
-      const u = Math.min((now - t0) / dur, 1);
-      el.scrollTop = start + (goal - start) * ease(u);
-      if (u < 1) requestAnimationFrame(step);
-    };
-
-    const id = window.setTimeout(() => requestAnimationFrame(step), autoScrollDelay);
-    return () => window.clearTimeout(id);
-  }, [scrollContainer, sectionBreaks, autoScrollDelay]);
 
   return (
     <>
