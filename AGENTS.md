@@ -30,7 +30,8 @@ at engineering magnificent software systems.
 
 The codebase is currently structured as follows:
 
-/johnsurette.com: (most of these files are just import files and libraries, except AGENTS.md, and /src which are particularly important to you.)
+/johnsurette.com (most of these files are just import files and libraries, except AGENTS.md, and /src which are particularly important to you.)
+
   /dist
   /node_modules
   /src
@@ -56,6 +57,8 @@ The codebase is currently structured as follows:
       RadialDotFieldCanvas.tsx
       SectionLayer.tsx
     /NavBar (components for the navbar.)
+
+    
   /Projects (components for the landing page)
       /textures (textures or assets for the project page)
       Card3D.tsx (3D card model template for the animations in the project page. it has size (dimensions), colour, texture, order, and more.)
@@ -65,6 +68,8 @@ The codebase is currently structured as follows:
       ProjectDeck.tsx (The stack of ProjectCardInfo cards, in order. It animates the cards and flips them on a scrollprogression variable in ProjectStoryBoard.)
       ProjectStoryboard.tsx (The central file that combines all of the animation components into order, which are progressed through an interactive scroll logic that can run foward and backward through the animations. it has props that can be editted in ProjectsPage.tsx.)
       SpreadReveal.tsx (Animates the introdeck, which spreads the cards like you would if you showed your hand in poker; it spreads the cards in an arc!)
+
+      
     /Transitions (components for page transitions)
       /TransitionWipe.tsx (The 
     Footer.tsx (the interactive footer!)
