@@ -1,6 +1,5 @@
 import React, { useMemo, useRef } from "react";
-import { motion, MotionValue, useTransform } from "framer-motion";
-import { Html } from "@react-three/drei";
+import { MotionValue, useTransform } from "framer-motion";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import Card3D from "./Card3D";
@@ -9,14 +8,12 @@ import IntroShuffle from "./IntroShuffle";
 interface IntroDeckProps {
   progress: MotionValue<number>;
   cardCount?: number;
-  shuffleCount?: number;
   radius?: number;
 }
 
 const IntroDeck: React.FC<IntroDeckProps> = ({
   progress,
   cardCount = 6,
-  shuffleCount = 3,
   radius,
 }) => {
   const { viewport } = useThree();
@@ -25,7 +22,6 @@ const IntroDeck: React.FC<IntroDeckProps> = ({
   const rotateProg = useTransform(progress, [0.05, 0.35], [0, 1], { clamp: true });
   const fanProg = useTransform(progress, [0.35, 0.7], [0, 1], { clamp: true });
   const flipProg = useTransform(progress, [0.7, 1], [0, 1], { clamp: true });
-  const overlayOpacity = useTransform(progress, [0, 0.3], [1, 0], { clamp: true });
 
   const cards = useMemo(() => Array.from({ length: cardCount }, (_, i) => i), [cardCount]);
   const groupRefs = useRef<THREE.Group[]>([]);
