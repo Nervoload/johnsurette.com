@@ -1,5 +1,5 @@
 import React, { useMemo, useRef } from "react";
-import { MotionValue, useTransform } from "framer-motion";
+import { MotionValue, useTransform, motionValue } from "framer-motion";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
@@ -22,9 +22,14 @@ const IntroShuffle: React.FC<IntroShuffleProps> = ({
 
   const deckRef = useRef<THREE.Group>(null);
   const cardRefs = useRef<THREE.Group[]>([]);
+  const flipVals = useRef<MotionValue<number>[]>([]);
 
   const cardCount = cards?.length ?? 6;
   const indices = useMemo(() => Array.from({ length: cardCount }, (_, i) => i), [cardCount]);
+
+  if (flipVals.current.length !== cardCount) {
+    flipVals.current = indices.map(() => motionValue(0));
+  }
 
   const shuffleOffsets = useMemo(
     () =>
@@ -77,14 +82,23 @@ const IntroShuffle: React.FC<IntroShuffleProps> = ({
       g.position.y = off.y * out;
       g.position.z = THREE.MathUtils.lerp(baseZ, targetZ, localS) + out * 0.05;
       g.rotation.z = angle * tFan;
-      g.rotation.y = tFlip * Math.PI;
+      g.rotation.y = 0;
+      flipVals.current[idx].set(tFlip);
 
       const scaleFactor = 1 + (1.15 - 1) * tFan;
       g.scale.setScalar(scaleFactor);
     });
   });
 
-  return <IntroDeck cards={cards} deckRef={deckRef} cardRefs={cardRefs} spacing={0.03} />;
+  return (
+    <IntroDeck
+      cards={cards}
+      deckRef={deckRef}
+      cardRefs={cardRefs}
+      spacing={0.03}
+      flipVals={flipVals.current}
+    />
+  );
 };
 
 export default IntroShuffle;
