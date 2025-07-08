@@ -1,6 +1,7 @@
 import React from "react";
 import * as THREE from "three";
 import Card3D, { Card3DProps } from "./Card3D";
+import { MotionValue } from "framer-motion";
 
 export interface IntroDeckProps {
   /** List of card props defining the deck order */
@@ -9,6 +10,8 @@ export interface IntroDeckProps {
   deckRef?: React.Ref<THREE.Group>;
   /** Refs for each card wrapper for animation */
   cardRefs?: React.MutableRefObject<THREE.Group[]>;
+  /** Flip values per card */
+  flipVals?: MotionValue<number>[];
   /** Z-spacing between stacked cards */
   spacing?: number;
 }
@@ -27,6 +30,7 @@ const IntroDeck: React.FC<IntroDeckProps> = ({
   cards = defaultCards,
   deckRef,
   cardRefs,
+  flipVals,
   spacing = 0.03,
 }) => {
   if (cardRefs && cardRefs.current.length !== cards.length) {
@@ -41,7 +45,7 @@ const IntroDeck: React.FC<IntroDeckProps> = ({
           ref={cardRefs ? (el) => (cardRefs.current[i] = el!) : undefined}
           position={[0, 0, -i * spacing]}
         >
-          <Card3D {...card} />
+          <Card3D {...card} flip={flipVals ? flipVals[i] : undefined} />
         </group>
       ))}
     </group>
