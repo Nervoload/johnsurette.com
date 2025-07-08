@@ -28,7 +28,9 @@ export interface Card3DProps {
 }
 
 /* ───────────────────────────── Component */
-const Card3D = forwardRef<THREE.Group, Card3DProps>(({
+
+const Card3D = forwardRef<THREE.Group, Card3DProps>(({ 
+
   frontSrc,
   backSrc,
   width,
@@ -46,8 +48,10 @@ const Card3D = forwardRef<THREE.Group, Card3DProps>(({
   const base = Math.min(viewport.width, viewport.height);      // scene units
   const w = width ?? base * 0.08;      // 25 % of the shorter side
   const h = height ?? w * 1.4;
+
   const innerRef = useRef<THREE.Group>(null!);
   useImperativeHandle(ref, () => innerRef.current, []);
+
 
   /* textures (lazy) */
   const [frontMap] = useTexture([frontSrc ?? frontPlaceholder]);
@@ -55,6 +59,7 @@ const Card3D = forwardRef<THREE.Group, Card3DProps>(({
 
   /* animation on every frame (cheap) */
   useFrame(() => {
+
     const g = innerRef.current;
     if (!g) return;
 
@@ -71,7 +76,9 @@ const Card3D = forwardRef<THREE.Group, Card3DProps>(({
   /* ───────────────────────────── Render */
   return (
     <group
+
       ref={innerRef}
+
       onClick={onClick}
       {...rest}
     >
@@ -95,6 +102,8 @@ const Card3D = forwardRef<THREE.Group, Card3DProps>(({
     </group>
   );
 });
+
+Card3D.displayName = "Card3D";
 
 Card3D.displayName = "Card3D";
 
