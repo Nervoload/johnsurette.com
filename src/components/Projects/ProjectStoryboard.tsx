@@ -8,7 +8,6 @@ import IntroDeck from "./IntroDeck";
 import SpreadReveal from "./SpreadReveal";
 import ProjectDeck from "./ProjectDeck";
 import ProjectCardInfo from "./ProjectCardInfo";
-import IntroShuffle from "./IntroShuffle";
 
 interface ProjectStoryboardProps {
   scrollContainer: React.RefObject<HTMLElement>;
@@ -82,7 +81,6 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
         <ProjectCardInfo progress={s3} />
       </group>
     </Canvas>
-    <IntroShuffle progress={s0} />
     </>
   );
 };
