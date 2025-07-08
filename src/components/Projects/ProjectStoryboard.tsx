@@ -1,5 +1,7 @@
+
 import React from "react";
 import StoryboardSection from "./StoryboardSection";
+
 import IntroShuffle from "./IntroShuffle";
 import SpreadReveal from "./SpreadReveal";
 import ProjectDeck from "./ProjectDeck";
@@ -7,9 +9,10 @@ import ProjectCardInfo from "./ProjectCardInfo";
 
 interface ProjectStoryboardProps {
   scrollContainer: React.RefObject<HTMLElement>;
-}
+
 
 const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({ scrollContainer }) => {
+
   return (
     <>
       <StoryboardSection container={scrollContainer}>
