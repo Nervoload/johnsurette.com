@@ -1,5 +1,5 @@
 // src/components/Projects/Card3D.tsx
-import React, { useRef, forwardRef } from "react";
+import React, { useRef, forwardRef, useImperativeHandle } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import { MotionValue } from "framer-motion";
@@ -28,7 +28,8 @@ export interface Card3DProps {
 }
 
 /* ───────────────────────────── Component */
-const Card3D = forwardRef<THREE.Group, Card3DProps>(({
+
+const Card3D = forwardRef<THREE.Group, Card3DProps>(({ 
   frontSrc,
   backSrc,
   width,
@@ -48,13 +49,18 @@ const Card3D = forwardRef<THREE.Group, Card3DProps>(({
   const h = height ?? w * 1.4;
   const innerRef = useRef<THREE.Group>(null);
 
+  useImperativeHandle(ref, () => innerRef.current as THREE.Group | null, []);
+
+
   /* textures (lazy) */
   const [frontMap] = useTexture([frontSrc ?? frontPlaceholder]);
   const [backMap]  = useTexture([backSrc  ?? backPlaceholder]);
 
   /* animation on every frame (cheap) */
   useFrame(() => {
-    const g = (ref as React.MutableRefObject<THREE.Group | null>)?.current ?? innerRef.current;
+    
+    const g = innerRef.current;
+
     if (!g) return;
 
     /* flip */
@@ -70,11 +76,9 @@ const Card3D = forwardRef<THREE.Group, Card3DProps>(({
   /* ───────────────────────────── Render */
   return (
     <group
-      ref={(node) => {
-        innerRef.current = node;
-        if (typeof ref === "function") ref(node);
-        else if (ref) (ref as React.MutableRefObject<THREE.Group | null>).current = node;
-      }}
+
+      ref={innerRef}
+        
       onClick={onClick}
       {...rest}
     >
