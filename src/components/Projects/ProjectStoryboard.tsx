@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { RefObject } from "react";
 import StoryboardSection from "./StoryboardSection";
 
 import IntroShuffle from "./IntroShuffle";
@@ -7,28 +6,37 @@ import SpreadReveal from "./SpreadReveal";
 import ProjectDeck from "./ProjectDeck";
 import ProjectCardInfo from "./ProjectCardInfo";
 
-interface ProjectStoryboardProps {
-  scrollContainer: React.RefObject<HTMLElement>;
+/* ──────────────────────────────────────────────────────────────
+   Props
+   ────────────────────────────────────────────────────────────── */
+export interface ProjectStoryboardProps {
+  /** The scrollable element that <StoryboardSection> will observe */
+  scrollContainer: RefObject<HTMLElement>;
+}
 
+/* ──────────────────────────────────────────────────────────────
+   Component
+   ────────────────────────────────────────────────────────────── */
+const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
+  scrollContainer,
+}) => (
+  <>
+    <StoryboardSection container={scrollContainer}>
+      {(p) => <IntroShuffle progress={p} />}
+    </StoryboardSection>
 
-const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({ scrollContainer }) => {
+    <StoryboardSection container={scrollContainer}>
+      {(p) => <SpreadReveal progress={p} />}
+    </StoryboardSection>
 
-  return (
-    <>
-      <StoryboardSection container={scrollContainer}>
-        {(p) => <IntroShuffle progress={p} />}
-      </StoryboardSection>
-      <StoryboardSection container={scrollContainer}>
-        {(p) => <SpreadReveal progress={p} />}
-      </StoryboardSection>
-      <StoryboardSection container={scrollContainer}>
-        {(p) => <ProjectDeck progress={p} />}
-      </StoryboardSection>
-      <StoryboardSection container={scrollContainer}>
-        {(p) => <ProjectCardInfo progress={p} />}
-      </StoryboardSection>
-    </>
-  );
-};
+    <StoryboardSection container={scrollContainer}>
+      {(p) => <ProjectDeck progress={p} />}
+    </StoryboardSection>
+
+    <StoryboardSection container={scrollContainer}>
+      {(p) => <ProjectCardInfo progress={p} />}
+    </StoryboardSection>
+  </>
+);
 
 export default ProjectStoryboard;
