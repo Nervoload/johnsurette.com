@@ -4,7 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { AdaptiveDpr, PerspectiveCamera, Environment } from "@react-three/drei";
 import { useScroll, useTransform, MotionValue } from "framer-motion";
 
-import IntroDeck from "./IntroDeck";
+import IntroShuffle from "./IntroShuffle";
 import SpreadReveal from "./SpreadReveal";
 import ProjectDeck from "./ProjectDeck";
 import ProjectCardInfo from "./ProjectCardInfo";
@@ -75,7 +75,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
 
       {/* No manual Y-offset; group is centered at [0,0,0] */}
       <group scale={1.4}>
-        <IntroDeck progress={s0} cardCount={6} />
+        <IntroShuffle progress={s0} />
         <SpreadReveal progress={s1} cards={undefined} />
         <ProjectDeck progress={s2} />
         <ProjectCardInfo progress={s3} />

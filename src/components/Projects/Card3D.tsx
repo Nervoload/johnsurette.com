@@ -1,5 +1,5 @@
 // src/components/Projects/Card3D.tsx
-import React, { useRef } from "react";
+import React, { useRef, forwardRef, useImperativeHandle } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import { MotionValue } from "framer-motion";
@@ -16,6 +16,7 @@ export interface Card3DProps {
   width?:    number;          // world units (optional override)
   height?:   number;          // world units (optional override)
   thickness?: number;
+  borderColor?: string;       // rim colour
   /** 0 → 1 motion value; rotation Y = π * value */
   flip?: MotionValue<number>;
   /** 0 → 1 motion value; 1 = normal scale, >1 = pop-out */
@@ -27,24 +28,26 @@ export interface Card3DProps {
 }
 
 /* ───────────────────────────── Component */
-const Card3D: React.FC<Card3DProps> = ({
+const Card3D = forwardRef<THREE.Group, Card3DProps>(({ 
   frontSrc,
   backSrc,
   width,
   height,
   thickness = 0.02,
+  borderColor = "#e0e0e0",
   flip,
   pop,
   popScale = 1.15,
   onClick,
   ...rest
-}) => {
+}, ref) => {
   /* responsive default size based on viewport */
   const { viewport } = useThree();
   const base = Math.min(viewport.width, viewport.height);      // scene units
   const w = width ?? base * 0.08;      // 25 % of the shorter side
   const h = height ?? w * 1.4;
-  const group = useRef<THREE.Group>(null);
+  const innerRef = useRef<THREE.Group>(null);
+  useImperativeHandle(ref, () => innerRef.current as THREE.Group | null, []);
 
   /* textures (lazy) */
   const [frontMap] = useTexture([frontSrc ?? frontPlaceholder]);
@@ -52,7 +55,7 @@ const Card3D: React.FC<Card3DProps> = ({
 
   /* animation on every frame (cheap) */
   useFrame(() => {
-    const g = group.current;
+    const g = innerRef.current;
     if (!g) return;
 
     /* flip */
@@ -67,11 +70,15 @@ const Card3D: React.FC<Card3DProps> = ({
 
   /* ───────────────────────────── Render */
   return (
-    <group ref={group} onClick={onClick} {...rest}>
+    <group
+      ref={innerRef}
+      onClick={onClick}
+      {...rest}
+    >
       {/* subtle bevel: thin box for the rim */}
       <mesh>
         <boxGeometry args={[w, h, thickness]} />
-        <meshStandardMaterial color="#e0e0e0" metalness={0.25} roughness={0.8} />
+        <meshStandardMaterial color={borderColor} metalness={0.25} roughness={0.8} />
       </mesh>
 
       {/* front plane */}
@@ -88,5 +95,7 @@ const Card3D: React.FC<Card3DProps> = ({
     </group>
   );
 };
+
+Card3D.displayName = "Card3D";
 
 export default Card3D;
