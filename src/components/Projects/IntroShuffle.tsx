@@ -82,8 +82,9 @@ const IntroShuffle: React.FC<IntroShuffleProps> = ({
       g.position.y = off.y * out;
       g.position.z = THREE.MathUtils.lerp(baseZ, targetZ, localS) + out * 0.05;
       g.rotation.z = angle * tFan;
-      g.rotation.y = 0;
+
       flipVals.current[idx].set(tFlip);
+      g.rotation.y = tFlip * Math.PI * 2;
 
       const scaleFactor = 1 + (1.15 - 1) * tFan;
       g.scale.setScalar(scaleFactor);

@@ -1,6 +1,7 @@
 // src/components/Projects/ProjectStoryboard.tsx
 import React, { Suspense, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
+import * as THREE from "three";
 import { AdaptiveDpr, PerspectiveCamera, Environment } from "@react-three/drei";
 import { useScroll, useTransform, MotionValue } from "framer-motion";
 
@@ -26,6 +27,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   // Listen to the wrapper’s actual scroll
   const { scrollYProgress } = useScroll({
     container: scrollContainer,
+    layoutEffect: false,
   });
 
   // Break the scroll into four scene progresses
@@ -60,7 +62,15 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
 
   return (
     <>
-    <Canvas className="fixed inset-0 z-10 pointer-events-none" shadows>
+    <Canvas
+      className="fixed inset-0 z-10 pointer-events-none"
+      shadows
+      gl={{ preserveDrawingBuffer: false }}
+      onCreated={({ gl }) => {
+        gl.colorSpace = THREE.SRGBColorSpace;
+        THREE.ColorManagement.enabled = true;
+      }}
+    >
       {/* Full-viewport Canvas */}
       <AdaptiveDpr pixelated />
       <PerspectiveCamera makeDefault position={[0, 0, 6]} fov={45} />
