@@ -26,8 +26,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
 }) => {
   // Listen to the wrapper’s actual scroll
   const { scrollYProgress } = useScroll({
-    target: scrollContainer,
-    offset: ["start start", "end end"],
+    container: scrollContainer,
   });
 
   // Break the scroll into four scene progresses
