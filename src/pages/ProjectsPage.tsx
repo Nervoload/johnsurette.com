@@ -5,21 +5,19 @@ import Footer from "../components/Footer";
 
 const ProjectsPage: React.FC = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const sec0 = useRef<HTMLElement>(null);
-  const sec1 = useRef<HTMLElement>(null);
-  const sec2 = useRef<HTMLElement>(null);
-  const sec3 = useRef<HTMLElement>(null);
 
   return (
-    <div
-      ref={scrollRef}
-      className="relative w-screen min-h-screen bg-white overflow-y-auto overflow-x-hidden"
-    >
-
-      <ProjectStoryboard scrollContainer={scrollRef} />
+    <>
+      <div
+        ref={scrollRef}
+        className="relative w-screen overflow-y-auto overflow-x-hidden bg-white"
+        style={{ height: "400vh" }}
+      >
+        <ProjectStoryboard scrollContainer={scrollRef} />
+      </div>
 
       <Footer />
-    </div>
+    </>
   );
 };
 
