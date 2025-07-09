@@ -13,7 +13,7 @@ const ProjectsPage: React.FC = () => {
   return (
     <div
       ref={scrollRef}
-      className="relative w-screen h-screen bg-white overflow-y-auto overflow-x-hidden"
+      className="relative w-screen min-h-screen bg-white overflow-y-auto overflow-x-hidden"
     >
 
       <ProjectStoryboard scrollContainer={scrollRef} />
