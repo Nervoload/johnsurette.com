@@ -7,6 +7,8 @@ import SpreadReveal from "./SpreadReveal";
 import ProjectDeck from "./ProjectDeck";
 import ProjectCardInfo from "./ProjectCardInfo";
 
+export const sceneCount = 4;
+
 /* ──────────────────────────────────────────────────────────────
    Props
    ────────────────────────────────────────────────────────────── */
@@ -29,11 +31,10 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({ scrollContainer }
   const { scrollYProgress } = useScroll({ container: scrollContainer, layoutEffect: false });
 
   // Break global progress into equal segments for each scene
-  const s0 = slice(scrollYProgress, 0.0, 0.25);
-  const s1 = slice(scrollYProgress, 0.25, 0.5);
-  const s2 = slice(scrollYProgress, 0.5, 0.75);
-  const s3 = slice(scrollYProgress, 0.75, 1.0);
-  const segments = [s0, s1, s2, s3];
+  const segments = Array.from({ length: sceneCount }, (_, i) =>
+    slice(scrollYProgress, i / sceneCount, (i + 1) / sceneCount)
+  );
+  const [s0, s1, s2, s3] = segments;
 
   // Optionally prevent scrolling into the next segment until the current one completes
   useMotionValueEvent(scrollYProgress, "change", (v) => {
@@ -41,8 +42,8 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({ scrollContainer }
     if (!el) return;
     const total = el.scrollHeight - el.clientHeight;
     for (let i = 0; i < segments.length; i++) {
-      const start = i * 0.25;
-      const end = (i + 1) * 0.25;
+      const start = i / sceneCount;
+      const end = (i + 1) / sceneCount;
       const local = segments[i].get();
       if (v > end && local < 1) {
         el.scrollTop = end * total;
