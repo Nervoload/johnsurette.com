@@ -1,15 +1,17 @@
 import React, { useMemo, useRef } from "react";
-import { MotionValue, useTransform, motionValue } from "framer-motion";
+import { MotionValue, useTransform } from "framer-motion";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 
-import IntroDeck from "./IntroDeck";
 import { Card3DProps } from "./Card3D";
 
 export interface IntroShuffleProps {
   progress: MotionValue<number>;
   /** Optional custom cards */
   cards?: Card3DProps[];
+  deckRef: React.RefObject<THREE.Group>;
+  cardRefs: React.MutableRefObject<THREE.Group[]>;
+  flipVals: MotionValue<number>[];
 }
 
 /**
@@ -18,18 +20,12 @@ export interface IntroShuffleProps {
 const IntroShuffle: React.FC<IntroShuffleProps> = ({
   progress,
   cards,
+  deckRef,
+  cardRefs,
+  flipVals,
 }) => {
-
-  const deckRef = useRef<THREE.Group>(null);
-  const cardRefs = useRef<THREE.Group[]>([]);
-  const flipVals = useRef<MotionValue<number>[]>([]);
-
-  const cardCount = cards?.length ?? 6;
+  const cardCount = cards?.length ?? (cardRefs.current.length || 6);
   const indices = useMemo(() => Array.from({ length: cardCount }, (_, i) => i), [cardCount]);
-
-  if (flipVals.current.length !== cardCount) {
-    flipVals.current = indices.map(() => motionValue(0));
-  }
 
   const shuffleOffsets = useMemo(
     () =>
@@ -83,7 +79,7 @@ const IntroShuffle: React.FC<IntroShuffleProps> = ({
       g.position.z = THREE.MathUtils.lerp(baseZ, targetZ, localS) + out * 0.05;
       g.rotation.z = angle * tFan;
 
-      flipVals.current[idx].set(tFlip);
+      flipVals[idx]?.set(tFlip);
       g.rotation.y = tFlip * Math.PI * 2;
 
       const scaleFactor = 1 + (1.15 - 1) * tFan;
@@ -91,15 +87,7 @@ const IntroShuffle: React.FC<IntroShuffleProps> = ({
     });
   });
 
-  return (
-    <IntroDeck
-      cards={cards}
-      deckRef={deckRef}
-      cardRefs={cardRefs}
-      spacing={0.03}
-      flipVals={flipVals.current}
-    />
-  );
+  return null;
 };
 
 export default IntroShuffle;

@@ -7,15 +7,18 @@ import * as THREE from "three";
 interface StoryboardSectionProps {
   /** Scene progress provided by ProjectStoryboard */
   progress: MotionValue<number>;
+  /** Height in viewport units (default 200) */
+  height?: number;
   children: (progress: MotionValue<number>) => React.ReactNode;
 }
 
 const StoryboardSection: React.FC<StoryboardSectionProps> = ({
   progress,
+  height = 200,
   children,
 }) => {
   return (
-    <section className="h-[200vh]">
+    <section style={{ height: `${height}vh` }}>
       {/*
         Sticky wrapper stays fixed while this section's scroll progress
         is between 0 and 1. Once scrollYProgress reaches 1, the wrapper
