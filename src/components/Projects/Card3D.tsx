@@ -105,6 +105,4 @@ const Card3D = forwardRef<THREE.Group, Card3DProps>(({
 
 Card3D.displayName = "Card3D";
 
-Card3D.displayName = "Card3D";
-
 export default Card3D;
