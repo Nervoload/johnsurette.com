@@ -1,5 +1,5 @@
 import React, { RefObject, useRef } from "react";
-import { MotionValue, useScroll, useTransform, useMotionValueEvent, motionValue } from "framer-motion";
+import { MotionValue, useTransform, motionValue } from "framer-motion";
 import StoryboardSection from "./StoryboardSection";
 
 import IntroDeck from "./IntroDeck";
@@ -58,55 +58,26 @@ export interface ProjectStoryboardProps {
 /* ──────────────────────────────────────────────────────────────
    Component
    ────────────────────────────────────────────────────────────── */
-const slice = (
-  mv: MotionValue<number>,
-  start: number,
-  end: number
-) => useTransform(mv, [start, end], [0, 1]);
-
-const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({ scrollContainer }) => {
-  // Track the scroll progress of the entire storyboard container
-  const { scrollYProgress } = useScroll({ container: scrollContainer, layoutEffect: false });
-
-  // Break global progress into equal segments for each scene
-  const segments = Array.from({ length: sceneCount }, (_, i) =>
-    slice(scrollYProgress, i / sceneCount, (i + 1) / sceneCount)
-  );
-  const [s0, s1, s2, s3] = segments;
-  const introSection = slice(scrollYProgress, 0, 0.5);
-
-  // Optionally prevent scrolling into the next segment until the current one completes
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
-    const el = scrollContainer.current;
-    if (!el) return;
-    const total = el.scrollHeight - el.clientHeight;
-    for (let i = 0; i < segments.length; i++) {
-      const start = i / sceneCount;
-      const end = (i + 1) / sceneCount;
-      const local = segments[i].get();
-      if (v > end && local < 1) {
-        el.scrollTop = end * total;
-        return;
-      } else if (v < start && local > 0) {
-        el.scrollTop = start * total;
-        return;
-      }
-    }
-  });
-
-  return (
-    <>
-      <StoryboardSection progress={introSection} height={400}>
-        {() => (
-          <IntroSequence shuffleProgress={s0} revealProgress={s1} />
-        )}
-      </StoryboardSection>
-
-      <StoryboardSection progress={s2}>{(p) => <ProjectDeck progress={p} />}</StoryboardSection>
-
-      <StoryboardSection progress={s3}>{(p) => <ProjectCardInfo progress={p} />}</StoryboardSection>
-    </>
-  );
+const IntroWrapper: React.FC<{ progress: MotionValue<number> }> = ({ progress }) => {
+  const shuffleProgress = useTransform(progress, [0, 0.5], [0, 1], { clamp: true });
+  const revealProgress = useTransform(progress, [0.5, 1], [0, 1], { clamp: true });
+  return <IntroSequence shuffleProgress={shuffleProgress} revealProgress={revealProgress} />;
 };
+
+const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({ scrollContainer }) => (
+  <>
+    <StoryboardSection container={scrollContainer}>
+      {(p) => <IntroWrapper progress={p} />}
+    </StoryboardSection>
+
+    <StoryboardSection container={scrollContainer}>
+      {(p) => <ProjectDeck progress={p} />}
+    </StoryboardSection>
+
+    <StoryboardSection container={scrollContainer}>
+      {(p) => <ProjectCardInfo progress={p} />}
+    </StoryboardSection>
+  </>
+);
 
 export default ProjectStoryboard;
