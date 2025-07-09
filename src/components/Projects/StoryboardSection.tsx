@@ -1,7 +1,7 @@
 import React, { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { AdaptiveDpr, PerspectiveCamera, Environment } from "@react-three/drei";
-import { MotionValue } from "framer-motion";
+import { MotionValue, useTransform } from "framer-motion";
 import * as THREE from "three";
 
 interface StoryboardSectionProps {
@@ -14,6 +14,7 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
   progress,
   children,
 }) => {
+  const innerProgress = useTransform(progress, [0, 0.5], [0, 1], { clamp: true });
   return (
     <section className="h-[200vh]">
       {/*
@@ -40,7 +41,7 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
           <Suspense fallback={null}>
             <Environment preset="sunset" />
           </Suspense>
-          <group scale={1.4}>{children(progress)}</group>
+          <group scale={1.4}>{children(innerProgress)}</group>
         </Canvas>
       </div>
     </section>
