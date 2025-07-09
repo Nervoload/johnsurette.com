@@ -76,25 +76,25 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({ scrollContainer }
   const introSection = slice(scrollYProgress, 0, 0.5);
 
   // Optionally prevent scrolling into the next segment until the current one completes
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
+  useMotionValueEvent(scrollYProgress, "change", ((v: number, prev: number) => {
     const el = scrollContainer.current;
     if (!el) return;
     const total = el.scrollHeight - el.clientHeight;
-    for (let i = 0; i < segments.length; i++) {
+    for (let i = 0; i < sceneCount; i++) {
       const start = i / sceneCount;
       const end = (i + 1) / sceneCount;
-      let local = (v - start) / (end - start);
-      if (local < 0) local = 0;
-      else if (local > 1) local = 1;
+      const localRaw = (prev - start) / (end - start);
+      const local = Math.min(Math.max(localRaw, 0), 1);
       if (v > end && local < 1) {
         el.scrollTop = end * total;
         return;
-      } else if (v < start && local > 0) {
+      }
+      if (v < start && local > 0) {
         el.scrollTop = start * total;
         return;
       }
     }
-  });
+  }) as any);
 
   return (
     <>
