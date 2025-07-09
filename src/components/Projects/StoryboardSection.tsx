@@ -32,7 +32,8 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
           shadows
           gl={{ preserveDrawingBuffer: false }}
           onCreated={({ gl }) => {
-            (gl as any).colorSpace = THREE.SRGBColorSpace;
+            // Use the outputColorSpace property introduced in three.js r156
+            (gl as any).outputColorSpace = THREE.SRGBColorSpace;
             THREE.ColorManagement.enabled = true;
           }}
         >
