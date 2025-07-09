@@ -23,7 +23,13 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
 
   return (
     <section ref={ref} className="h-[200vh]">
-      <div className="sticky top-0 h-screen">
+      {/*
+        Sticky wrapper stays fixed while this section's scroll progress
+        is between 0 and 1. Once scrollYProgress reaches 1, the wrapper
+        unpins and the next section scrolls in. The z-index ensures the
+        current section overlays previous content while they scroll out.
+      */}
+      <div className="sticky top-0 h-screen z-10">
         <Canvas
           className="w-full h-full pointer-events-none"
           shadows
