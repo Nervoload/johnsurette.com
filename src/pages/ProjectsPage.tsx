@@ -12,7 +12,8 @@ const ProjectsPage: React.FC = () => {
       <div
         ref={scrollRef}
         className="relative w-screen overflow-y-auto overflow-x-hidden bg-white"
-        style={{ height: containerHeight }}
+
+        style={{ height: "800vh" }}
       >
         <ProjectStoryboard scrollContainer={scrollRef} />
       </div>

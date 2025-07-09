@@ -15,7 +15,7 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
   children,
 }) => {
   return (
-    <section className="h-screen">
+    <section className="h-[200vh]">
       {/*
         Sticky wrapper stays fixed while this section's scroll progress
         is between 0 and 1. Once scrollYProgress reaches 1, the wrapper
