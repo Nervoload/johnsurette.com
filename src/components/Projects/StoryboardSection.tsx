@@ -1,27 +1,24 @@
-import React, { Suspense, useRef } from "react";
+import React, { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { AdaptiveDpr, PerspectiveCamera, Environment } from "@react-three/drei";
-import { MotionValue, useScroll } from "framer-motion";
+import { MotionValue } from "framer-motion";
 import * as THREE from "three";
 
 interface StoryboardSectionProps {
-  container: React.RefObject<HTMLElement>;
+  /** Scene progress provided by ProjectStoryboard */
+  progress: MotionValue<number>;
+  /** Height in viewport units (default 200) */
+  height?: number;
   children: (progress: MotionValue<number>) => React.ReactNode;
 }
 
 const StoryboardSection: React.FC<StoryboardSectionProps> = ({
-  container,
+  progress,
+  height = 200,
   children,
 }) => {
-  const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
-    container,
-    target: ref,
-    offset: ["start start", "end start"],
-    layoutEffect: false,
-  });
   return (
-    <section ref={ref} className="h-[200vh]">
+    <section style={{ height: `${height}vh` }}>
       {/*
         Sticky wrapper stays fixed while this section's scroll progress
         is between 0 and 1. Once scrollYProgress reaches 1, the wrapper
@@ -47,7 +44,7 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
           <Suspense fallback={null}>
             <Environment preset="sunset" />
           </Suspense>
-          <group scale={1.4}>{children(scrollYProgress)}</group>
+          <group scale={1.4}>{children(progress)}</group>
         </Canvas>
       </div>
     </section>
