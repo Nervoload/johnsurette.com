@@ -6,7 +6,6 @@ interface ProjectCardStackProps {
   items: ProjectItem[];
   active: boolean;
   scrollContainer: RefObject<HTMLDivElement>;
-  handoffProgress: number;
 }
 
 interface StackCardProps {
@@ -15,175 +14,134 @@ interface StackCardProps {
   onToggle: () => void;
   revealProgress: number;
   index: number;
-  total: number;
-  stackMode: boolean;
-  active: boolean;
 }
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 const easeOut = (value: number) => 1 - Math.pow(1 - value, 3);
 
-const StackCard: React.FC<StackCardProps> = ({ item, isExpanded, onToggle, revealProgress, index, total, stackMode, active }) => {
-  const descend = easeOut(clamp01((revealProgress - index * 0.08) / 0.52));
-  const flip = easeOut(clamp01((revealProgress - 0.08 - index * 0.07) / 0.44));
+const StackCard: React.FC<StackCardProps> = ({ item, isExpanded, onToggle, revealProgress, index }) => {
+  const descend = easeOut(clamp01((revealProgress - index * 0.085) / 0.42));
+  const flip = easeOut(clamp01((revealProgress - 0.14 - index * 0.08) / 0.42));
 
-  const yStart = -190 - index * 28;
+  const yStart = -280 - index * 34;
   const y = yStart * (1 - descend);
-  const tilt = (index % 2 === 0 ? -1 : 1) * (1 - descend) * 3.4;
-  const shellScaleX = 0.84 + flip * 0.16;
-  const shellScaleY = 0.94 + flip * 0.06;
-  const opacity = clamp01(descend * 1.25);
+  const zRotation = (index % 2 === 0 ? -1 : 1) * (1 - descend) * 5.2;
+  const shellScaleX = 0.72 + flip * 0.28;
+  const shellOpacity = clamp01(descend * 1.25);
 
-  const canInteract = flip > 0.92 && revealProgress > 0.72;
-  const overlap = stackMode && index > 0 ? -Math.max(72, 112 - index * 10) : 0;
+  const canInteract = flip > 0.96;
 
   return (
     <motion.article
       className="relative"
       style={{
         y,
-        rotateZ: tilt,
-        opacity,
-        marginTop: overlap,
-        zIndex: isExpanded ? total + 10 : total - index,
+        rotateZ: zRotation,
+        opacity: shellOpacity,
       }}
     >
-      <div className="mx-auto" style={{ perspective: 1800 }}>
+      <div className="mx-auto w-full max-w-[980px]" style={{ perspective: 1700 }}>
         <motion.div
-          initial={false}
-          className={`relative overflow-hidden border border-slate-200/95 shadow-[0_28px_70px_-42px_rgba(15,23,42,0.35)] transition-all duration-300 ${
-            isExpanded
-              ? "h-[560px] w-full max-w-[980px] rounded-[1.9rem] sm:h-[640px]"
-              : "h-[220px] w-full max-w-[700px] rounded-[1.2rem] sm:h-[260px] md:h-[300px]"
-          }`}
+          layout
+          className="relative rounded-[1.9rem] border border-slate-200/95 shadow-[0_28px_70px_-42px_rgba(15,23,42,0.35)]"
           style={{
             transformStyle: "preserve-3d",
             rotateY: 180 * (1 - flip),
             scaleX: shellScaleX,
-            scaleY: shellScaleY,
-            backdropFilter: "blur(10px)",
+            background: "linear-gradient(145deg, rgba(255,255,255,0.88), rgba(248,250,252,0.96))",
+            backdropFilter: "blur(12px)",
           }}
         >
           <div
-            className="absolute inset-0"
+            className="rounded-[1.9rem] p-6 md:p-7"
             style={{
-              transform: "rotateY(0deg)",
               backfaceVisibility: "hidden",
               WebkitBackfaceVisibility: "hidden",
-              backgroundColor: "#ffffff",
             }}
           >
-            <img
-              src={item.cardFrontSrc}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover"
-              draggable={false}
-              loading="eager"
-            />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_18%,rgba(255,255,255,0.52),transparent_54%),linear-gradient(140deg,rgba(255,255,255,0.2),transparent)]" />
-
-            <motion.button
+            <button
               type="button"
               onClick={onToggle}
-              disabled={!canInteract || isExpanded}
-              className="absolute inset-0 w-full text-left disabled:cursor-default"
+              disabled={!canInteract}
+              className="w-full text-left disabled:cursor-default"
               aria-expanded={isExpanded}
               aria-label={`Toggle ${item.title}`}
-              style={{ pointerEvents: isExpanded ? "none" : "auto" }}
-              initial={false}
-              animate={{ opacity: isExpanded ? 0 : 1 }}
-              transition={{ duration: 0.2 }}
             >
-              <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-white/70 bg-white/60 px-4 py-3 backdrop-blur-md md:inset-x-5 md:bottom-5">
-                <p className="text-[10px] uppercase tracking-[0.2em] text-slate-600">{item.subtitle}</p>
-                <h3 className="mt-1 text-[18px] font-medium leading-tight text-slate-900" style={{ color: item.accent }}>
-                  {item.title}
-                </h3>
-                <p className="mt-1 text-[12px] text-slate-700">Click to expand</p>
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{item.subtitle}</p>
+                  <h3 className="mt-2 text-[27px] font-medium leading-tight text-slate-900 md:text-[30px]" style={{ color: item.accent }}>
+                    {item.title}
+                  </h3>
+                </div>
+                <span className="rounded-full border border-slate-300 px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-slate-500">
+                  {isExpanded ? "Open" : "Collapsed"}
+                </span>
               </div>
-            </motion.button>
+
+              <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-slate-600">{item.summary}</p>
+            </button>
 
             <motion.div
               initial={false}
-              animate={{ opacity: isExpanded ? 1 : 0 }}
-              transition={{ duration: 0.22 }}
-              className="absolute inset-0 p-5 md:p-6"
-              style={{ pointerEvents: isExpanded ? "auto" : "none" }}
+              animate={{
+                height: isExpanded ? "auto" : 0,
+                opacity: isExpanded ? 1 : 0,
+                marginTop: isExpanded ? 22 : 0,
+              }}
+              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+              className="overflow-hidden"
             >
-              <div className="h-full overflow-auto rounded-[1.25rem] border border-white/75 bg-white/84 p-5 backdrop-blur-md">
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">{item.subtitle}</p>
-                    <h3 className="mt-2 text-[27px] font-medium leading-tight text-slate-900 md:text-[30px]" style={{ color: item.accent }}>
-                      {item.title}
-                    </h3>
+              <p className="text-[14px] leading-relaxed text-slate-700">{item.details}</p>
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                {item.tags.map((tag) => (
+                  <span key={tag} className="rounded-full bg-slate-100 px-3 py-1 text-[11px] text-slate-600">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {item.media.map((src) => (
+                  <div key={src} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                    <img
+                      src={src}
+                      alt={`${item.title} preview`}
+                      className="h-44 w-full object-cover transition duration-500 hover:scale-[1.02]"
+                      loading="lazy"
+                    />
                   </div>
-                  <button
-                    type="button"
-                    onClick={onToggle}
-                    className="rounded-full border border-slate-300 bg-white/85 px-3 py-1 text-[10px] uppercase tracking-[0.16em] text-slate-500"
+                ))}
+              </div>
+
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                {item.links.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    className="rounded-lg border border-slate-300 px-4 py-2 text-[13px] font-medium text-slate-700 transition hover:bg-slate-100"
                   >
-                    Collapse
-                  </button>
-                </div>
-
-                <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-slate-600">{item.summary}</p>
-                <p className="mt-4 text-[14px] leading-relaxed text-slate-700">{item.details}</p>
-
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {item.tags.map((tag) => (
-                    <span key={tag} className="rounded-full bg-slate-100 px-3 py-1 text-[11px] text-slate-600">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  {item.media.map((src) => (
-                    <div key={src} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
-                      <img
-                        src={src}
-                        alt={`${item.title} preview`}
-                        className="h-44 w-full object-cover transition duration-500 hover:scale-[1.02]"
-                        loading="lazy"
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-5 flex flex-wrap items-center gap-3">
-                  {item.links.map((link) => (
-                    <a
-                      key={link.label}
-                      href={link.href}
-                      className="rounded-lg border border-slate-300 px-4 py-2 text-[13px] font-medium text-slate-700 transition hover:bg-slate-100"
-                    >
-                      {link.label}
-                    </a>
-                  ))}
-                </div>
+                    {link.label}
+                  </a>
+                ))}
               </div>
             </motion.div>
           </div>
 
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 rounded-[1.9rem] border border-slate-200/90"
             style={{
-              transform: "rotateY(180deg)",
               backfaceVisibility: "hidden",
               WebkitBackfaceVisibility: "hidden",
-              backgroundColor: "#1f5fd8",
+              transform: "rotateY(180deg)",
+              background:
+                "linear-gradient(145deg, rgba(194,210,232,0.95), rgba(229,236,247,0.9)), radial-gradient(circle at 32% 30%, rgba(131,168,213,0.35), transparent 58%)",
             }}
           >
-            <img
-              src={item.cardBackSrc}
-              alt=""
-              className="absolute inset-0 h-full w-full object-cover"
-              draggable={false}
-              loading="eager"
-            />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_26%,rgba(255,255,255,0.2),transparent_52%),linear-gradient(120deg,rgba(255,255,255,0.14),transparent)]" />
-            <div className="absolute inset-[10px] rounded-[inherit] border border-white/60" />
+            <div className="absolute inset-0 rounded-[1.9rem] bg-[radial-gradient(circle_at_24%_26%,rgba(255,255,255,0.4),transparent_48%),linear-gradient(120deg,rgba(255,255,255,0.18),transparent)]" />
+            <div className="absolute inset-[12px] rounded-[1.45rem] border border-white/65" />
+            <div className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/70 bg-white/30" />
           </div>
         </motion.div>
       </div>
@@ -191,7 +149,7 @@ const StackCard: React.FC<StackCardProps> = ({ item, isExpanded, onToggle, revea
   );
 };
 
-const ProjectCardStack: React.FC<ProjectCardStackProps> = ({ items, active, scrollContainer, handoffProgress }) => {
+const ProjectCardStack: React.FC<ProjectCardStackProps> = ({ items, active, scrollContainer }) => {
   const [openId, setOpenId] = useState<string | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -199,7 +157,7 @@ const ProjectCardStack: React.FC<ProjectCardStackProps> = ({ items, active, scro
   const { scrollYProgress } = useScroll({
     container: scrollContainer,
     target: sectionRef,
-    offset: ["start 95%", "end 22%"],
+    offset: ["start 90%", "end 15%"],
     layoutEffect: false,
   });
 
@@ -207,27 +165,25 @@ const ProjectCardStack: React.FC<ProjectCardStackProps> = ({ items, active, scro
     setScrollProgress(value);
   });
 
-  const revealProgress = clamp01(scrollProgress * 1.18 + handoffProgress * 0.95);
-  const revealActive = active || handoffProgress > 0.01 || scrollProgress > 0.02;
-  const stackMode = openId === null;
+  const revealProgress = active ? scrollProgress : 0;
 
   return (
-    <section ref={sectionRef} className="relative z-30 mx-auto -mt-[46vh] min-h-[210vh] w-full max-w-6xl px-6 pb-28 pt-2">
+    <section ref={sectionRef} className="mx-auto min-h-[210vh] w-full max-w-6xl px-6 pb-28 pt-12">
       <motion.div
         initial={false}
-        animate={{ opacity: revealActive ? 1 : 0 }}
-        transition={{ duration: 0.2 }}
-        style={{ pointerEvents: revealActive ? "auto" : "none" }}
+        animate={{ opacity: active ? 1 : 0 }}
+        transition={{ duration: 0.22 }}
+        style={{ pointerEvents: active ? "auto" : "none" }}
       >
-        <div className="mb-8 max-w-3xl text-slate-900">
+        <div className="mb-10 max-w-3xl text-slate-900">
           <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Project Stack</p>
-          <h2 className="mt-3 text-[40px] font-medium leading-[1.03] sm:text-[50px]">Cards land, flip, then expand on click</h2>
-          <p className="mt-3 max-w-2xl text-[16px] leading-relaxed text-slate-600">
-            Face-down cards settle into a horizontal v-stack, flip during scroll, and expand into full detail sections on click.
+          <h2 className="mt-3 text-[44px] font-medium leading-[1.03] sm:text-[52px]">Cards fly in, flip, and expand on click</h2>
+          <p className="mt-4 max-w-2xl text-[16px] leading-relaxed text-slate-600">
+            The sequence now continues from the intro flight: cards land into a vertical stack face-down, then flip and widen with scroll progression.
           </p>
         </div>
 
-        <div className={stackMode ? "flex flex-col items-center pb-16" : "grid gap-6"}>
+        <div className="grid gap-4">
           {items.map((item, index) => {
             const isExpanded = openId === item.id;
             return (
@@ -235,9 +191,6 @@ const ProjectCardStack: React.FC<ProjectCardStackProps> = ({ items, active, scro
                 key={item.id}
                 item={item}
                 index={index}
-                total={items.length}
-                active={active}
-                stackMode={stackMode}
                 isExpanded={isExpanded}
                 revealProgress={revealProgress}
                 onToggle={() => {

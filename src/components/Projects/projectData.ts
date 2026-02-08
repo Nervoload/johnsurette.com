@@ -1,5 +1,3 @@
-import { CARD_BACK_TEXTURES, CARD_FRONT_TEXTURES } from "./cardTextures";
-
 export interface ProjectLink {
   label: string;
   href: string;
@@ -13,11 +11,26 @@ export interface ProjectItem {
   details: string;
   tags: string[];
   accent: string;
-  cardFrontSrc: string;
-  cardBackSrc: string;
   media: string[];
   links: ProjectLink[];
 }
+
+const mediaTexture = (a: string, b: string) =>
+  `data:image/svg+xml;utf8,${encodeURIComponent(`
+    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 400'>
+      <defs>
+        <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+          <stop offset='0%' stop-color='${a}'/>
+          <stop offset='100%' stop-color='${b}'/>
+        </linearGradient>
+      </defs>
+      <rect width='720' height='400' fill='url(#g)'/>
+      <g opacity='0.26' stroke='white'>
+        <circle cx='360' cy='200' r='110' fill='none' stroke-width='6'/>
+        <circle cx='360' cy='200' r='70' fill='none' stroke-width='4'/>
+      </g>
+    </svg>
+  `)}`;
 
 export const projectItems: ProjectItem[] = [
   {
@@ -29,9 +42,7 @@ export const projectItems: ProjectItem[] = [
       "Built reusable scene primitives, transition orchestration, and card-based storytelling blocks to keep animation logic composable across pages.",
     tags: ["React", "Framer Motion", "Architecture"],
     accent: "#ffd608",
-    cardFrontSrc: CARD_FRONT_TEXTURES[0],
-    cardBackSrc: CARD_BACK_TEXTURES[0],
-    media: [CARD_FRONT_TEXTURES[0], CARD_BACK_TEXTURES[0]],
+    media: [mediaTexture("#e2e8f0", "#cbd5e1"), mediaTexture("#1f5fd8", "#1947a6")],
     links: [
       { label: "Live Site", href: "#" },
       { label: "Source", href: "#" },
@@ -46,9 +57,7 @@ export const projectItems: ProjectItem[] = [
       "Explored lightweight approaches to visual depth where real-time 3D is used selectively and performance-first fallbacks are available for mobile devices.",
     tags: ["Three.js", "R3F", "Performance"],
     accent: "#08c5ff",
-    cardFrontSrc: CARD_FRONT_TEXTURES[1],
-    cardBackSrc: CARD_BACK_TEXTURES[1],
-    media: [CARD_BACK_TEXTURES[1], CARD_FRONT_TEXTURES[1]],
+    media: [mediaTexture("#1b2a44", "#132339"), mediaTexture("#0ea390", "#0f6f67")],
     links: [
       { label: "Case Study", href: "#" },
       { label: "Prototype", href: "#" },
@@ -63,9 +72,7 @@ export const projectItems: ProjectItem[] = [
       "Designed a card scene graph that can load decade-based snapshots, crossfade layered assets, and support gradual updates without rewriting animation timelines.",
     tags: ["Storytelling", "Timeline", "Design Systems"],
     accent: "#08ff94",
-    cardFrontSrc: CARD_FRONT_TEXTURES[2],
-    cardBackSrc: CARD_BACK_TEXTURES[2],
-    media: [CARD_FRONT_TEXTURES[2], CARD_BACK_TEXTURES[2]],
+    media: [mediaTexture("#b91c1c", "#7f1d1d"), mediaTexture("#4f46e5", "#312e81")],
     links: [
       { label: "Read Notes", href: "#" },
       { label: "Design Doc", href: "#" },

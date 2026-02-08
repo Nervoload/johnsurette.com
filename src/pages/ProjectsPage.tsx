@@ -4,17 +4,17 @@ import ProjectCardStack from "../components/Projects/ProjectCardStack";
 import { projectItems } from "../components/Projects/projectData";
 import PageScaffold from "../components/layout/PageScaffold";
 
-const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
-
 const ProjectsPage: React.FC = () => {
-  const [introProgress, setIntroProgress] = useState(0);
+  const [stackActive, setStackActive] = useState(false);
 
   const handleIntroProgress = useCallback((progress: number) => {
-    setIntroProgress(progress);
+    setStackActive((prev) => {
+      if (prev) {
+        return progress > 0.84;
+      }
+      return progress > 0.92;
+    });
   }, []);
-
-  const stackHandoff = clamp01((introProgress - 0.68) / 0.24);
-  const stackActive = stackHandoff > 0.25;
 
   return (
     <PageScaffold backgroundClassName="bg-slate-50" footerBackgroundColor="#ffffff" footerRunwayVh={120}>
@@ -28,23 +28,11 @@ const ProjectsPage: React.FC = () => {
             </p>
           </header>
 
-          <div
-            className="relative mt-8"
-            style={{
-              opacity: stackActive ? 0 : clamp01((0.98 - introProgress) / 0.22),
-              transition: "opacity 180ms linear",
-              pointerEvents: stackActive || introProgress > 0.94 ? "none" : "auto",
-            }}
-          >
+          <div className="relative mt-8">
             <ProjectStoryboard scrollContainer={scrollRef} onProgressChange={handleIntroProgress} />
           </div>
 
-          <ProjectCardStack
-            items={projectItems}
-            active={stackActive}
-            scrollContainer={scrollRef}
-            handoffProgress={stackHandoff}
-          />
+          <ProjectCardStack items={projectItems} active={stackActive} scrollContainer={scrollRef} />
         </>
       )}
     </PageScaffold>

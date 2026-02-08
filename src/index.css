@@ -104,3 +104,109 @@ body {
   );
   animation: stageRingSpin 34s linear infinite reverse, stageRingPulse 8.2s ease-in-out infinite;
 }
+
+@keyframes storyBlobDrift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(18px, -20px, 0) scale(1.08);
+  }
+}
+
+@keyframes storyBlobDriftReverse {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-18px, 14px, 0) scale(0.95);
+  }
+}
+
+@keyframes storyRotateSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes storyRotateReverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes storyTokenOrbit {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translate3d(0, -16px, 0) scale(1.08);
+    opacity: 0.9;
+  }
+}
+
+.story-blob-drift {
+  animation: storyBlobDrift 10s ease-in-out infinite;
+}
+
+.story-blob-drift-rev {
+  animation: storyBlobDriftReverse 12s ease-in-out infinite;
+}
+
+.story-rotate-slow {
+  animation: storyRotateSlow 24s linear infinite;
+}
+
+.story-rotate-reverse {
+  animation: storyRotateReverse 30s linear infinite;
+}
+
+.story-token-orbit {
+  animation: storyTokenOrbit 5.6s ease-in-out infinite;
+}
+
+.story-transition-grid {
+  background-image: linear-gradient(rgba(103, 232, 249, 0.22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(103, 232, 249, 0.16) 1px, transparent 1px);
+  background-size: 42px 42px;
+  animation: storyRotateSlow 38s linear infinite;
+}
+
+.story-flow-lines {
+  background-image: repeating-linear-gradient(
+    115deg,
+    rgba(34, 211, 238, 0.14) 0px,
+    rgba(34, 211, 238, 0.14) 1px,
+    transparent 1px,
+    transparent 13px
+  );
+}
+
+.story-neural-noise {
+  background-image: radial-gradient(circle at 18% 20%, rgba(34, 211, 238, 0.22) 0 2px, transparent 2px),
+    radial-gradient(circle at 62% 30%, rgba(196, 181, 253, 0.2) 0 2px, transparent 2px),
+    radial-gradient(circle at 38% 78%, rgba(34, 211, 238, 0.18) 0 2px, transparent 2px),
+    radial-gradient(circle at 82% 66%, rgba(244, 114, 182, 0.16) 0 2px, transparent 2px);
+  background-size: 180px 180px;
+}
+
+.story-circuit-grid {
+  background-image: linear-gradient(rgba(148, 163, 184, 0.22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.16) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+.story-terminal-haze {
+  background: radial-gradient(circle at 20% 12%, rgba(34, 211, 238, 0.16), transparent 36%),
+    radial-gradient(circle at 84% 82%, rgba(168, 85, 247, 0.14), transparent 38%);
+}

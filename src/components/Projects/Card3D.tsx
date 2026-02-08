@@ -2,7 +2,6 @@ import React, { useRef, forwardRef, useImperativeHandle } from "react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { MotionValue } from "framer-motion";
 import * as THREE from "three";
-import { CARD_BACK_TEXTURES, CARD_FRONT_TEXTURES } from "./cardTextures";
 
 export interface Card3DProps {
   frontSrc?: string;
@@ -16,6 +15,14 @@ export interface Card3DProps {
   popScale?: number;
   onClick?: () => void;
 }
+
+const FALLBACK_FRONT =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 1024'><rect width='720' height='1024' fill='#f8fafc'/><rect x='36' y='36' width='648' height='952' rx='28' fill='none' stroke='#94a3b8' stroke-width='8'/></svg>");
+
+const FALLBACK_BACK =
+  "data:image/svg+xml;utf8," +
+  encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 1024'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='#103a8a'/><stop offset='100%' stop-color='#1f5fd8'/></linearGradient></defs><rect width='720' height='1024' fill='url(#g)'/></svg>");
 
 const Card3D = forwardRef<THREE.Group, Card3DProps>(
   (
@@ -42,25 +49,15 @@ const Card3D = forwardRef<THREE.Group, Card3DProps>(
     const innerRef = useRef<THREE.Group>(null!);
     useImperativeHandle(ref, () => innerRef.current, []);
 
-    const frontMap = useLoader(THREE.TextureLoader, frontSrc ?? CARD_FRONT_TEXTURES[0]);
-    const backMap = useLoader(THREE.TextureLoader, backSrc ?? CARD_BACK_TEXTURES[0]);
+    const frontMap = useLoader(THREE.TextureLoader, frontSrc ?? FALLBACK_FRONT);
+    const backMap = useLoader(THREE.TextureLoader, backSrc ?? FALLBACK_BACK);
 
     frontMap.colorSpace = THREE.SRGBColorSpace;
     backMap.colorSpace = THREE.SRGBColorSpace;
     frontMap.anisotropy = gl.capabilities.getMaxAnisotropy();
     backMap.anisotropy = gl.capabilities.getMaxAnisotropy();
-    frontMap.wrapS = THREE.ClampToEdgeWrapping;
-    frontMap.wrapT = THREE.ClampToEdgeWrapping;
-    backMap.wrapS = THREE.ClampToEdgeWrapping;
-    backMap.wrapT = THREE.ClampToEdgeWrapping;
-    frontMap.generateMipmaps = false;
-    backMap.generateMipmaps = false;
-    frontMap.minFilter = THREE.LinearFilter;
-    backMap.minFilter = THREE.LinearFilter;
-    frontMap.magFilter = THREE.LinearFilter;
-    backMap.magFilter = THREE.LinearFilter;
-    frontMap.needsUpdate = true;
-    backMap.needsUpdate = true;
+    frontMap.minFilter = THREE.LinearMipmapLinearFilter;
+    backMap.minFilter = THREE.LinearMipmapLinearFilter;
 
     useFrame(() => {
       const group = innerRef.current;
