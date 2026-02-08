@@ -54,7 +54,8 @@ const RadialDotFieldCanvas: React.FC<RadialDotFieldCanvasProps> = ({
     if (!canvas) return;
     const ctx = canvas.getContext("2d")!;
 
-    const parent = canvas.parentElement as HTMLElement;
+    const parent = canvas.parentElement as HTMLElement | null;
+    if (!parent) return;
     const resize = () => {
       canvas.width = parent.clientWidth;
       canvas.height = parent.clientHeight;
@@ -137,12 +138,13 @@ const RadialDotFieldCanvas: React.FC<RadialDotFieldCanvasProps> = ({
       }
 
       ctx.restore();
-      requestAnimationFrame(render);
+      frameId = requestAnimationFrame(render);
     };
 
-    requestAnimationFrame(render);
+    let frameId = requestAnimationFrame(render);
 
     return () => {
+      cancelAnimationFrame(frameId);
       window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", handleVisibility);
     };

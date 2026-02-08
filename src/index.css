@@ -1,17 +1,106 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600&display=swap");
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-
-/* Tailwind base Font override */
-body {
-  font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+:root {
+  --bg-deep: #f8fafc;
+  --text-main: #0f172a;
 }
 
-html, body, #root {
-  height: 100%;
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
   margin: 0;
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  background: var(--bg-deep);
+  color: var(--text-main);
+  font-family: "Manrope", "SF Pro Text", "Avenir Next", "Segoe UI", sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+@keyframes stageRingSpin {
+  from {
+    transform: rotate(0deg) scale(1);
+  }
+  to {
+    transform: rotate(360deg) scale(1.05);
+  }
+}
+
+@keyframes stageRingPulse {
+  0%,
+  100% {
+    opacity: 0.32;
+    filter: blur(8px);
+  }
+  50% {
+    opacity: 0.58;
+    filter: blur(12px);
+  }
+}
+
+.stage-flow-ring {
+  background: conic-gradient(
+    from 0deg,
+    rgba(56, 189, 248, 0.26),
+    rgba(99, 102, 241, 0.2),
+    rgba(217, 70, 239, 0.22),
+    rgba(34, 211, 238, 0.24),
+    rgba(56, 189, 248, 0.26)
+  );
+  -webkit-mask-image: radial-gradient(
+    circle,
+    transparent 55%,
+    rgba(0, 0, 0, 0.94) 66%,
+    rgba(0, 0, 0, 0.68) 72%,
+    transparent 80%
+  );
+  mask-image: radial-gradient(
+    circle,
+    transparent 55%,
+    rgba(0, 0, 0, 0.94) 66%,
+    rgba(0, 0, 0, 0.68) 72%,
+    transparent 80%
+  );
+  animation: stageRingSpin 22s linear infinite, stageRingPulse 6.2s ease-in-out infinite;
+}
+
+.stage-flow-ring-alt {
+  background: conic-gradient(
+    from 180deg,
+    rgba(6, 182, 212, 0.2),
+    rgba(14, 165, 233, 0.22),
+    rgba(168, 85, 247, 0.18),
+    rgba(59, 130, 246, 0.18),
+    rgba(6, 182, 212, 0.2)
+  );
+  -webkit-mask-image: radial-gradient(
+    circle,
+    transparent 58%,
+    rgba(0, 0, 0, 0.84) 70%,
+    rgba(0, 0, 0, 0.48) 76%,
+    transparent 84%
+  );
+  mask-image: radial-gradient(
+    circle,
+    transparent 58%,
+    rgba(0, 0, 0, 0.84) 70%,
+    rgba(0, 0, 0, 0.48) 76%,
+    transparent 84%
+  );
+  animation: stageRingSpin 34s linear infinite reverse, stageRingPulse 8.2s ease-in-out infinite;
 }

@@ -49,7 +49,8 @@ const AnimatedDotFieldCanvas: React.FC<AnimatedDotFieldCanvasProps> = ({
     const ctx = canvas.getContext("2d")!;
 
     // Resize to match center orb container
-    const parent = canvas.parentElement as HTMLElement;
+    const parent = canvas.parentElement as HTMLElement | null;
+    if (!parent) return;
     const resize = () => {
       canvas.width = parent.clientWidth;
       canvas.height = parent.clientHeight;
@@ -144,12 +145,13 @@ const AnimatedDotFieldCanvas: React.FC<AnimatedDotFieldCanvasProps> = ({
       }
 
       ctx.restore();
-      requestAnimationFrame(render);
+      frameId = requestAnimationFrame(render);
     };
 
-    requestAnimationFrame(render);
+    let frameId = requestAnimationFrame(render);
 
     return () => {
+      cancelAnimationFrame(frameId);
       window.removeEventListener("resize", resize);
       document.removeEventListener("visibilitychange", handleVisibility);
     };

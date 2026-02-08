@@ -1,107 +1,99 @@
-// src/components/Projects/Card3D.tsx
 import React, { useRef, forwardRef, useImperativeHandle } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
-import { useTexture } from "@react-three/drei";
+import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { MotionValue } from "framer-motion";
 import * as THREE from "three";
-
-import frontPlaceholder from "./textures/fronttemp.png";
-import backPlaceholder from "./textures/backtemp.png";
-
-/* ───────────────────────────── Types */
+import { CARD_BACK_TEXTURES, CARD_FRONT_TEXTURES } from "./cardTextures";
 
 export interface Card3DProps {
-  frontSrc?: string;          // texture url (can be data-url)
-  backSrc?:  string;
-  width?:    number;          // world units (optional override)
-  height?:   number;          // world units (optional override)
+  frontSrc?: string;
+  backSrc?: string;
+  width?: number;
+  height?: number;
   thickness?: number;
-  borderColor?: string;       // rim colour
-  /** 0 → 1 motion value; rotation Y = π * value */
+  borderColor?: string;
   flip?: MotionValue<number>;
-  /** 0 → 1 motion value; 1 = normal scale, >1 = pop-out */
   pop?: MotionValue<number>;
-  /** scale multiplier when pop == 1 (default 1.15) */
   popScale?: number;
-  /** optional onClick handler (let storyboard decide what to do) */
   onClick?: () => void;
 }
 
-/* ───────────────────────────── Component */
+const Card3D = forwardRef<THREE.Group, Card3DProps>(
+  (
+    {
+      frontSrc,
+      backSrc,
+      width,
+      height,
+      thickness = 0.02,
+      borderColor = "#e0e0e0",
+      flip,
+      pop,
+      popScale = 1.15,
+      onClick,
+      ...rest
+    },
+    ref
+  ) => {
+    const { viewport, gl } = useThree();
+    const base = Math.min(viewport.width, viewport.height);
+    const w = width ?? base * 0.08;
+    const h = height ?? w * 1.4;
 
-const Card3D = forwardRef<THREE.Group, Card3DProps>(({ 
+    const innerRef = useRef<THREE.Group>(null!);
+    useImperativeHandle(ref, () => innerRef.current, []);
 
-  frontSrc,
-  backSrc,
-  width,
-  height,
-  thickness = 0.02,
-  borderColor = "#e0e0e0",
-  flip,
-  pop,
-  popScale = 1.15,
-  onClick,
-  ...rest
-}, ref) => {
-  /* responsive default size based on viewport */
-  const { viewport } = useThree();
-  const base = Math.min(viewport.width, viewport.height);      // scene units
-  const w = width ?? base * 0.08;      // 25 % of the shorter side
-  const h = height ?? w * 1.4;
+    const frontMap = useLoader(THREE.TextureLoader, frontSrc ?? CARD_FRONT_TEXTURES[0]);
+    const backMap = useLoader(THREE.TextureLoader, backSrc ?? CARD_BACK_TEXTURES[0]);
 
-  const innerRef = useRef<THREE.Group>(null!);
-  useImperativeHandle(ref, () => innerRef.current, []);
+    frontMap.colorSpace = THREE.SRGBColorSpace;
+    backMap.colorSpace = THREE.SRGBColorSpace;
+    frontMap.anisotropy = gl.capabilities.getMaxAnisotropy();
+    backMap.anisotropy = gl.capabilities.getMaxAnisotropy();
+    frontMap.wrapS = THREE.ClampToEdgeWrapping;
+    frontMap.wrapT = THREE.ClampToEdgeWrapping;
+    backMap.wrapS = THREE.ClampToEdgeWrapping;
+    backMap.wrapT = THREE.ClampToEdgeWrapping;
+    frontMap.generateMipmaps = false;
+    backMap.generateMipmaps = false;
+    frontMap.minFilter = THREE.LinearFilter;
+    backMap.minFilter = THREE.LinearFilter;
+    frontMap.magFilter = THREE.LinearFilter;
+    backMap.magFilter = THREE.LinearFilter;
+    frontMap.needsUpdate = true;
+    backMap.needsUpdate = true;
 
+    useFrame(() => {
+      const group = innerRef.current;
+      if (!group) return;
 
-  /* textures (lazy) */
-  const [frontMap] = useTexture([frontSrc ?? frontPlaceholder]);
-  const [backMap]  = useTexture([backSrc  ?? backPlaceholder]);
+      const flipValue = flip?.get?.() ?? 0;
+      group.rotation.y = Math.PI * flipValue;
 
-  /* animation on every frame (cheap) */
-  useFrame(() => {
+      const popValue = pop?.get?.() ?? 0;
+      const scale = 1 + (popScale - 1) * popValue;
+      group.scale.setScalar(scale);
+    });
 
-    const g = innerRef.current;
-    if (!g) return;
+    return (
+      <group ref={innerRef} onClick={onClick} {...rest}>
+        <mesh castShadow receiveShadow>
+          <boxGeometry args={[w, h, thickness]} />
+          <meshStandardMaterial color={borderColor} metalness={0.12} roughness={0.62} />
+        </mesh>
 
-    /* flip */
-    const f = flip?.get?.() ?? 0;
-    g.rotation.y = Math.PI * f;
+        <mesh castShadow receiveShadow position={[0, 0, thickness / 2 + 0.0001]}>
+          <planeGeometry args={[w, h]} />
+          <meshStandardMaterial map={frontMap} roughness={0.62} metalness={0.02} />
+        </mesh>
 
-    /* pop-out scale */
-    const p = pop?.get?.() ?? 0;
-    const scl = 1 + (popScale - 1) * p;
-    g.scale.setScalar(scl);
-  });
-
-  /* ───────────────────────────── Render */
-  return (
-    <group
-
-      ref={innerRef}
-
-      onClick={onClick}
-      {...rest}
-    >
-      {/* subtle bevel: thin box for the rim */}
-      <mesh>
-        <boxGeometry args={[w, h, thickness]} />
-        <meshStandardMaterial color={borderColor} metalness={0.25} roughness={0.8} />
-      </mesh>
-
-      {/* front plane */}
-      <mesh position={[0, 0, thickness / 2 + 0.0001]}>
-        <planeGeometry args={[w, h]} />
-        <meshBasicMaterial map={frontMap} toneMapped={false} />
-      </mesh>
-
-      {/* back plane (rotated so texture isn’t mirrored) */}
-      <mesh rotation-y={Math.PI} position={[0, 0, -thickness / 2 - 0.0001]}>
-        <planeGeometry args={[w, h]} />
-        <meshBasicMaterial map={backMap} toneMapped={false} />
-      </mesh>
-    </group>
-  );
-});
+        <mesh castShadow receiveShadow rotation-y={Math.PI} position={[0, 0, -thickness / 2 - 0.0001]}>
+          <planeGeometry args={[w, h]} />
+          <meshStandardMaterial map={backMap} roughness={0.62} metalness={0.02} />
+        </mesh>
+      </group>
+    );
+  }
+);
 
 Card3D.displayName = "Card3D";
 
