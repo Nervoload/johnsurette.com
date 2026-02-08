@@ -51,11 +51,26 @@ export const siteRoutes: SiteRoute[] = sections.map((section) => ({
   color: section.color,
 }));
 
-export const routeSet = new Set(siteRoutes.map((route) => route.path));
+const canonicalizeRoutePath = (rawPath: string): string => {
+  const trimmed = rawPath.trim();
+  if (!trimmed) return "/";
+
+  const withLeadingSlash = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  const singleSlashes = withLeadingSlash.replace(/\/{2,}/g, "/");
+
+  if (singleSlashes === "/") {
+    return "/";
+  }
+
+  return singleSlashes.replace(/\/+$/, "");
+};
+
+export const routeSet = new Set(siteRoutes.map((route) => canonicalizeRoutePath(route.path)));
 
 export const normalizeRoute = (path: string): string => {
-  if (routeSet.has(path)) {
-    return path;
+  const normalized = canonicalizeRoutePath(path);
+  if (routeSet.has(normalized)) {
+    return normalized;
   }
   return "/";
 };

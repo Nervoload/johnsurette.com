@@ -5,7 +5,7 @@ import ProjectIntroSequence from "./ProjectIntroSequence";
 
 export interface ProjectStoryboardProps {
   scrollContainer: RefObject<HTMLDivElement>;
-  onProgressChange?: (progress: number) => void;
+  onStackActivationChange?: (active: boolean) => void;
 }
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
@@ -31,9 +31,13 @@ const remapProgress = (raw: number): number => {
   return 0.64 + local * (1 - 0.64);
 };
 
-const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({ scrollContainer, onProgressChange }) => {
+const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
+  scrollContainer,
+  onStackActivationChange,
+}) => {
   const sceneRef = useRef<HTMLDivElement>(null);
   const rawRef = useRef(0);
+  const stackActiveRef = useRef(false);
 
   const timelineProgress = useMotionValue(0);
 
@@ -60,12 +64,16 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({ scrollContainer, 
     const next = clamp01(current + step);
 
     timelineProgress.set(next);
-    onProgressChange?.(next);
+    const nextStackActive = stackActiveRef.current ? next > 0.84 : next > 0.92;
+    if (nextStackActive !== stackActiveRef.current) {
+      stackActiveRef.current = nextStackActive;
+      onStackActivationChange?.(nextStackActive);
+    }
   });
 
   return (
     <div ref={sceneRef}>
-      <StoryboardSection progress={timelineProgress} height={280}>
+      <StoryboardSection progress={timelineProgress} height={230}>
         {(progress) => <ProjectIntroSequence progress={progress} />}
       </StoryboardSection>
     </div>

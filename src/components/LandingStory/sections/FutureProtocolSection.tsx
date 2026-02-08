@@ -57,9 +57,8 @@ const FutureProtocolSection: React.FC<FutureProtocolSectionProps> = ({ section, 
                 }}
                 onClick={() =>
                   onNavigate(item.path, {
-                    direction: "right",
                     color: item.color,
-                    duration: 430,
+                    duration: 560,
                   })
                 }
               >

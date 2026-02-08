@@ -1,162 +1,158 @@
-This AGENTS.md. This file is the set of instructions and context to properly navigate through my codebase.
+# AGENTS.md
 
-# General Instructions
-You are an expert software engineer. You are genius and creative and precise with your code, your design, 
-and your vision for each line, each file, and the entire codebase.
+This file is the operating guide for coding agents in this repository.
 
-Also, you can run the project in dev mode by 
+## Project Objective
+Build and maintain `johnsurette.com` as a high-quality narrative portfolio site with strong architecture first, then layered animation/3D where it has clear storytelling value.
 
-npm run dev
+The experience goal is:
+- Intentional visual design (not generic templates)
+- Reusable, modular systems
+- Smooth interactions on desktop and mobile
+- Data-driven content where possible
 
+## Thinking Procedure (Do This First)
+Before changing code, reason through these questions:
+1. What is the exact goal of the prompt?
+2. What concrete steps are needed to achieve it?
+3. What constraints apply (architecture, accessibility, performance, maintainability)?
+4. What result should emerge if those steps are done correctly?
+5. Do the steps align with the goal, or conflict with it?
+6. What generalized approach can solve this class of problem in this codebase?
 
-You are to reason logically, and thouroughly. You will take your time to reason firstly, by the following:
+Use this reasoning internally by default; provide it to the user when useful or requested.
 
-You will make think deeply about your prompt. You need answer the following questions associated with your prompt:
-## ANSWER THESE QUESTIONS FIRST
-  1. What exactly is the goal of the prompt?
-       Simply offer a premise for the goal of the prompt.
-  2. What are the steps you have to accomplish to achieve the goal?
-       Create a series of abstract steps, a hypothesis, that could accomplish the goal
-  3. What are the constraints to accomplish the goal?
-       Attempt to uncover any hidden constraints from the prompt, but focus general constraints such as modularity, extensibility,
-       mentioned dependencies, simplicity or complexity, design, form, etc.
-  4. Consider only these steps and goals, what is the resulting function you think will emerge from these ideas?
-       Ask yourself what the sum of the abstract steps/hypotheses will output.
-  5. Do think the steps and goals conflict or align with the goal of the prompt?
-       if they conflict, consider why and perhaps make a new hypothesis to approach the solution OR determine
-       if your goal setting was incorrect.
-  6. Can you create a generalized approach and procedure with the goals and steps in mind to solve the problem of the prompt. 
+## Current Architecture (Foundation Update - Feb 2026)
 
-Then, you must read the codebase, with the goal procedure in mind.
+### App Shell
+- Routing is path-based in `src/App.tsx` (`/`, `/projects`, `/about`, `/blog`, `/contact`).
+- Route metadata is centralized in `src/components/sections.ts`.
+- Global navigation is `src/components/NavBar/NavBar.tsx`.
+- Global page transition is `src/components/Transitions/TransitionWipe.tsx`.
+- Shared page layout and footer scroll ownership live in `src/components/layout/PageScaffold.tsx`.
+- Footer behavior is centralized in `src/components/Footer.tsx`.
 
-Always be thorough, and truthful. Be professional, and masterful in code. You are excited to code, you are incredible
-at engineering magnificent software systems.
+### Pages
+- `src/pages/LandingPage.tsx`
+  - Hero stage with swappable centerpiece via registry:
+    - `src/components/LandingComponents/centerpieces/centerpieceRegistry.ts`
+    - `src/components/LandingComponents/centerpieces/WaveOrbCenterpiece.tsx`
+  - Story sequence:
+    - `src/components/LandingStory/LandingStoryboard.tsx`
+    - `src/components/LandingStory/storySections.ts`
+    - `src/components/LandingStory/sections/*`
+- `src/pages/ProjectsPage.tsx`
+  - Intro 3D sequence:
+    - `src/components/Projects/ProjectStoryboard.tsx`
+    - `src/components/Projects/ProjectIntroSequence.tsx`
+    - `src/components/Projects/StoryboardSection.tsx`
+  - Expandable card stack:
+    - `src/components/Projects/ProjectCardStack.tsx`
+    - Data in `src/components/Projects/projectData.ts`
+- `src/pages/AboutPage.tsx`
+  - Pop-up timeline stage:
+    - `src/components/About/PopBookTimeline.tsx`
+    - Data in `src/components/About/timelineData.ts`
+- `src/pages/BlogPage.tsx`
+  - Foundation card layout for articles.
+- `src/pages/ContactPage.tsx`
+  - Contact blocks + social carousel:
+    - `src/components/Contact/SocialPostCarousel.tsx`
 
-# CODEBASE CONTEXT
+### Build/Chunking
+- Code-splitting and chunk strategy are in `src/App.tsx` and `vite.config.ts`.
 
-The codebase is currently structured as follows:
+## Active vs Legacy Files
 
-/johnsurette.com (most of these files are just import files and libraries, except AGENTS.md, and /src which are particularly important to you.)
+### Active Landing Component Pattern
+- `CenterpieceStage` + registered centerpiece (`centerpieces/`) is the active pattern.
 
-  /dist
-  /node_modules
-  /src
-  /AGENTS.md
-  /index.html
-  /package-lock.json
-  /package.json
-  /postcss.config.json
-  /README.md
-  /tailwind.config.js
-  /tsconfig.json
-  vite.config.ts
+### Removed Legacy Landing Files
+These were removed during cleanup and should stay out of active architecture unless intentionally redesigned and reintroduced:
+- `src/components/LandingComponents/AnimatedDotFieldCanvas.tsx`
+- `src/components/LandingComponents/CenterOrb.tsx`
+- `src/components/LandingComponents/GradientRing.tsx`
+- `src/components/LandingComponents/RadialDotFieldCanvas.tsx`
+- `src/components/LandingComponents/SectionLayer.tsx`
 
-## THE WEBAPP CODE
-
-
-/johnsurette.com/src (The Webapp directory. This is where the code for the website lies!)
-  /components
-    /LandingComponents (components for the landing page.)
-      AnimatedDotFieldCanvas.tsx
-      CenterOrb.tsx
-      GradientRing.tsx
-      RadialDotFieldCanvas.tsx
-      SectionLayer.tsx
-    /NavBar (components for the navbar.)
-
-    
-  /Projects (components for the landing page)
-      /textures (textures or assets for the project page)
-      Card3D.tsx (3D card model template for the animations in the project page. it has size (dimensions), colour, texture, order, and more.)
-      IntroDeck.tsx (Intro animation upon loading the page generates a stack (or deck) of Card3D instances. It colours them, and adds textures to them, and gives them an order in the deck)
-      IntroShuffle.tsx (Animates each individual Card3D instance in Introdeck. It shuffles the cards, and puts them back into the deck.)
-      ProjectCardInfo.tsx (Is a larger Card3D instance, which replaces the Card3D's front texture with an interactive presentation of a project, with a title, description, 3D icon, a link to a project-specific page, and a default aniamtion as a template to display the project's information within the card.
-      ProjectDeck.tsx (The stack of ProjectCardInfo cards, in order. It animates the cards and flips them on a scrollprogression variable in ProjectStoryBoard.)
-      ProjectStoryboard.tsx (The central file that combines all of the animation components into order, which are progressed through an interactive scroll logic that can run foward and backward through the animations. it has props that can be editted in ProjectsPage.tsx.)
-      SpreadReveal.tsx (Animates the introdeck, which spreads the cards like you would if you showed your hand in poker; it spreads the cards in an arc!)
-
-      
-    /Transitions (components for page transitions)
-      /TransitionWipe.tsx (The 
-    Footer.tsx (the interactive footer!)
-    section.ts (file for section data and utils)
-
-  /pages
-    AboutPage.tsx (Currently empty)
-    LandingPage.tsx (First page upon loading the webapp. It has an interactive style, with many assets to help navigate users from my intro to the more specific information about me!)
-    ProjectsPage.tsx (Page for my active and past projects, to present them to everyone in an interactive and creative way!)
-  App.tsx (The central combining file for all of the pages and components.)
-  Assets.d.ts
-  index.css
-  main.tsx
-
-
-
-# CONCEPT CONTEXT FOR THE PROJECT
-
-General Components:
-NavBar: I wanted a navbar that when you hover near the top of any page on the website, it smoothly fades in from the top. It would be a navbar that simply navigates to other pages. It should be like a cell that does not take up the entire top bar, more like a modern menu bar.
-Footer: I wanted a 2-tier footer. The footer only appears when you reach the end of the scroll for the page, and then the first tier of the footer appears with minimal information and a single header with my name. You can scroll further then from this footer and the second tier will take up much more of the page (maybe even all of it) which smooth animation. It would have more detailed information and potentially some other features. I hoped for it to have some simple abstract background animations to play within it as well.
-Icon: I wanted some animated icon at the top left of every page. It animates when you approach it or while you scroll progress, and when you hover over it, it would have a unique animation. Clicking it would load the landing page with a transition.
-Transitions: I wanted a modular transition component that I could edit to change how transitions look across all the other pages. I imagined that these transitions could have many dynamic animations/assets to make transitions look artistic OR simple and smooth fade ins/outs.
-
-PAGES:
-
-Landing Page: There is 2 main sections for the landing page. The first section is what is show when you first load the site and when you return to the landing page. I hoped for an interesting, abstract 3D asset that is interactive. I hoped to be able to switch this centerpiece component out as I like(if I wanted to change it every now and then)--currently it is an orb that emits dot particles which all change colour as you hover your mouse around the orb to select a page. I basically just wanted something high-quality, interactive and animated that I can swap with different "centerpieces" as I please. So, the first section should have the section options, and within it (like a stage) we can load a centerpiece. 
-
-The second section is a scrollable story-board which progresses as you scroll--I wanted it to have clean animations with 3D looking assets, depth, and information about me! It should be a good introduction for who I am. I mainly wanted to be another way to hyperlink references to projects I've done, things I am doing now, and etc, which can be updated and changed.
-
-Project Page:
-
-I wanted this to be a way to cleanly load many "cards" with the same base components to show a variety of different projects. That is, each card would have things like "project title", "project images/carousel", "project link" "description" and some individual colour themes, etc. From a v-stack of projects, we would have many project cards with a project title and etc that you could click on, which would expand to take more of the screen and show more details that were initial hidden. You could open multiple projects and simply click to expand or colapse to see their details. 
-
-About Page: 
-
-I wanted this to be a more detailed, personal story board page. I wanted to talk about my life, what I am about, and etc in a time-line scroll progress across many years. I wanted it to be as if you were seeing snapshots of moments I add -- I wanted a "stage" where as you scroll to different points, a set of image assets fade in and out: an image to take photos, and maybe cut outs from those photos, to make a background, midground, and foreground in a 3D enviroment. Kinda like going through a paper pop-up book.
-
-Blog Page:
-
-This would be a simple blog page, not much unlike the cards in the product page where instead of product titles, they would be their own blog entries in a well--formated article. Potentially with images, theme changes to the page when you press it, and etc. This would be for me to write about things I am interested in and upload for some personal thinking
-
-Contact page:
-This would be a simple contact page! The first thing should be a list of contact information and maybe a message from me. Then, there could be a dashboard of my latest posts from my socials. 
-
-Perhaps this webapp needed a backend, perhaps not.
-
-Please review every page and file thoroughly. Identify where it is currently at in terms of the concepts I wanted to implement. 
-
-## FOUNDATION STATUS UPDATE (FEB 2026)
-
-The app foundation was rebuilt to establish stable page-level architecture before deeper animation work.
-
-Current structural notes:
-- Routing is path-based in `src/App.tsx` using browser history (`/`, `/projects`, `/about`, `/blog`, `/contact`).
-- Route metadata is centralized in `src/components/sections.ts` (labels, colors, paths, descriptions).
-- Shared page layout wrapper is `src/components/layout/PageScaffold.tsx` and handles:
-  - Full-page scroll container ownership
-  - Footer scroll binding
-  - Consistent viewport shell for all pages
-- Navigation is global in `src/components/NavBar/NavBar.tsx` with top-hover reveal + explicit toggle.
-- Page transitions are centralized in `src/components/Transitions/TransitionWipe.tsx`.
-- Footer behavior is centralized in `src/components/Footer.tsx` with two-tier reveal near page bottom.
-
-Projects foundation currently:
-- `src/components/Projects/ProjectStoryboard.tsx` now focuses on the intro 3D deck sequence.
-- Intro sequence is deterministic and centralized in `src/components/Projects/ProjectIntroSequence.tsx`.
-- `src/components/Projects/ProjectCardStack.tsx` provides modular expandable project cards.
-- `src/components/Projects/projectData.ts` is the data source for project cards.
-- About timeline stage is in `src/components/About/PopBookTimeline.tsx` with data in `src/components/About/timelineData.ts`.
-- App/page code splitting is handled in `src/App.tsx` (lazy routes) and `vite.config.ts` (manual chunks).
-
-Files intentionally removed from active architecture:
-- `src/components/NavBar/LandingOrb.tsx`
+Projects files previously removed from active architecture (do not restore by default):
 - `src/components/Projects/ProjectDeck.tsx`
 - `src/components/Projects/ProjectCardInfo.tsx`
 - `src/components/Projects/IntroDeck.tsx`
 - `src/components/Projects/IntroShuffle.tsx`
 - `src/components/Projects/SpreadReveal.tsx`
 
-Guidance for future edits:
-- Prefer data-driven sections/cards over hardcoded page-specific logic.
-- Keep 3D scoped to high-value scenes (hero/intro moments), and use lightweight DOM motion elsewhere.
-- Preserve mobile behavior by avoiding hover-only interactions as the sole access path.
+## Engineering Rules for This Repo
+
+1. Preserve architecture boundaries:
+- Route metadata in `src/components/sections.ts`
+- Shared scroll/footer shell in `src/components/layout/PageScaffold.tsx`
+- Global nav and transition components as single sources of truth
+
+2. Prefer data-driven implementations:
+- New project cards should extend `projectData.ts`
+- New landing story scenes should extend `storySections.ts` + `LandingStory/sections`
+- New about checkpoints should extend `timelineData.ts`
+
+3. Keep 3D scoped:
+- Use 3D in high-value scenes (hero/intro moments)
+- Use lighter DOM/CSS motion for dense UI content
+
+4. Mobile and accessibility are mandatory:
+- Do not rely on hover-only interactions
+- Keep keyboard navigation functional for controls
+- Maintain readable contrast and clear focus behavior
+
+5. Performance discipline:
+- Avoid avoidable rerenders in scroll-driven paths
+- Avoid unnecessary state updates on every frame when motion values can stay in animation layer
+- Be cautious with expensive canvases/shaders and stacked blur effects
+
+6. Keep placeholders explicit:
+- Prefer TODO-marked placeholders over silent fake production values
+- If data is temporary, isolate it in data files (not scattered hardcoded strings)
+
+## Implementation Workflow
+1. Read relevant files before editing.
+2. Confirm fit with current architecture above.
+3. Make minimal, coherent edits.
+4. Validate with:
+- `npm run build`
+5. Summarize:
+- What changed
+- Why it changed
+- Any follow-up tasks
+
+## Page-Specific Guidance
+
+### Landing
+- Keep `CenterpieceStage` and registry-based centerpiece swapping.
+- Maintain clean separation between hero centerpiece and lower storyboard.
+- New section visuals belong in dedicated `LandingStory/sections/*` components.
+
+### Projects
+- Intro sequence and card stack are separate responsibilities; keep them modular.
+- New project details belong in `projectData.ts`.
+- Preserve expandable card behavior; avoid one-off custom logic per card.
+
+### About
+- Keep timeline scene data in `timelineData.ts`.
+- Maintain layered foreground/midground/background transition model.
+
+### Blog
+- Keep simple and scalable for future post routing.
+- Prefer article data structure over hardcoded repeated JSX when expanded.
+
+### Contact
+- Keep static contact info + feed components decoupled.
+- Social feed behavior should degrade gracefully with no posts.
+
+## Known Technical Debt (Track Explicitly)
+- Placeholder links and emails still exist in project/contact/footer content and should be replaced.
+- Build currently emits a `three-mesh-bvh`/`three` compatibility warning and dependency alignment should be reviewed.
+
+## Dev Commands
+- Install deps: `npm install`
+- Run dev server: `npm run dev`
+- Production build: `npm run build`
+- Preview build: `npm run preview`

@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "vite --open",
-    "build": "vite build",
+    "dev": "BROWSERSLIST_IGNORE_OLD_DATA=true vite --open",
+    "build": "BROWSERSLIST_IGNORE_OLD_DATA=true vite build",
     "preview": "vite preview"
   },
   "dependencies": {

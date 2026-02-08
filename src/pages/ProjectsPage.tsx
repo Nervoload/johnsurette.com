@@ -7,13 +7,8 @@ import PageScaffold from "../components/layout/PageScaffold";
 const ProjectsPage: React.FC = () => {
   const [stackActive, setStackActive] = useState(false);
 
-  const handleIntroProgress = useCallback((progress: number) => {
-    setStackActive((prev) => {
-      if (prev) {
-        return progress > 0.84;
-      }
-      return progress > 0.92;
-    });
+  const handleStackActivationChange = useCallback((active: boolean) => {
+    setStackActive(active);
   }, []);
 
   return (
@@ -29,7 +24,10 @@ const ProjectsPage: React.FC = () => {
           </header>
 
           <div className="relative mt-8">
-            <ProjectStoryboard scrollContainer={scrollRef} onProgressChange={handleIntroProgress} />
+            <ProjectStoryboard
+              scrollContainer={scrollRef}
+              onStackActivationChange={handleStackActivationChange}
+            />
           </div>
 
           <ProjectCardStack items={projectItems} active={stackActive} scrollContainer={scrollRef} />

@@ -21,7 +21,21 @@ type TexturePalette = {
   line: string;
 };
 
-const ORDER = [2, 5, 1, 4, 0, 3];
+const buildDepthOrder = (count: number): number[] => {
+  if (count <= 0) return [];
+  if (count === 6) return [2, 5, 1, 4, 0, 3];
+
+  const order = Array.from({ length: count }, (_, index) => index);
+  let seed = count * 131 + 17;
+
+  for (let index = order.length - 1; index > 0; index -= 1) {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    const swapIndex = seed % (index + 1);
+    [order[index], order[swapIndex]] = [order[swapIndex], order[index]];
+  }
+
+  return order;
+};
 
 const PALETTES: TexturePalette[] = [
   { deep: "#103a8a", mid: "#1f5fd8", bright: "#e6f1ff", line: "#f8fbff" },
@@ -106,6 +120,8 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({ progress })
     }));
   }, [cardHeight, cardWidth]);
 
+  const depthOrder = useMemo(() => buildDepthOrder(cards.length), [cards.length]);
+
   if (flipValues.current.length !== cards.length) {
     flipValues.current = Array.from({ length: cards.length }, () => motionValue(0));
   }
@@ -159,7 +175,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({ progress })
 
       const arcLift = Math.sin(localShuffle * Math.PI);
       const baseZ = -index * 0.05;
-      const targetZ = -ORDER[index] * 0.055;
+      const targetZ = -(depthOrder[index] ?? index) * 0.055;
 
       const shuffleX = profile.x * arcLift;
       const shuffleY = profile.y * arcLift;

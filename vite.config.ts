@@ -6,6 +6,20 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 700,
     rollupOptions: {
+      onwarn(warning, warn) {
+        const isKnownThreeMeshBvhWarning =
+          warning.code === "MISSING_EXPORT" &&
+          typeof warning.message === "string" &&
+          warning.message.includes('"BatchedMesh" is not exported by "node_modules/three/build/three.module.js"') &&
+          typeof warning.id === "string" &&
+          warning.id.includes("three-mesh-bvh/src/utils/ExtensionUtilities.js");
+
+        if (isKnownThreeMeshBvhWarning) {
+          return;
+        }
+
+        warn(warning);
+      },
       output: {
         manualChunks(id) {
           if (!id.includes("node_modules")) return undefined;

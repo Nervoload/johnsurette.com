@@ -1,5 +1,5 @@
-import React, { RefObject, useRef, useState } from "react";
-import { motion, useMotionValueEvent, useScroll } from "framer-motion";
+import React, { RefObject, useEffect, useRef, useState } from "react";
+import { MotionValue, motion, useMotionValue, useMotionValueEvent, useScroll, useTransform } from "framer-motion";
 import { ProjectItem } from "./projectData";
 
 interface ProjectCardStackProps {
@@ -12,7 +12,7 @@ interface StackCardProps {
   item: ProjectItem;
   isExpanded: boolean;
   onToggle: () => void;
-  revealProgress: number;
+  revealProgress: MotionValue<number>;
   index: number;
 }
 
@@ -20,16 +20,18 @@ const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 const easeOut = (value: number) => 1 - Math.pow(1 - value, 3);
 
 const StackCard: React.FC<StackCardProps> = ({ item, isExpanded, onToggle, revealProgress, index }) => {
-  const descend = easeOut(clamp01((revealProgress - index * 0.085) / 0.42));
-  const flip = easeOut(clamp01((revealProgress - 0.14 - index * 0.08) / 0.42));
+  const descend = useTransform(revealProgress, (progress) =>
+    easeOut(clamp01((progress - index * 0.085) / 0.42))
+  );
+  const flip = useTransform(revealProgress, (progress) =>
+    easeOut(clamp01((progress - 0.14 - index * 0.08) / 0.42))
+  );
 
   const yStart = -280 - index * 34;
-  const y = yStart * (1 - descend);
-  const zRotation = (index % 2 === 0 ? -1 : 1) * (1 - descend) * 5.2;
-  const shellScaleX = 0.72 + flip * 0.28;
-  const shellOpacity = clamp01(descend * 1.25);
-
-  const canInteract = flip > 0.96;
+  const y = useTransform(descend, (value) => yStart * (1 - value));
+  const zRotation = useTransform(descend, (value) => (index % 2 === 0 ? -1 : 1) * (1 - value) * 5.2);
+  const shellScaleX = useTransform(flip, (value) => 0.72 + value * 0.28);
+  const shellOpacity = useTransform(descend, (value) => clamp01(value * 1.25));
 
   return (
     <motion.article
@@ -62,8 +64,7 @@ const StackCard: React.FC<StackCardProps> = ({ item, isExpanded, onToggle, revea
             <button
               type="button"
               onClick={onToggle}
-              disabled={!canInteract}
-              className="w-full text-left disabled:cursor-default"
+              className="w-full cursor-pointer text-left"
               aria-expanded={isExpanded}
               aria-label={`Toggle ${item.title}`}
             >
@@ -150,9 +151,10 @@ const StackCard: React.FC<StackCardProps> = ({ item, isExpanded, onToggle, revea
 };
 
 const ProjectCardStack: React.FC<ProjectCardStackProps> = ({ items, active, scrollContainer }) => {
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openIds, setOpenIds] = useState<Set<string>>(() => new Set());
   const sectionRef = useRef<HTMLElement>(null);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const activeRef = useRef(active);
+  const revealProgress = useMotionValue(0);
 
   const { scrollYProgress } = useScroll({
     container: scrollContainer,
@@ -161,11 +163,16 @@ const ProjectCardStack: React.FC<ProjectCardStackProps> = ({ items, active, scro
     layoutEffect: false,
   });
 
-  useMotionValueEvent(scrollYProgress, "change", (value) => {
-    setScrollProgress(value);
-  });
+  useEffect(() => {
+    activeRef.current = active;
+    if (!active) {
+      revealProgress.set(0);
+    }
+  }, [active, revealProgress]);
 
-  const revealProgress = active ? scrollProgress : 0;
+  useMotionValueEvent(scrollYProgress, "change", (value) => {
+    revealProgress.set(activeRef.current ? value : 0);
+  });
 
   return (
     <section ref={sectionRef} className="mx-auto min-h-[210vh] w-full max-w-6xl px-6 pb-28 pt-12">
@@ -185,7 +192,7 @@ const ProjectCardStack: React.FC<ProjectCardStackProps> = ({ items, active, scro
 
         <div className="grid gap-4">
           {items.map((item, index) => {
-            const isExpanded = openId === item.id;
+            const isExpanded = openIds.has(item.id);
             return (
               <StackCard
                 key={item.id}
@@ -194,7 +201,15 @@ const ProjectCardStack: React.FC<ProjectCardStackProps> = ({ items, active, scro
                 isExpanded={isExpanded}
                 revealProgress={revealProgress}
                 onToggle={() => {
-                  setOpenId((prev) => (prev === item.id ? null : item.id));
+                  setOpenIds((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(item.id)) {
+                      next.delete(item.id);
+                    } else {
+                      next.add(item.id);
+                    }
+                    return next;
+                  });
                 }}
               />
             );

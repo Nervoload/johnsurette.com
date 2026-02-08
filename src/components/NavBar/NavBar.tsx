@@ -23,6 +23,7 @@ const NavBar: React.FC<NavBarProps> = ({ routes, currentPath, onNavigate }) => {
   const [hoveringTop, setHoveringTop] = useState(false);
 
   const visible = open || hoveringTop;
+  const homeRoute = routes.find((route) => route.path === "/");
 
   return (
     <>
@@ -38,7 +39,7 @@ const NavBar: React.FC<NavBarProps> = ({ routes, currentPath, onNavigate }) => {
         className="fixed left-3 top-3 z-[72] rounded-full border border-white/55 bg-white/45 p-1.5 shadow-sm backdrop-blur-xl transition hover:bg-white/60"
         onClick={() => {
           setOpen(false);
-          onNavigate("/", { direction: "left", color: "#ffffff", duration: 380 });
+          onNavigate("/", { color: homeRoute?.color ?? "#e2e8f0", duration: 560 });
         }}
       >
         <NavLogo size={30} ringThickness={3} />
@@ -73,9 +74,8 @@ const NavBar: React.FC<NavBarProps> = ({ routes, currentPath, onNavigate }) => {
                   onClick={() => {
                     setOpen(false);
                     onNavigate(route.path, {
-                      direction: "right",
                       color: route.color,
-                      duration: 380,
+                      duration: 560,
                     });
                   }}
                   className={`rounded-full px-3 py-1.5 text-xs font-medium tracking-[0.01em] transition sm:text-sm ${

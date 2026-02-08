@@ -2,30 +2,70 @@ import React from "react";
 import PageScaffold from "../components/layout/PageScaffold";
 
 const posts = [
-  { title: "Designing Narrative Interfaces", tag: "UX", summary: "How scroll progression can guide understanding without overwhelming users." },
-  { title: "When to Use Real 3D", tag: "Engineering", summary: "Choosing where 3D genuinely improves storytelling and where 2D depth cues are better." },
-  { title: "Building Stable Motion Systems", tag: "Architecture", summary: "Patterns for reusable motion primitives that avoid fragile one-off animation logic." },
+  {
+    title: "Designing Narrative Interfaces",
+    tag: "UX",
+    summary: "How scroll progression can guide understanding without overwhelming users.",
+    dateLabel: "Feb 2026",
+  },
+  {
+    title: "When to Use Real 3D",
+    tag: "Engineering",
+    summary: "Choosing where 3D genuinely improves storytelling and where 2D depth cues are better.",
+    dateLabel: "Jan 2026",
+  },
+  {
+    title: "Building Stable Motion Systems",
+    tag: "Architecture",
+    summary: "Patterns for reusable motion primitives that avoid fragile one-off animation logic.",
+    dateLabel: "Dec 2025",
+  },
 ];
 
 const BlogPage: React.FC = () => {
   return (
-    <PageScaffold backgroundClassName="bg-slate-50" footerBackgroundColor="#ffffff">
+    <PageScaffold
+      backgroundClassName="bg-[radial-gradient(circle_at_12%_10%,rgba(186,230,253,0.5),rgba(224,231,255,0.34)_34%,rgba(248,250,252,1)_72%)]"
+      footerBackgroundColor="#ffffff"
+    >
       {() => (
-        <section className="mx-auto min-h-[170vh] w-full max-w-5xl px-6 pb-20 pt-24 text-slate-900">
-          <header className="max-w-2xl">
-            <p className="text-sm uppercase tracking-[0.22em] text-slate-500">Blog</p>
-            <h1 className="mt-3 text-4xl font-semibold sm:text-5xl">Writing Foundation</h1>
-            <p className="mt-4 text-slate-600">Structured article cards are in place so entries can later route into full formatted posts.</p>
-          </header>
+        <section className="relative min-h-[175vh] w-full pb-24 pt-24 text-slate-900">
+          <div className="mx-auto w-full max-w-5xl px-6">
+            <header className="max-w-3xl">
+              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Blog</p>
+              <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-6xl">Research Notes</h1>
+              <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-slate-600">
+                Writing on interface systems, narrative motion, and architecture choices behind this portfolio.
+              </p>
+            </header>
 
-          <div className="mt-12 grid gap-5">
-            {posts.map((post) => (
-              <article key={post.title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:bg-slate-50">
-                <p className="text-xs uppercase tracking-[0.2em] text-indigo-500">{post.tag}</p>
-                <h2 className="mt-2 text-2xl font-semibold">{post.title}</h2>
-                <p className="mt-3 text-slate-600">{post.summary}</p>
-              </article>
-            ))}
+            <div className="mt-12 border-t border-slate-300/60">
+              {posts.map((post) => (
+                <article
+                  key={post.title}
+                  className="grid gap-4 border-b border-slate-300/55 py-8 sm:grid-cols-[auto_1fr_auto] sm:items-start sm:gap-8"
+                >
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                    {post.tag}
+                    <span className="mx-2 text-slate-300">/</span>
+                    {post.dateLabel}
+                  </p>
+                  <div>
+                    <h2 className="text-2xl font-semibold tracking-tight text-slate-900">{post.title}</h2>
+                    <p className="mt-3 text-sm leading-relaxed text-slate-600">{post.summary}</p>
+                  </div>
+                  <a
+                    href="#"
+                    className="justify-self-start text-xs font-medium uppercase tracking-[0.16em] text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:decoration-slate-700 sm:justify-self-end"
+                  >
+                    Read
+                  </a>
+                </article>
+              ))}
+            </div>
+            <p className="mt-5 text-xs uppercase tracking-[0.16em] text-slate-500">
+              TODO: replace placeholder links with routed blog entries.
+            </p>
           </div>
         </section>
       )}
