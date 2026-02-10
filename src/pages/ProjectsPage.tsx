@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import ProjectStoryboard from "../components/Projects/ProjectStoryboard";
 import ProjectCardStack from "../components/Projects/ProjectCardStack";
 import { projectItems } from "../components/Projects/projectData";
@@ -6,6 +6,15 @@ import PageScaffold from "../components/layout/PageScaffold";
 
 const ProjectsPage: React.FC = () => {
   const [stackActive, setStackActive] = useState(false);
+  const [bootLowPower, setBootLowPower] = useState(true);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setBootLowPower(false);
+    }, 900);
+
+    return () => window.clearTimeout(timeout);
+  }, []);
 
   const handleStackActivationChange = useCallback((active: boolean) => {
     setStackActive(active);
@@ -27,6 +36,7 @@ const ProjectsPage: React.FC = () => {
             <ProjectStoryboard
               scrollContainer={scrollRef}
               onStackActivationChange={handleStackActivationChange}
+              forceLowPower={bootLowPower}
             />
           </div>
 

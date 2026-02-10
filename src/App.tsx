@@ -9,6 +9,9 @@ const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const BlogPage = lazy(() => import("./pages/BlogPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
+const ROUTE_TRANSITION_FULL_MS = 760;
+const ROUTE_TRANSITION_LITE_MS = 620;
+const HEAVY_TRANSITION_ROUTES = new Set(["/", "/projects"]);
 
 const routeIndexMap = new Map<string, number>(
   siteRoutes.map((route, index) => [normalizeRoute(route.path), index]),
@@ -25,11 +28,13 @@ const buildTransitionOptions = (
   const toIndex = routeIndexMap.get(toPath) ?? fromIndex;
 
   const inferredDirection: Required<WipeOptions>["direction"] = toIndex >= fromIndex ? "right" : "left";
+  const enteringHeavyRoute = HEAVY_TRANSITION_ROUTES.has(toPath);
 
   return {
     direction: opts?.direction ?? inferredDirection,
     color: opts?.color ?? routeColorMap.get(toPath) ?? "#e2e8f0",
-    duration: opts?.duration ?? 560,
+    duration: opts?.duration ?? (enteringHeavyRoute ? ROUTE_TRANSITION_LITE_MS : ROUTE_TRANSITION_FULL_MS),
+    intensity: opts?.intensity ?? (enteringHeavyRoute ? "lite" : "full"),
   };
 };
 
@@ -129,6 +134,18 @@ function App() {
     return <LandingPage onNavigate={navigate} />;
   }, [path, navigate]);
 
+  const isHeavyRoute = HEAVY_TRANSITION_ROUTES.has(path);
+  const pageInitialMotion = prefersReducedMotion
+    ? { opacity: 1 }
+    : isHeavyRoute
+      ? { opacity: 0, y: 12, filter: "blur(4px)", scale: 0.996 }
+      : { opacity: 0, y: 24, filter: "blur(10px)", scale: 0.992 };
+  const pageTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : isHeavyRoute
+      ? { duration: 0.48, ease: [0.14, 0.88, 0.22, 1] as [number, number, number, number] }
+      : { duration: 0.7, ease: [0.14, 0.88, 0.22, 1] as [number, number, number, number] };
+
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-slate-50">
       <TransitionWipe ref={wipeRef} />
@@ -137,21 +154,13 @@ function App() {
         <motion.main
           key={path}
           className="h-full w-full"
-          initial={
-            prefersReducedMotion
-              ? { opacity: 1 }
-              : { opacity: 0, y: 14, filter: "blur(5px)", scale: 0.997 }
-          }
+          initial={pageInitialMotion}
           animate={
             prefersReducedMotion
               ? { opacity: 1 }
               : { opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }
           }
-          transition={
-            prefersReducedMotion
-              ? { duration: 0 }
-              : { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
-          }
+          transition={pageTransition}
           style={{ willChange: prefersReducedMotion ? "auto" : "transform, opacity, filter" }}
         >
           {pageNode}

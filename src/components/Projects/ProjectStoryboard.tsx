@@ -6,6 +6,7 @@ import ProjectIntroSequence from "./ProjectIntroSequence";
 export interface ProjectStoryboardProps {
   scrollContainer: RefObject<HTMLDivElement>;
   onStackActivationChange?: (active: boolean) => void;
+  forceLowPower?: boolean;
 }
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
@@ -34,6 +35,7 @@ const remapProgress = (raw: number): number => {
 const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   scrollContainer,
   onStackActivationChange,
+  forceLowPower = false,
 }) => {
   const sceneRef = useRef<HTMLDivElement>(null);
   const rawRef = useRef(0);
@@ -73,7 +75,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
 
   return (
     <div ref={sceneRef}>
-      <StoryboardSection progress={timelineProgress} height={230}>
+      <StoryboardSection progress={timelineProgress} height={230} forceLowPower={forceLowPower}>
         {(progress) => <ProjectIntroSequence progress={progress} />}
       </StoryboardSection>
     </div>

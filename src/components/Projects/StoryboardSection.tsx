@@ -6,10 +6,16 @@ import * as THREE from "three";
 interface StoryboardSectionProps {
   progress: MotionValue<number>;
   height?: number;
+  forceLowPower?: boolean;
   children: (progress: MotionValue<number>) => React.ReactNode;
 }
 
-const StoryboardSection: React.FC<StoryboardSectionProps> = ({ progress, height = 200, children }) => {
+const StoryboardSection: React.FC<StoryboardSectionProps> = ({
+  progress,
+  height = 200,
+  forceLowPower = false,
+  children,
+}) => {
   const [lowPowerMode, setLowPowerMode] = useState(false);
 
   useEffect(() => {
@@ -42,8 +48,9 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({ progress, height 
     };
   }, []);
 
-  const renderHeight = lowPowerMode ? Math.max(190, Math.min(height, 220)) : height;
-  const shadowMapSize = lowPowerMode ? 1024 : 2048;
+  const effectiveLowPowerMode = lowPowerMode || forceLowPower;
+  const renderHeight = effectiveLowPowerMode ? Math.max(190, Math.min(height, 220)) : height;
+  const shadowMapSize = effectiveLowPowerMode ? 1024 : 2048;
 
   return (
     <section style={{ height: `${renderHeight}vh` }} className="relative">
@@ -54,18 +61,18 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({ progress, height 
 
         <Canvas
           className="absolute inset-0 h-full w-full"
-          dpr={lowPowerMode ? [1, 1.5] : [1, 2]}
-          shadows={!lowPowerMode}
+          dpr={effectiveLowPowerMode ? [1, 1.5] : [1, 2]}
+          shadows={!effectiveLowPowerMode}
           gl={{
             preserveDrawingBuffer: false,
-            antialias: !lowPowerMode,
+            antialias: !effectiveLowPowerMode,
             powerPreference: "high-performance",
             alpha: true,
           }}
           onCreated={({ gl }) => {
             (gl as unknown as { outputColorSpace: THREE.ColorSpace }).outputColorSpace = THREE.SRGBColorSpace;
             THREE.ColorManagement.enabled = true;
-            gl.shadowMap.enabled = !lowPowerMode;
+            gl.shadowMap.enabled = !effectiveLowPowerMode;
             gl.shadowMap.type = THREE.PCFSoftShadowMap;
             gl.setClearColor(0xffffff, 0);
           }}
@@ -75,18 +82,18 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({ progress, height 
 
           <ambientLight intensity={0.62} />
           <spotLight
-            castShadow={!lowPowerMode}
+            castShadow={!effectiveLowPowerMode}
             position={[0, 5.2, 2.6]}
             angle={0.56}
             penumbra={0.66}
-            intensity={lowPowerMode ? 1.32 : 1.55}
+            intensity={effectiveLowPowerMode ? 1.32 : 1.55}
             distance={26}
             shadow-mapSize-width={shadowMapSize}
             shadow-mapSize-height={shadowMapSize}
             shadow-bias={-0.00015}
           />
           <directionalLight
-            castShadow={!lowPowerMode}
+            castShadow={!effectiveLowPowerMode}
             position={[2.8, 2.6, 2.4]}
             intensity={0.38}
             shadow-bias={-0.00018}
@@ -96,7 +103,7 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({ progress, height 
           {/* Large invisible receiver for soft grounding shadows only. */}
           <mesh rotation-x={-Math.PI / 2} position={[0, -1.26, 0]} receiveShadow>
             <planeGeometry args={[160, 160]} />
-            <shadowMaterial transparent opacity={lowPowerMode ? 0.09 : 0.14} />
+            <shadowMaterial transparent opacity={effectiveLowPowerMode ? 0.09 : 0.14} />
           </mesh>
 
           <group scale={1.14} position={[0, 0.02, 0]}>

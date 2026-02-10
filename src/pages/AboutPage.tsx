@@ -7,7 +7,6 @@ const AboutPage: React.FC = () => {
     <PageScaffold
       backgroundClassName="bg-[radial-gradient(circle_at_14%_8%,rgba(186,230,253,0.52),rgba(224,231,255,0.32)_36%,rgba(248,250,252,1)_72%)]"
       footerBackgroundColor="#ffffff"
-      scrollSnap
     >
       {(scrollRef) => (
         <>
