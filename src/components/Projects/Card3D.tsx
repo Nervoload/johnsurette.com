@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, forwardRef, useImperativeHandle } from "react";
+import React, { useMemo, useRef, forwardRef, useImperativeHandle } from "react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { MotionValue } from "framer-motion";
 import * as THREE from "three";
@@ -76,19 +76,35 @@ const Card3D = forwardRef<THREE.Group, Card3DProps>(
 
     return (
       <group ref={innerRef} onClick={onClick} {...rest}>
-        <mesh castShadow receiveShadow>
+        <mesh castShadow>
           <boxGeometry args={[w, h, thickness]} />
-          <meshStandardMaterial color={borderColor} metalness={0.12} roughness={0.62} />
+          <meshStandardMaterial color={borderColor} metalness={0.08} roughness={0.52} />
         </mesh>
 
-        <mesh castShadow receiveShadow position={[0, 0, thickness / 2 + 0.0001]}>
+        <mesh position={[0, 0, thickness / 2 + 0.0001]}>
           <planeGeometry args={[w, h]} />
-          <meshStandardMaterial map={frontMap} roughness={0.62} metalness={0.02} />
+          <meshStandardMaterial
+            map={frontMap}
+            roughness={0.32}
+            metalness={0}
+            emissive="#ffffff"
+            emissiveMap={frontMap}
+            emissiveIntensity={0.36}
+            toneMapped={false}
+          />
         </mesh>
 
-        <mesh castShadow receiveShadow rotation-y={Math.PI} position={[0, 0, -thickness / 2 - 0.0001]}>
+        <mesh rotation-y={Math.PI} position={[0, 0, -thickness / 2 - 0.0001]}>
           <planeGeometry args={[w, h]} />
-          <meshStandardMaterial map={backMap} roughness={0.62} metalness={0.02} />
+          <meshStandardMaterial
+            map={backMap}
+            roughness={0.28}
+            metalness={0}
+            emissive="#ffffff"
+            emissiveMap={backMap}
+            emissiveIntensity={0.4}
+            toneMapped={false}
+          />
         </mesh>
       </group>
     );

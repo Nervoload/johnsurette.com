@@ -3,6 +3,7 @@ import { Canvas } from "@react-three/fiber";
 import { MotionValue } from "framer-motion";
 import * as THREE from "three";
 import CanvasErrorBoundary from "../CanvasErrorBoundary";
+import SceneBloom from "./SceneBloom";
 
 interface StoryboardSectionProps {
   progress: MotionValue<number>;
@@ -51,7 +52,6 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
 
   const effectiveLowPowerMode = lowPowerMode || forceLowPower;
   const renderHeight = effectiveLowPowerMode ? Math.max(190, Math.min(height, 220)) : height;
-  const shadowMapSize = effectiveLowPowerMode ? 1024 : 2048;
 
   return (
     <section style={{ height: `${renderHeight}vh` }} className="relative">
@@ -65,7 +65,7 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
           className="absolute inset-0 h-full w-full"
           camera={{ position: [0, 0.14, 6.15], fov: 43 }}
           dpr={effectiveLowPowerMode ? [1, 1.5] : [1, 2]}
-          shadows={!effectiveLowPowerMode}
+          shadows={false}
           gl={{
             preserveDrawingBuffer: false,
             antialias: !effectiveLowPowerMode,
@@ -75,38 +75,27 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
           onCreated={({ gl }) => {
             (gl as unknown as { outputColorSpace: THREE.ColorSpace }).outputColorSpace = THREE.SRGBColorSpace;
             THREE.ColorManagement.enabled = true;
-            gl.shadowMap.enabled = !effectiveLowPowerMode;
-            gl.shadowMap.type = THREE.PCFSoftShadowMap;
+            gl.shadowMap.enabled = false;
             gl.setClearColor(0xffffff, 0);
           }}
         >
           <fog attach="fog" args={["#f8fafc", 8, 24]} />
 
-          <ambientLight intensity={0.62} />
+          <ambientLight intensity={0.72} />
           <spotLight
-            castShadow={!effectiveLowPowerMode}
             position={[0, 5.2, 2.6]}
             angle={0.56}
             penumbra={0.66}
-            intensity={effectiveLowPowerMode ? 1.32 : 1.55}
+            intensity={effectiveLowPowerMode ? 1.45 : 1.68}
             distance={26}
-            shadow-mapSize-width={shadowMapSize}
-            shadow-mapSize-height={shadowMapSize}
-            shadow-bias={-0.00015}
           />
           <directionalLight
-            castShadow={!effectiveLowPowerMode}
             position={[2.8, 2.6, 2.4]}
-            intensity={0.38}
-            shadow-bias={-0.00018}
+            intensity={0.45}
           />
-          <directionalLight position={[-3.2, 1.4, -2.8]} intensity={0.14} />
+          <directionalLight position={[-3.2, 1.4, -2.8]} intensity={0.18} />
 
-          {/* Large invisible receiver for soft grounding shadows only. */}
-          <mesh rotation-x={-Math.PI / 2} position={[0, -1.26, 0]} receiveShadow>
-            <planeGeometry args={[160, 160]} />
-            <shadowMaterial transparent opacity={effectiveLowPowerMode ? 0.09 : 0.14} />
-          </mesh>
+          <SceneBloom enabled={!effectiveLowPowerMode} />
 
           <group scale={1.14} position={[0, 0.02, 0]}>
             {children(progress)}
