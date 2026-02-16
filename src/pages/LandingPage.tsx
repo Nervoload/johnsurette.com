@@ -23,7 +23,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
     >
       {() => (
         <>
-          <section className="relative flex min-h-screen items-center justify-center">
+          <section className="relative flex min-h-[100dvh] items-center justify-center">
             <DepthRainBackdrop />
             <div className="relative z-10 px-4 sm:px-6">
               <CenterpieceStage activeSection={null} centerpiece={ActiveCenterpiece} />

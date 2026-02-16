@@ -15,7 +15,7 @@ const Footer: React.FC<FooterProps> = ({
   scrollContainerRef,
   backgroundColor = "#ffffff",
   ownerName = "John Surette",
-  ownerEmail = "contact@example.com",
+  ownerEmail = "john@johnsurette.com",
   runwayVh = 110,
 }) => {
   const [isScrollable, setIsScrollable] = useState(false);
@@ -87,7 +87,7 @@ const Footer: React.FC<FooterProps> = ({
           transform: `translateY(${(1 - peekProgress) * 14}px)`,
         }}
       >
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 text-sm text-slate-800">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 pb-[env(safe-area-inset-bottom,0px)] text-sm text-slate-800">
           <p className="font-medium tracking-wide">{ownerName}</p>
           <p className="text-slate-500">{ownerEmail}</p>
         </div>
@@ -121,10 +121,10 @@ const Footer: React.FC<FooterProps> = ({
             Scroll up to return. This footer expands progressively only after page content is finished.
           </p>
           <div className="flex items-center gap-5 text-sm text-slate-600" style={{ opacity: 0.2 + panelProgress * 0.8 }}>
-            <a className="pointer-events-auto underline decoration-slate-400 underline-offset-4" href="https://github.com" target="_blank" rel="noreferrer">
+            <a className="pointer-events-auto underline decoration-slate-400 underline-offset-4" href="https://github.com/johnsurette" target="_blank" rel="noreferrer">
               GitHub
             </a>
-            <a className="pointer-events-auto underline decoration-slate-400 underline-offset-4" href="https://www.linkedin.com" target="_blank" rel="noreferrer">
+            <a className="pointer-events-auto underline decoration-slate-400 underline-offset-4" href="https://www.linkedin.com/in/johnsurette" target="_blank" rel="noreferrer">
               LinkedIn
             </a>
           </div>

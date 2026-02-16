@@ -1,5 +1,5 @@
 // src/components/NavBar/NavLogo.tsx
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 
 export interface NavLogoProps {
   /** Total diameter in CSS pixels. */
@@ -35,13 +35,18 @@ const NavLogo: React.FC<NavLogoProps> = ({
   const wrapRef = useRef<HTMLDivElement>(null);
   const [shine, setShine] = useState({ x: 50, y: 50 }); // percent
 
-  const handleMove = (e: React.MouseEvent) => {
+  // Unified handler — works for BOTH mouse and touch via pointer events
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
     const rect = wrapRef.current?.getBoundingClientRect();
     if (!rect) return;
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     setShine({ x, y });
-  };
+  }, []);
+
+  const handlePointerLeave = useCallback(() => {
+    setShine({ x: 50, y: 50 });
+  }, []);
 
   const inner = size - ringThickness * 2;
   const conic = `conic-gradient(${ringColors.join(", ")})`;
@@ -52,7 +57,8 @@ const NavLogo: React.FC<NavLogoProps> = ({
   return (
     <div
       ref={wrapRef}
-      onMouseMove={handleMove}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={handlePointerLeave}
       style={{ width: size, height: size, position: "relative" }}
       className="select-none"
     >

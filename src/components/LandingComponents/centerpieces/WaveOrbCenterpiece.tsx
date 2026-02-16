@@ -4,6 +4,7 @@ import { Sparkles } from "@react-three/drei";
 import * as THREE from "three";
 import { sections } from "../../sections";
 import { CenterpieceProps } from "../centerpieceTypes";
+import CanvasErrorBoundary from "../../CanvasErrorBoundary";
 
 interface Palette {
   baseHex: string;
@@ -584,6 +585,7 @@ const WaveOrbCenterpiece: React.FC<CenterpieceProps> = ({ activeSection, ...rest
   }, [activeSection]);
 
   return (
+    <CanvasErrorBoundary>
     <Canvas
       camera={{ position: [0, 0, 5], fov: 45 }}
       dpr={[1, 2]}
@@ -592,6 +594,7 @@ const WaveOrbCenterpiece: React.FC<CenterpieceProps> = ({ activeSection, ...rest
     >
       <OrbScene activeSection={activeSection} palette={palette} {...rest} />
     </Canvas>
+    </CanvasErrorBoundary>
   );
 };
 

@@ -26,7 +26,7 @@ const ProjectsPage: React.FC = () => {
         <>
           <header className="relative z-20 mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 pt-24 text-slate-900">
             <p className="text-sm uppercase tracking-[0.22em] text-slate-500">Projects</p>
-            <h1 className="text-4xl font-medium sm:text-5xl">Interactive Project Narrative</h1>
+            <h1 className="text-3xl font-medium xs:text-4xl sm:text-5xl">Interactive Project Narrative</h1>
             <p className="max-w-2xl text-slate-600">
               Intro cards shuffle, spread into orbit, then exit downward before the project stack takes over.
             </p>

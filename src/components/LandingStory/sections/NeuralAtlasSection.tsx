@@ -36,7 +36,7 @@ const links: Array<[number, number]> = [
 
 const NeuralAtlasSection: React.FC<NeuralAtlasSectionProps> = ({ section }) => {
   return (
-    <section className="relative isolate min-h-[122vh] overflow-hidden px-6 py-24 sm:px-10 lg:px-16">
+    <section className="relative isolate min-h-[100dvh] overflow-hidden px-4 py-24 xs:px-6 sm:px-10 lg:px-16">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_10%,rgba(20,184,166,0.16),rgba(2,6,23,0)_44%),radial-gradient(circle_at_88%_14%,rgba(236,72,153,0.14),rgba(2,6,23,0)_42%),linear-gradient(170deg,#020617,#0b1120_60%,#0f172a)]" />
 
       <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-10">
@@ -48,7 +48,7 @@ const NeuralAtlasSection: React.FC<NeuralAtlasSectionProps> = ({ section }) => {
           className="max-w-3xl"
         >
           <p className="text-xs uppercase tracking-[0.28em] text-cyan-100/70">{section.eyebrow}</p>
-          <h2 className="mt-4 text-4xl font-semibold leading-tight text-slate-100 sm:text-5xl">{section.title}</h2>
+          <h2 className="mt-4 text-3xl font-semibold leading-tight text-slate-100 xs:text-4xl sm:text-5xl">{section.title}</h2>
           <p className="mt-6 text-lg leading-relaxed text-slate-300">{section.summary}</p>
         </motion.div>
 
@@ -88,13 +88,14 @@ const NeuralAtlasSection: React.FC<NeuralAtlasSectionProps> = ({ section }) => {
               key={node.id}
               className="absolute -translate-x-1/2 -translate-y-1/2 rounded-xl border border-cyan-200/25 bg-slate-950/72 px-3 py-2 text-[11px] uppercase tracking-[0.12em] text-cyan-100"
               style={{ left: `${node.x}%`, top: `${node.y}%` }}
-              animate={{
+              whileInView={{
                 boxShadow: [
                   "0 0 0 rgba(34,211,238,0)",
                   "0 0 24px rgba(34,211,238,0.45)",
                   "0 0 0 rgba(34,211,238,0)",
                 ],
               }}
+              viewport={{ once: false, amount: 0.1 }}
               transition={{ duration: 2.2 + idx * 0.2, repeat: Infinity, ease: "easeInOut" }}
             >
               {node.label}

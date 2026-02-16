@@ -10,7 +10,7 @@ const HumanMachineSection: React.FC<HumanMachineSectionProps> = ({ section }) =>
   const cards = section.focusAreas.slice(0, 6);
 
   return (
-    <section className="relative isolate min-h-[120vh] overflow-hidden px-6 py-24 sm:px-10 lg:px-16">
+    <section className="relative isolate min-h-[100dvh] overflow-hidden px-4 py-24 xs:px-6 sm:px-10 lg:px-16">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_14%_16%,rgba(14,165,233,0.2),rgba(15,23,42,0)_44%),radial-gradient(circle_at_88%_88%,rgba(45,212,191,0.16),rgba(15,23,42,0)_42%),linear-gradient(150deg,#0f172a,#111827_46%,#0b1120)]" />
 
       <div className="relative mx-auto w-full max-w-7xl">
@@ -22,7 +22,7 @@ const HumanMachineSection: React.FC<HumanMachineSectionProps> = ({ section }) =>
           transition={{ duration: 0.65 }}
         >
           <p className="text-xs uppercase tracking-[0.28em] text-cyan-100/75">{section.eyebrow}</p>
-          <h2 className="mt-4 text-4xl font-semibold leading-tight text-slate-100 sm:text-5xl">{section.title}</h2>
+          <h2 className="mt-4 text-3xl font-semibold leading-tight text-slate-100 xs:text-4xl sm:text-5xl">{section.title}</h2>
           <p className="mt-6 text-lg leading-relaxed text-slate-300">{section.summary}</p>
         </motion.div>
 

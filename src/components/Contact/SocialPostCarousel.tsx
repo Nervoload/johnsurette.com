@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useTouchSwipe } from "../../hooks/useTouchSwipe";
 
 export interface SocialPost {
   id: string;
@@ -32,6 +33,15 @@ const SocialPostCarousel: React.FC<SocialPostCarouselProps> = ({ posts, autoAdva
   const next = () => goTo(activeIndex + 1);
   const previous = () => goTo(activeIndex - 1);
 
+  // Swipe handlers — works for both touch and mouse drag
+  const swipeHandlers = useTouchSwipe(
+    {
+      onSwipeLeft: next,
+      onSwipeRight: previous,
+    },
+    { threshold: 36 },
+  );
+
   useEffect(() => {
     if (!hasPosts || isPaused) return;
 
@@ -57,11 +67,12 @@ const SocialPostCarousel: React.FC<SocialPostCarouselProps> = ({ posts, autoAdva
 
   return (
     <div
-      className="relative overflow-hidden py-3"
+      className="relative overflow-hidden py-3 touch-pan-y"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onFocusCapture={() => setIsPaused(true)}
       onBlurCapture={() => setIsPaused(false)}
+      {...swipeHandlers}
     >
       <div className="mb-4 flex items-center justify-between">
         <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Latest Posts</p>
@@ -108,17 +119,21 @@ const SocialPostCarousel: React.FC<SocialPostCarouselProps> = ({ posts, autoAdva
       </div>
 
       <div className="mt-5 flex items-center justify-between gap-4">
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           {posts.map((post, index) => (
             <button
               key={post.id}
               type="button"
               aria-label={`Jump to ${post.platform} post ${index + 1}`}
               onClick={() => goTo(index)}
-              className={`h-2.5 w-2.5 rounded-full transition ${
-                index === activeIndex ? "bg-slate-900" : "bg-slate-300 hover:bg-slate-400"
-              }`}
-            />
+              className="flex h-8 w-8 items-center justify-center"
+            >
+              <span
+                className={`block h-2.5 w-2.5 rounded-full transition ${
+                  index === activeIndex ? "bg-slate-900" : "bg-slate-300"
+                }`}
+              />
+            </button>
           ))}
         </div>
 
@@ -126,14 +141,16 @@ const SocialPostCarousel: React.FC<SocialPostCarouselProps> = ({ posts, autoAdva
           <button
             type="button"
             onClick={previous}
-            className="rounded-full border border-slate-300/80 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.12em] text-slate-700 transition hover:border-slate-500"
+            aria-label="Previous post"
+            className="rounded-full border border-slate-300/80 px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-700 transition active:scale-95 hover:border-slate-500"
           >
             Prev
           </button>
           <button
             type="button"
             onClick={next}
-            className="rounded-full border border-slate-300/80 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.12em] text-slate-700 transition hover:border-slate-500"
+            aria-label="Next post"
+            className="rounded-full border border-slate-300/80 px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-700 transition active:scale-95 hover:border-slate-500"
           >
             Next
           </button>

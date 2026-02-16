@@ -22,7 +22,7 @@ const PageScaffold: React.FC<PageScaffoldProps> = ({
     <>
       <div
         ref={scrollRef}
-        className={`relative h-screen w-screen overflow-y-auto overflow-x-hidden ${backgroundClassName} ${
+        className={`relative h-[100dvh] w-screen overflow-y-auto overflow-x-hidden ${backgroundClassName} ${
           scrollSnap ? "snap-y snap-mandatory" : ""
         }`}
       >

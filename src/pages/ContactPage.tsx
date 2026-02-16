@@ -47,16 +47,16 @@ const ContactPage: React.FC = () => {
       footerRunwayVh={120}
     >
       {() => (
-        <section className="relative min-h-[180vh] w-full overflow-hidden pb-24 pt-24 text-slate-900">
+        <section className="relative min-h-[140vh] w-full overflow-hidden px-4 pb-24 pt-24 text-slate-900 xs:px-6 sm:min-h-[180vh]">
           <div className="pointer-events-none absolute inset-0">
             <DotFieldGlobeBackground pointCount={240} className="opacity-90" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_28%,rgba(248,250,252,0.06),rgba(248,250,252,0.85)_38%,rgba(248,250,252,0.96)_70%)]" />
           </div>
 
-          <div className="relative z-10 mx-auto w-full max-w-6xl px-6">
+          <div className="relative z-10 mx-auto w-full max-w-6xl">
             <header className="max-w-3xl">
               <p className="text-xs uppercase tracking-[0.26em] text-slate-500">Contact</p>
-              <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">Let&apos;s Connect</h1>
+              <h1 className="mt-4 text-3xl font-semibold tracking-tight xs:text-4xl sm:text-6xl">Let&apos;s Connect</h1>
               <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-slate-600">
                 An easy path to connect with me for project work, collaborations, or quick conversations. Reach out directly, then explore the latest updates below.
               </p>
@@ -67,7 +67,7 @@ const ContactPage: React.FC = () => {
                 <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Contact Me</p>
                 <a
                   href="mailto:contact@example.com"
-                  className="mt-5 inline-flex text-2xl font-semibold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-8 transition hover:decoration-slate-700"
+                  className="mt-5 inline-flex text-xl font-semibold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-8 transition hover:decoration-slate-700 xs:text-2xl"
                 >
                   contact@example.com
                 </a>

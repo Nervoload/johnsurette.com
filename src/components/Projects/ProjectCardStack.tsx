@@ -184,7 +184,7 @@ const ProjectCardStack: React.FC<ProjectCardStackProps> = ({ items, active, scro
       >
         <div className="mb-10 max-w-3xl text-slate-900">
           <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Project Stack</p>
-          <h2 className="mt-3 text-[44px] font-medium leading-[1.03] sm:text-[52px]">Cards fly in, flip, and expand on click</h2>
+          <h2 className="mt-3 text-[28px] font-medium leading-[1.03] xs:text-[36px] sm:text-[44px] md:text-[52px]">Cards fly in, flip, and expand on click</h2>
           <p className="mt-4 max-w-2xl text-[16px] leading-relaxed text-slate-600">
             The sequence now continues from the intro flight: cards land into a vertical stack face-down, then flip and widen with scroll progression.
           </p>

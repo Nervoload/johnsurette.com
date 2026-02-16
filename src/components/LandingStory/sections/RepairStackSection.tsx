@@ -10,7 +10,7 @@ const RepairStackSection: React.FC<RepairStackSectionProps> = ({ section }) => {
   const nodes = section.focusAreas.slice(0, 6);
 
   return (
-    <section className="relative isolate min-h-[118vh] overflow-hidden bg-slate-950 px-6 py-24 sm:px-10 lg:px-16">
+    <section className="relative isolate min-h-[100dvh] overflow-hidden bg-slate-950 px-4 py-24 xs:px-6 sm:px-10 lg:px-16">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_36%,rgba(56,189,248,0.18),rgba(15,23,42,0.0)_46%),radial-gradient(circle_at_30%_86%,rgba(167,139,250,0.15),rgba(15,23,42,0.0)_40%),linear-gradient(180deg,#020617,#0f172a_65%,#111827)]" />
       <div className="absolute inset-0 story-flow-lines opacity-35" />
 
@@ -22,7 +22,7 @@ const RepairStackSection: React.FC<RepairStackSectionProps> = ({ section }) => {
           transition={{ duration: 0.7 }}
         >
           <p className="text-xs uppercase tracking-[0.28em] text-cyan-100/70">{section.eyebrow}</p>
-          <h2 className="mt-4 text-4xl font-semibold leading-tight text-slate-100 sm:text-5xl">{section.title}</h2>
+          <h2 className="mt-4 text-3xl font-semibold leading-tight text-slate-100 xs:text-4xl sm:text-5xl">{section.title}</h2>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-300">{section.summary}</p>
 
           <div className="mt-8 space-y-3">
@@ -66,7 +66,8 @@ const RepairStackSection: React.FC<RepairStackSectionProps> = ({ section }) => {
                 key={node}
                 className="absolute -translate-x-1/2 -translate-y-1/2 rounded-xl border border-cyan-200/30 bg-slate-900/78 px-3 py-2 text-xs text-cyan-100 shadow-[0_0_24px_rgba(34,211,238,0.15)]"
                 style={{ left: `${x}%`, top: `${y}%` }}
-                animate={{ y: [0, -8, 0] }}
+                whileInView={{ y: [0, -8, 0] }}
+                viewport={{ once: false, amount: 0.1 }}
                 transition={{ duration: 3.4 + idx * 0.35, repeat: Infinity, ease: "easeInOut" }}
               >
                 {node}

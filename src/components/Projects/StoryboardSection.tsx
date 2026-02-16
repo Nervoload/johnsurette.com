@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { MotionValue } from "framer-motion";
 import * as THREE from "three";
+import CanvasErrorBoundary from "../CanvasErrorBoundary";
 
 interface StoryboardSectionProps {
   progress: MotionValue<number>;
@@ -59,8 +60,10 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(191,219,254,0.52),transparent_46%),radial-gradient(circle_at_78%_20%,rgba(196,181,253,0.34),transparent_42%),linear-gradient(165deg,#ffffff,#f8fafc_58%,#eef2f7)]" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_72%,rgba(148,163,184,0.15),transparent_58%)]" />
 
+        <CanvasErrorBoundary>
         <Canvas
           className="absolute inset-0 h-full w-full"
+          camera={{ position: [0, 0.14, 6.15], fov: 43 }}
           dpr={effectiveLowPowerMode ? [1, 1.5] : [1, 2]}
           shadows={!effectiveLowPowerMode}
           gl={{
@@ -77,7 +80,6 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
             gl.setClearColor(0xffffff, 0);
           }}
         >
-          <perspectiveCamera makeDefault position={[0, 0.14, 6.15]} fov={43} />
           <fog attach="fog" args={["#f8fafc", 8, 24]} />
 
           <ambientLight intensity={0.62} />
@@ -110,6 +112,7 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
             {children(progress)}
           </group>
         </Canvas>
+        </CanvasErrorBoundary>
 
         {/* Bottom blend to avoid hard section edge into following content. */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-b from-transparent to-slate-50" />

@@ -48,13 +48,13 @@ const CenterpieceStage: React.FC<CenterpieceStageProps> = ({ activeSection, cent
   };
 
   return (
-    <div className="relative h-[clamp(260px,74vmin,720px)] w-[clamp(260px,74vmin,720px)]">
+    <div className="relative h-[clamp(220px,65vmin,720px)] w-[clamp(220px,65vmin,720px)] sm:h-[clamp(260px,74vmin,720px)] sm:w-[clamp(260px,74vmin,720px)]">
       <div className="pointer-events-none absolute inset-[-24%] rounded-full bg-[radial-gradient(circle_at_40%_30%,rgba(56,189,248,0.25),rgba(99,102,241,0.17)_36%,rgba(217,70,239,0.14)_54%,rgba(2,6,23,0)_75%)] blur-[40px]" />
       <div className="pointer-events-none absolute inset-[-8%] stage-flow-ring" />
       <div className="pointer-events-none absolute inset-[2%] stage-flow-ring-alt" />
       <div
         ref={stageRef}
-        className="relative h-full w-full overflow-hidden rounded-full border border-cyan-200/10 bg-[radial-gradient(circle_at_50%_36%,rgba(30,41,59,0.72),rgba(15,23,42,0.62)_44%,rgba(2,6,23,0.42)_100%)] shadow-[0_55px_140px_-85px_rgba(14,116,144,0.82),inset_0_0_80px_rgba(56,189,248,0.08)]"
+        className="relative h-full w-full touch-pan-y overflow-hidden rounded-full border border-cyan-200/10 bg-[radial-gradient(circle_at_50%_36%,rgba(30,41,59,0.72),rgba(15,23,42,0.62)_44%,rgba(2,6,23,0.42)_100%)] shadow-[0_55px_140px_-85px_rgba(14,116,144,0.82),inset_0_0_80px_rgba(56,189,248,0.08)]"
         onPointerEnter={() => setHovering(true)}
         onPointerLeave={() => {
           setHovering(false);

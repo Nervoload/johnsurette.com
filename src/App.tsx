@@ -40,7 +40,7 @@ const buildTransitionOptions = (
 
 const PageFallback: React.FC = () => {
   return (
-    <div className="flex h-screen w-screen items-center justify-center bg-slate-50 text-slate-800">
+    <div className="flex h-[100dvh] w-screen items-center justify-center bg-slate-50 text-slate-800">
       <div className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm tracking-wide text-slate-600 shadow-sm">
         Loading page...
       </div>
@@ -120,7 +120,7 @@ function App() {
     }
 
     if (path === "/about") {
-      return <AboutPage />;
+      return <AboutPage onNavigate={navigate} />;
     }
 
     if (path === "/contact") {
@@ -147,7 +147,7 @@ function App() {
       : { duration: 0.7, ease: [0.14, 0.88, 0.22, 1] as [number, number, number, number] };
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-slate-50">
+    <div className="relative h-[100dvh] w-screen overflow-hidden bg-slate-50 supports-[height:100dvh]:h-[100dvh]">
       <TransitionWipe ref={wipeRef} />
       <NavBar routes={siteRoutes} currentPath={path} onNavigate={navigate} />
       <Suspense fallback={<PageFallback />}>

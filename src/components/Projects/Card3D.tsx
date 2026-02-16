@@ -1,4 +1,4 @@
-import React, { useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useRef, useMemo, forwardRef, useImperativeHandle } from "react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { MotionValue } from "framer-motion";
 import * as THREE from "three";
@@ -52,12 +52,15 @@ const Card3D = forwardRef<THREE.Group, Card3DProps>(
     const frontMap = useLoader(THREE.TextureLoader, frontSrc ?? FALLBACK_FRONT);
     const backMap = useLoader(THREE.TextureLoader, backSrc ?? FALLBACK_BACK);
 
-    frontMap.colorSpace = THREE.SRGBColorSpace;
-    backMap.colorSpace = THREE.SRGBColorSpace;
-    frontMap.anisotropy = gl.capabilities.getMaxAnisotropy();
-    backMap.anisotropy = gl.capabilities.getMaxAnisotropy();
-    frontMap.minFilter = THREE.LinearMipmapLinearFilter;
-    backMap.minFilter = THREE.LinearMipmapLinearFilter;
+    useMemo(() => {
+      const maxAniso = gl.capabilities.getMaxAnisotropy();
+      for (const map of [frontMap, backMap]) {
+        map.colorSpace = THREE.SRGBColorSpace;
+        map.anisotropy = maxAniso;
+        map.minFilter = THREE.LinearMipmapLinearFilter;
+        map.needsUpdate = true;
+      }
+    }, [frontMap, backMap, gl]);
 
     useFrame(() => {
       const group = innerRef.current;

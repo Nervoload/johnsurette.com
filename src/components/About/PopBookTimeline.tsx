@@ -1,9 +1,11 @@
 import React, { RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { TimelineScene, timelineScenes } from "./timelineData";
+import { WipeOptions } from "../Transitions/TransitionWipe";
 
 interface PopBookTimelineProps {
   scrollContainer: RefObject<HTMLDivElement>;
+  onNavigate?: (path: string, opts?: WipeOptions) => void;
 }
 
 interface SceneLayer {
@@ -15,7 +17,7 @@ interface SceneLayer {
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 const overlayEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
-const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer }) => {
+const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNavigate }) => {
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const anchorRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -147,6 +149,53 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer }) =>
     setStageTilt(0, 0);
   }, [setStageTilt]);
 
+  // Escape key to close expanded modal
+  useEffect(() => {
+    if (!expandedSceneId) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeScene();
+        return;
+      }
+
+      // Focus trap: cycle focus within the modal
+      if (e.key === "Tab") {
+        const modal = document.querySelector<HTMLElement>('[role="dialog"]');
+        if (!modal) return;
+
+        const focusable = modal.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [expandedSceneId, closeScene]);
+
+  // Auto-focus modal close button when it opens
+  useEffect(() => {
+    if (!expandedSceneId) return;
+    const timer = window.setTimeout(() => {
+      const closeBtn = document.querySelector<HTMLElement>('[aria-label="Minimize scene"]');
+      closeBtn?.focus();
+    }, 360);
+    return () => window.clearTimeout(timer);
+  }, [expandedSceneId]);
+
   const nowScene = useMemo<TimelineScene | null>(() => {
     if (currentScene.nowActions && currentScene.nowActions.length > 0) {
       return currentScene;
@@ -174,7 +223,7 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer }) =>
     <section ref={sectionRef} className="relative">
       <div
         ref={stageRef}
-        className="sticky top-0 z-10 h-screen overflow-hidden"
+        className="sticky top-0 z-10 h-[100dvh] overflow-hidden"
         onPointerMove={handleStagePointerMove}
         onPointerLeave={handleStagePointerLeave}
         onPointerCancel={handleStagePointerLeave}
@@ -245,7 +294,7 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer }) =>
                   aria-label={`Open ${scene.title} timeline scene`}
                   aria-hidden={!interactive}
                   tabIndex={interactive ? 0 : -1}
-                  className="group absolute left-1/2 top-[52%] h-[54vh] w-[74vw] max-w-5xl -translate-x-1/2 -translate-y-1/2 rounded-[2.2rem] border border-slate-300/65 bg-[rgba(248,250,252,0.98)] text-left shadow-[0_28px_80px_-62px_rgba(15,23,42,0.55)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/70"
+                  className="group absolute left-1/2 top-[52%] h-[62vh] w-[92vw] max-w-5xl -translate-x-1/2 -translate-y-1/2 rounded-[1.4rem] border border-slate-300/65 bg-[rgba(248,250,252,0.98)] text-left shadow-[0_28px_80px_-62px_rgba(15,23,42,0.55)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/70 sm:h-[54vh] sm:w-[74vw] sm:rounded-[2.2rem]"
                   style={{
                     opacity: layerOpacity,
                     transform: `translate(-50%, calc(-50% + ${deepOffset * 0.45}px)) scale(${0.93 + layerOpacity * 0.08}) rotateX(var(--about-tilt-x, 0deg)) rotateY(var(--about-tilt-y, 0deg))`,
@@ -257,7 +306,7 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer }) =>
                   <div className="absolute bottom-[12%] left-[5%] top-[12%] hidden w-px bg-slate-300/45 sm:block" />
 
                   <div
-                    className="absolute inset-0 flex flex-col justify-between p-8 sm:p-10"
+                    className="absolute inset-0 flex flex-col justify-between p-5 sm:p-8 sm:p-10"
                     style={{
                       transform: "translate3d(var(--about-shift-x, 0px), var(--about-shift-y, 0px), 0)",
                       transition: "transform 180ms linear",
@@ -265,8 +314,8 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer }) =>
                   >
                     <div>
                       <p className="text-xs uppercase tracking-[0.24em] text-slate-500">{scene.year}</p>
-                      <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">{scene.title}</h2>
-                      <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-600">{scene.summary}</p>
+                      <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">{scene.title}</h2>
+                      <p className="mt-3 max-w-2xl text-xs leading-relaxed text-slate-600 sm:mt-4 sm:text-sm">{scene.summary}</p>
                     </div>
 
                     <div className="grid grid-cols-3 gap-3 sm:gap-4">
@@ -291,19 +340,20 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer }) =>
         </div>
 
         {showNowPanel && (
-          <div className="absolute right-4 top-6 z-30 w-[min(280px,calc(100vw-2rem))] border-t border-slate-300/65 pt-4 sm:right-5 sm:top-8 sm:w-[280px]">
+          <div className="absolute bottom-20 right-4 z-30 w-[min(250px,calc(100vw-2rem))] border-t border-slate-300/65 pt-4 sm:bottom-auto sm:right-5 sm:top-8 sm:w-[280px]">
             <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Now</p>
             <p className="mt-2 text-lg font-semibold tracking-tight text-slate-900">{nowScene?.title}</p>
             <p className="mt-2 text-xs leading-relaxed text-slate-600">{nowScene?.detail.studioNote}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {nowActions.map((action) => (
-                <a
+                <button
                   key={`now-action-${action.path}`}
-                  href={action.path}
+                  type="button"
+                  onClick={() => onNavigate?.(action.path)}
                   className="rounded-full border border-slate-300/70 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-slate-700 transition hover:border-slate-500"
                 >
                   {action.label}
-                </a>
+                </button>
               ))}
             </div>
           </div>
@@ -388,13 +438,17 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer }) =>
                     {expandedScene.nowActions && expandedScene.nowActions.length > 0 && (
                       <div className="mt-8 flex flex-wrap gap-2">
                         {expandedScene.nowActions.map((action) => (
-                          <a
+                          <button
                             key={`expanded-action-${action.path}`}
-                            href={action.path}
+                            type="button"
+                            onClick={() => {
+                              closeScene();
+                              onNavigate?.(action.path);
+                            }}
                             className="rounded-full border border-slate-300/70 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.14em] text-slate-700 transition hover:border-slate-500"
                           >
                             {action.label}
-                          </a>
+                          </button>
                         ))}
                       </div>
                     )}
