@@ -11,7 +11,7 @@ const HumanMachineSection: React.FC<HumanMachineSectionProps> = ({ section }) =>
 
   return (
     <section className="relative isolate min-h-[100dvh] overflow-hidden px-4 py-24 xs:px-6 sm:px-10 lg:px-16">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_14%_16%,rgba(14,165,233,0.2),rgba(15,23,42,0)_44%),radial-gradient(circle_at_88%_88%,rgba(45,212,191,0.16),rgba(15,23,42,0)_42%),linear-gradient(150deg,#0f172a,#111827_46%,#0b1120)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_14%_16%,rgba(14,165,233,0.18),rgba(15,23,42,0)_44%),radial-gradient(circle_at_88%_88%,rgba(45,212,191,0.14),rgba(15,23,42,0)_42%),linear-gradient(150deg,rgba(15,23,42,0.72),rgba(17,24,39,0.7)_46%,rgba(11,17,32,0.74))]" />
 
       <div className="relative mx-auto w-full max-w-7xl">
         <motion.div

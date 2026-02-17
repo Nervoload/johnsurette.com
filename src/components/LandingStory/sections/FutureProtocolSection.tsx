@@ -12,7 +12,7 @@ interface FutureProtocolSectionProps {
 const FutureProtocolSection: React.FC<FutureProtocolSectionProps> = ({ section, onNavigate }) => {
   return (
     <section className="relative isolate min-h-[100dvh] overflow-hidden px-4 pb-28 pt-24 xs:px-6 sm:px-10 lg:px-16">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.16),rgba(2,6,23,0)_45%),radial-gradient(circle_at_70%_80%,rgba(168,85,247,0.15),rgba(2,6,23,0)_45%),linear-gradient(180deg,#020617,#0f172a_52%,#f8fafc_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.15),rgba(2,6,23,0)_45%),radial-gradient(circle_at_70%_80%,rgba(168,85,247,0.13),rgba(2,6,23,0)_45%),linear-gradient(180deg,rgba(2,6,23,0.76),rgba(15,23,42,0.68)_52%,rgba(248,250,252,0.8)_100%)]" />
 
       <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center text-center">
         <motion.div

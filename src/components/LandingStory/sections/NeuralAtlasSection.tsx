@@ -37,7 +37,7 @@ const links: Array<[number, number]> = [
 const NeuralAtlasSection: React.FC<NeuralAtlasSectionProps> = ({ section }) => {
   return (
     <section className="relative isolate min-h-[100dvh] overflow-hidden px-4 py-24 xs:px-6 sm:px-10 lg:px-16">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_10%,rgba(20,184,166,0.16),rgba(2,6,23,0)_44%),radial-gradient(circle_at_88%_14%,rgba(236,72,153,0.14),rgba(2,6,23,0)_42%),linear-gradient(170deg,#020617,#0b1120_60%,#0f172a)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_10%,rgba(20,184,166,0.14),rgba(2,6,23,0)_44%),radial-gradient(circle_at_88%_14%,rgba(236,72,153,0.12),rgba(2,6,23,0)_42%),linear-gradient(170deg,rgba(2,6,23,0.74),rgba(11,17,32,0.7)_60%,rgba(15,23,42,0.74))]" />
 
       <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-10">
         <motion.div

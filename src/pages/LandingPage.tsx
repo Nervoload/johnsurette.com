@@ -22,16 +22,23 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
       footerBackgroundColor="#ffffff"
     >
       {() => (
-        <>
-          <section className="relative flex min-h-[100dvh] items-center justify-center">
-            <DepthRainBackdrop />
-            <div className="relative z-10 px-4 sm:px-6">
-              <CenterpieceStage activeSection={null} centerpiece={ActiveCenterpiece} />
+        <div className="relative isolate">
+          <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
+            <div className="sticky top-0 h-[100dvh]">
+              <DepthRainBackdrop preset="balanced" palette="neon" flowStrength={1.2} />
             </div>
-          </section>
+          </div>
 
-          <LandingStoryboard onNavigate={onNavigate} />
-        </>
+          <div className="relative z-10">
+            <section className="relative flex min-h-[100dvh] items-center justify-center">
+              <div className="relative z-10 px-4 sm:px-6">
+                <CenterpieceStage activeSection={null} centerpiece={ActiveCenterpiece} />
+              </div>
+            </section>
+
+            <LandingStoryboard onNavigate={onNavigate} />
+          </div>
+        </div>
       )}
     </PageScaffold>
   );

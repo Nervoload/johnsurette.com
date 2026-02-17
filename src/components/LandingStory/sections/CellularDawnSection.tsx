@@ -9,7 +9,7 @@ interface CellularDawnSectionProps {
 const CellularDawnSection: React.FC<CellularDawnSectionProps> = ({ section }) => {
   return (
     <section className="relative isolate min-h-[100dvh] overflow-hidden px-4 py-24 xs:px-6 sm:px-10 lg:px-16">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_24%,rgba(34,211,238,0.18),rgba(15,23,42,0)_42%),radial-gradient(circle_at_84%_14%,rgba(129,140,248,0.16),rgba(15,23,42,0)_44%),linear-gradient(160deg,#f8fafc,#ecfeff_40%,#eef2ff)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_24%,rgba(34,211,238,0.16),rgba(15,23,42,0)_42%),radial-gradient(circle_at_84%_14%,rgba(129,140,248,0.14),rgba(15,23,42,0)_44%),linear-gradient(160deg,rgba(248,250,252,0.72),rgba(236,254,255,0.64)_40%,rgba(238,242,255,0.74))]" />
 
       <div className="relative mx-auto grid w-full max-w-7xl gap-10 lg:grid-cols-[1.08fr_1fr] lg:items-center">
         <motion.div

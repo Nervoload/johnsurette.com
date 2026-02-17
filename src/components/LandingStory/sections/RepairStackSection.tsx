@@ -10,8 +10,8 @@ const RepairStackSection: React.FC<RepairStackSectionProps> = ({ section }) => {
   const nodes = section.focusAreas.slice(0, 6);
 
   return (
-    <section className="relative isolate min-h-[100dvh] overflow-hidden bg-slate-950 px-4 py-24 xs:px-6 sm:px-10 lg:px-16">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_36%,rgba(56,189,248,0.18),rgba(15,23,42,0.0)_46%),radial-gradient(circle_at_30%_86%,rgba(167,139,250,0.15),rgba(15,23,42,0.0)_40%),linear-gradient(180deg,#020617,#0f172a_65%,#111827)]" />
+    <section className="relative isolate min-h-[100dvh] overflow-hidden px-4 py-24 xs:px-6 sm:px-10 lg:px-16">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_36%,rgba(56,189,248,0.18),rgba(15,23,42,0)_46%),radial-gradient(circle_at_30%_86%,rgba(167,139,250,0.14),rgba(15,23,42,0)_40%),linear-gradient(180deg,rgba(2,6,23,0.72),rgba(15,23,42,0.68)_65%,rgba(17,24,39,0.74))]" />
       <div className="absolute inset-0 story-flow-lines opacity-35" />
 
       <div className="relative mx-auto grid w-full max-w-7xl gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
