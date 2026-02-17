@@ -118,13 +118,13 @@ const Footer: React.FC<FooterProps> = ({
             {ownerName}
           </h2>
           <p className="max-w-xl text-slate-600" style={{ opacity: 0.25 + panelProgress * 0.75 }}>
-            Scroll up to return. This footer expands progressively only after page content is finished.
+            Last to die, or first to live without the fear of death.
           </p>
           <div className="flex items-center gap-5 text-sm text-slate-600" style={{ opacity: 0.2 + panelProgress * 0.8 }}>
-            <a className="pointer-events-auto underline decoration-slate-400 underline-offset-4" href="https://github.com/johnsurette" target="_blank" rel="noreferrer">
+            <a className="pointer-events-auto underline decoration-slate-400 underline-offset-4" href="https://github.com/Nervoload" target="_blank" rel="noreferrer">
               GitHub
             </a>
-            <a className="pointer-events-auto underline decoration-slate-400 underline-offset-4" href="https://www.linkedin.com/in/johnsurette" target="_blank" rel="noreferrer">
+            <a className="pointer-events-auto underline decoration-slate-400 underline-offset-4" href="https://www.linkedin.com/in/johnmsurette" target="_blank" rel="noreferrer">
               LinkedIn
             </a>
           </div>

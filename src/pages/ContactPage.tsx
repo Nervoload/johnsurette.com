@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import DotFieldGlobeBackground from "../components/visuals/DotFieldGlobeBackground";
 import SocialPostCarousel, { SocialPost } from "../components/Contact/SocialPostCarousel";
 import PageScaffold from "../components/layout/PageScaffold";
@@ -7,18 +7,18 @@ const socialPosts: SocialPost[] = [
   {
     id: "x-build-notes",
     platform: "X",
-    handle: "@johnsurette",
+    handle: "@johnmsurette",
     publishedLabel: "2 days ago",
     title: "Rebuilt page architecture for smoother motion",
     excerpt:
       "Finished the foundation pass: centralized transitions, reusable page scaffolding, and cleaner route-level loading.",
-    href: "https://x.com/johnsurette",
+    href: "https://x.com/johnmsurette",
     accentClassName: "bg-slate-800",
   },
   {
     id: "linkedin-project-stack",
     platform: "LinkedIn",
-    handle: "linkedin.com/in/johnsurette",
+    handle: "linkedin.com/in/johnmsurette",
     publishedLabel: "5 days ago",
     title: "Project stack now supports expandable detail cards",
     excerpt:
@@ -29,17 +29,52 @@ const socialPosts: SocialPost[] = [
   {
     id: "github-shader-pass",
     platform: "GitHub",
-    handle: "github.com/johnsurette",
-    publishedLabel: "1 week ago",
-    title: "Updated intro sequence for deterministic card animation",
+    handle: "github.com/Nervoload",
+    publishedLabel: "Live activity",
+    title: "Live GitHub Activity",
     excerpt:
-      "Refactored intro sequence logic to reduce animation drift and make scene ordering predictable during route transitions.",
-    href: "https://github.com/johnsurette",
+      "Real yearly contribution grid and latest public commits from my GitHub profile.",
+    href: "https://github.com/Nervoload",
     accentClassName: "bg-emerald-700",
+    github: {
+      username: "Nervoload",
+      profileUrl: "https://github.com/Nervoload",
+    },
   },
 ];
 
 const ContactPage: React.FC = () => {
+  const emailAddress = "johnmsurette@gmail.com";
+  const [copyStatus, setCopyStatus] = useState<"idle" | "success" | "error">("idle");
+
+  useEffect(() => {
+    if (copyStatus === "idle") return;
+    const timer = window.setTimeout(() => setCopyStatus("idle"), 2200);
+    return () => window.clearTimeout(timer);
+  }, [copyStatus]);
+
+  const handleCopyEmail = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(emailAddress);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = emailAddress;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "absolute";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.select();
+        const copied = document.execCommand("copy");
+        document.body.removeChild(textarea);
+        if (!copied) throw new Error("Copy failed");
+      }
+      setCopyStatus("success");
+    } catch {
+      setCopyStatus("error");
+    }
+  };
+
   return (
     <PageScaffold
       backgroundClassName="bg-[radial-gradient(circle_at_8%_12%,rgba(186,230,253,0.56),rgba(224,231,255,0.3)_34%,rgba(248,250,252,1)_68%)]"
@@ -56,32 +91,45 @@ const ContactPage: React.FC = () => {
           <div className="relative z-10 mx-auto w-full max-w-6xl">
             <header className="max-w-3xl">
               <p className="text-xs uppercase tracking-[0.26em] text-slate-500">Contact</p>
-              <h1 className="mt-4 text-3xl font-semibold tracking-tight xs:text-4xl sm:text-6xl">Let&apos;s Connect</h1>
+              <h1 className="mt-4 text-3xl font-semibold tracking-tight xs:text-4xl sm:text-6xl">Connect with me!</h1>
               <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-slate-600">
-                An easy path to connect with me for project work, collaborations, or quick conversations. Reach out directly, then explore the latest updates below.
+                I am always excited to talk about frontier technology, research, and ideas. Whether you want to collaborate, have a project idea, or just want to chat, feel free to connect below.
               </p>
             </header>
 
             <div className="mt-12 grid gap-10 border-t border-slate-300/60 pt-10 md:grid-cols-[1.25fr_1fr]">
               <article>
                 <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Contact Me</p>
-                <a
-                  href="mailto:contact@example.com"
-                  className="mt-5 inline-flex text-xl font-semibold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-8 transition hover:decoration-slate-700 xs:text-2xl"
-                >
-                  contact@example.com
-                </a>
+                <div className="mt-5 flex flex-wrap items-center gap-3">
+                  <a
+                    href={`mailto:${emailAddress}`}
+                    className="inline-flex text-xl font-semibold tracking-tight text-slate-900 underline decoration-slate-300 underline-offset-8 transition hover:decoration-slate-700 xs:text-2xl"
+                  >
+                    {emailAddress}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={handleCopyEmail}
+                    aria-label="Copy email address"
+                    className="inline-flex min-h-11 items-center justify-center rounded-full border border-slate-300/80 px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-700 transition hover:border-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                  >
+                    Copy Email
+                  </button>
+                </div>
+                <p aria-live="polite" className="mt-2 min-h-[1.2rem] text-xs uppercase tracking-[0.12em] text-slate-500">
+                  {copyStatus === "success" ? "Email copied" : copyStatus === "error" ? "Copy unavailable" : ""}
+                </p>
                 <p className="mt-4 max-w-lg text-sm leading-relaxed text-slate-600">
                   Best for freelance work, consulting, partnerships, and technical collaboration.
                 </p>
                 <div className="mt-7 flex flex-wrap gap-5 text-[12px] uppercase tracking-[0.16em] text-slate-600">
-                  <a href="https://github.com/johnsurette" target="_blank" rel="noreferrer" className="underline decoration-slate-300 underline-offset-4 hover:decoration-slate-700">
+                  <a href="https://github.com/Nervoload" target="_blank" rel="noreferrer" className="underline decoration-slate-300 underline-offset-4 hover:decoration-slate-700">
                     GitHub
                   </a>
-                  <a href="https://www.linkedin.com/in/johnsurette" target="_blank" rel="noreferrer" className="underline decoration-slate-300 underline-offset-4 hover:decoration-slate-700">
+                  <a href="https://www.linkedin.com/in/Nervoload" target="_blank" rel="noreferrer" className="underline decoration-slate-300 underline-offset-4 hover:decoration-slate-700">
                     LinkedIn
                   </a>
-                  <a href="https://x.com/johnsurette" target="_blank" rel="noreferrer" className="underline decoration-slate-300 underline-offset-4 hover:decoration-slate-700">
+                  <a href="https://x.com/johnmsurette" target="_blank" rel="noreferrer" className="underline decoration-slate-300 underline-offset-4 hover:decoration-slate-700">
                     X
                   </a>
                 </div>

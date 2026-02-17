@@ -76,11 +76,12 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   return (
     <div ref={sceneRef}>
       <StoryboardSection progress={timelineProgress} height={560} forceLowPower={forceLowPower}>
-        {(progress) => (
+        {(progress, context) => (
           <ProjectIntroSequence
             progress={progress}
             items={items}
             onCardSelect={onCardSelect}
+            lowPowerMode={context.lowPowerMode}
           />
         )}
       </StoryboardSection>

@@ -9,6 +9,7 @@ export interface NavBarProps {
   routes: SiteRoute[];
   currentPath: string;
   onNavigate: (path: string, opts?: WipeOptions) => void;
+  onHintNavInteraction?: (kind: "hover-zone" | "menu-toggle") => void;
 }
 
 const compactLabel = (label: string): string => {
@@ -19,7 +20,12 @@ const compactLabel = (label: string): string => {
   return label;
 };
 
-const NavBar: React.FC<NavBarProps> = ({ routes, currentPath, onNavigate }) => {
+const NavBar: React.FC<NavBarProps> = ({
+  routes,
+  currentPath,
+  onNavigate,
+  onHintNavInteraction,
+}) => {
   const [open, setOpen] = useState(false);
   const [hoveringTop, setHoveringTop] = useState(false);
   const isTouch = useIsTouch();
@@ -40,13 +46,18 @@ const NavBar: React.FC<NavBarProps> = ({ routes, currentPath, onNavigate }) => {
     if (open) setOpen(false);
   }, [open]);
 
+  const handleTopZoneEnter = useCallback(() => {
+    setHoveringTop(true);
+    onHintNavInteraction?.("hover-zone");
+  }, [onHintNavInteraction]);
+
   return (
     <>
       {/* Hover zone — only active for mouse/trackpad users */}
       {!isTouch && (
         <div
           className="fixed inset-x-0 top-0 z-40 h-14"
-          onMouseEnter={() => setHoveringTop(true)}
+          onMouseEnter={handleTopZoneEnter}
           onMouseLeave={() => setHoveringTop(false)}
         />
       )}
@@ -76,7 +87,10 @@ const NavBar: React.FC<NavBarProps> = ({ routes, currentPath, onNavigate }) => {
         type="button"
         aria-label="Toggle navigation"
         aria-expanded={visible}
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => {
+          setOpen((prev) => !prev);
+          onHintNavInteraction?.("menu-toggle");
+        }}
         className="fixed right-3 top-3 z-[72] flex h-11 w-11 items-center justify-center rounded-full border border-white/55 bg-white/45 text-slate-700 backdrop-blur-xl transition active:scale-95 hover:bg-white/60"
       >
         <span className="text-lg leading-none">{visible ? "×" : "≡"}</span>

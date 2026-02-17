@@ -3,7 +3,9 @@ import { motionValue, MotionValue } from "framer-motion";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import Card3D, { Card3DProps } from "./Card3D";
-import { ProjectItem } from "./projectData";
+import ProjectCardPopoutPresets from "./ProjectCardPopoutPresets";
+import { ProjectItem, resolveProjectCardFront } from "./projectData";
+import { makeProjectFrontTexture } from "./projectFrontTexture";
 
 /* ───────────────────────── types ───────────────────────── */
 
@@ -11,66 +13,12 @@ interface ProjectIntroSequenceProps {
   progress: MotionValue<number>;
   items: ProjectItem[];
   onCardSelect?: (item: ProjectItem, screenPos: { x: number; y: number }) => void;
+  lowPowerMode?: boolean;
 }
 
 type ShuffleProfile = { x: number; y: number; lift: number };
 
 /* ───────────────────── texture helpers ─────────────────── */
-
-const escapeXml = (s: string) =>
-  s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-
-const makeProjectFront = (item: ProjectItem, seed: number) => {
-  const a = item.accent;
-  const p = item.palette;
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 1024'>
-  <defs>
-    <linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'>
-      <stop offset='0%' stop-color='${p.bright}'/>
-      <stop offset='100%' stop-color='#ffffff'/>
-    </linearGradient>
-    <linearGradient id='trim' x1='0' y1='0' x2='1' y2='1'>
-      <stop offset='0%' stop-color='${a}' stop-opacity='0.9'/>
-      <stop offset='50%' stop-color='${p.mid}' stop-opacity='0.78'/>
-      <stop offset='100%' stop-color='${a}' stop-opacity='0.86'/>
-    </linearGradient>
-    <radialGradient id='emblemGlow' cx='50%' cy='36%' r='26%'>
-      <stop offset='0%' stop-color='${a}' stop-opacity='0.24'/>
-      <stop offset='100%' stop-color='${a}' stop-opacity='0'/>
-    </radialGradient>
-    <pattern id='grid' width='32' height='32' patternUnits='userSpaceOnUse' patternTransform='rotate(${seed * 12})'>
-      <path d='M16 0 V32 M0 16 H32' stroke='${a}' stroke-opacity='0.06' stroke-width='1'/>
-    </pattern>
-  </defs>
-  <rect width='720' height='1024' fill='url(#bg)'/>
-  <rect width='720' height='1024' fill='url(#grid)'/>
-  <rect x='24' y='24' width='672' height='976' rx='32' fill='none' stroke='${a}' stroke-width='10' stroke-opacity='0.1'/>
-  <rect x='24' y='24' width='672' height='976' rx='32' fill='none' stroke='url(#trim)' stroke-width='5.5' stroke-opacity='0.8'/>
-  <rect x='48' y='48' width='624' height='928' rx='28' fill='none' stroke='${a}' stroke-width='2.4' stroke-opacity='0.38'/>
-  <path d='M84 124 H144 M84 124 V184 M636 124 H576 M636 124 V184 M84 900 H144 M84 900 V840 M636 900 H576 M636 900 V840' stroke='${a}' stroke-width='2.3' stroke-linecap='round' stroke-opacity='0.56' fill='none'/>
-  <circle cx='360' cy='370' r='188' fill='url(#emblemGlow)'/>
-  <g transform='translate(360 380)'>
-    <circle r='150' fill='none' stroke='${a}' stroke-width='14' stroke-opacity='0.18'/>
-    <circle r='104' fill='none' stroke='${p.mid}' stroke-width='4.4' stroke-opacity='0.34'/>
-    <circle r='60' fill='none' stroke='${a}' stroke-width='2.8' stroke-opacity='0.55'/>
-    <path d='M0-90 L16-24 L84 0 L16 24 L0 90 L-16 24 L-84 0 L-16 -24 Z' fill='${a}' fill-opacity='0.26'/>
-    <circle r='16' fill='${a}' fill-opacity='0.78'/>
-  </g>
-  <text x='360' y='600' text-anchor='middle' font-family='system-ui,-apple-system,sans-serif' font-size='44' font-weight='600' fill='${p.deep}' opacity='0.96'>${escapeXml(item.title)}</text>
-  <text x='360' y='660' text-anchor='middle' font-family='system-ui,-apple-system,sans-serif' font-size='24' fill='${p.mid}' opacity='0.78'>${escapeXml(item.subtitle)}</text>
-  <path d='M152 712 H568' stroke='${a}' stroke-width='2.6' stroke-opacity='0.38'/>
-  <g opacity='0.3'>
-    <path d='M180 800 C260 770 460 770 540 800' stroke='${a}' stroke-width='2' fill='none'/>
-    <path d='M220 830 C300 810 420 810 500 830' stroke='${a}' stroke-width='1.5' fill='none'/>
-  </g>
-</svg>`;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
-};
 
 const makeProjectBack = (item: ProjectItem, seed: number) => {
   const p = item.palette;
@@ -150,15 +98,23 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   progress,
   items,
   onCardSelect,
+  lowPowerMode = false,
 }) => {
   const { viewport, pointer, camera, gl } = useThree();
   const cardGroups = useRef<THREE.Group[]>([]);
   const deckRef = useRef<THREE.Group>(null);
   const flipValues = useRef<MotionValue<number>[]>([]);
+  const edgeGlowValues = useRef<MotionValue<number>[]>([]);
+  const popoutRevealValues = useRef<MotionValue<number>[]>([]);
   const clickableRef = useRef(false);
 
+  const frontSpecs = useMemo(
+    () => items.map((item) => resolveProjectCardFront(item)),
+    [items],
+  );
+
   const base = Math.min(viewport.width, viewport.height);
-  const cardWidth = base * 0.165*1.2;
+  const cardWidth = base * 0.165 * 1.2;
   const cardHeight = cardWidth * 1.46;
   const count = items.length;
 
@@ -166,9 +122,10 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   const cards = useMemo<Card3DProps[]>(
     () =>
       items.map((item, i) => ({
-        frontSrc: makeProjectFront(item, i + 1),
+        frontSrc: makeProjectFrontTexture(item, i + 1),
         backSrc: makeProjectBack(item, i + 1),
         borderColor: "#f8fafc",
+        edgeColor: item.accent,
         width: cardWidth,
         height: cardHeight,
       })),
@@ -179,6 +136,12 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
 
   if (flipValues.current.length !== count) {
     flipValues.current = Array.from({ length: count }, () => motionValue(0));
+  }
+  if (edgeGlowValues.current.length !== count) {
+    edgeGlowValues.current = Array.from({ length: count }, () => motionValue(0));
+  }
+  if (popoutRevealValues.current.length !== count) {
+    popoutRevealValues.current = Array.from({ length: count }, () => motionValue(0));
   }
 
   const shuffleProfiles = useMemo<ShuffleProfile[]>(
@@ -235,6 +198,9 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
     const dealGlobalT = phase(t, 0.64, 0.84);
     const flipGlobalT = phase(t, 0.78, 0.98);
     const browseT = easeInOut(phase(t, 0.95, 1.0));
+    const dealGlowIn = easeInOut(phase(t, 0.62, 0.78));
+    const browseGlowFloor = 0.56 * easeInOut(phase(t, 0.88, 1.0));
+    const dealGlowWindow = clamp01(Math.max(dealGlowIn, browseGlowFloor));
 
     const inDealMode = t > 0.64;
     clickableRef.current = t > 0.9;
@@ -270,6 +236,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
       const group = cardGroups.current[i];
       if (!group) continue;
       const stagger = count > 1 ? i / (count - 1) : 0;
+      edgeGlowValues.current[i].set(dealGlowWindow);
 
       if (!inDealMode) {
         /* ═══ INTRO: shuffle → spread → orbit → exit ═══ */
@@ -316,6 +283,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
 
         // Keep cards face-down (back visible) throughout intro.
         flipValues.current[i].set(1);
+        popoutRevealValues.current[i].set(0);
 
         const sc = 1 + 0.1 * spreadT - 0.12 * exitT;
         group.scale.setScalar(sc);
@@ -392,6 +360,8 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
 
         // flipValue 1→0 (back→front)
         flipValues.current[i].set(1 - localFlipT);
+        const popoutReveal = clamp01((localFlipT - 0.08) / 0.92);
+        popoutRevealValues.current[i].set(popoutReveal);
 
         // Gentle idle bob after fully dealt & flipped
         if (localDealT > 0.98 && localFlipT > 0.98) {
@@ -413,21 +383,40 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   /* ── Render ──────────────────────────────────────────── */
   return (
     <group ref={deckRef}>
-      {cards.map((card, index) => (
-        <group
-          key={items[index]?.id ?? `card-${index}`}
-          ref={(el) => {
-            if (el) cardGroups.current[index] = el;
-          }}
-          position={[0, 0, -index * 0.05]}
-        >
-          <Card3D
-            {...card}
-            flip={flipValues.current[index]}
-            onClick={() => handleCardClick(index)}
-          />
-        </group>
-      ))}
+      {cards.map((card, index) => {
+        const item = items[index];
+        const frontSpec = frontSpecs[index];
+        return (
+          <group
+            key={item?.id ?? `card-${index}`}
+            ref={(el) => {
+              if (el) cardGroups.current[index] = el;
+            }}
+            position={[0, 0, -index * 0.05]}
+          >
+            <Card3D
+              {...card}
+              flip={flipValues.current[index]}
+              edgeGlow={edgeGlowValues.current[index]}
+              frontAttachment={
+                !lowPowerMode && item && frontSpec ? (
+                  <group rotation={[0, 0, -Math.PI / 2]} scale={0.56}>
+                    <ProjectCardPopoutPresets
+                      preset={frontSpec.popoutPreset}
+                      accent={item.accent}
+                      palette={item.palette}
+                      reveal={popoutRevealValues.current[index]}
+                      intensity={frontSpec.popoutIntensity * 0.84}
+                    />
+                  </group>
+                ) : undefined
+              }
+              isClickable={() => clickableRef.current}
+              onClick={() => handleCardClick(index)}
+            />
+          </group>
+        );
+      })}
     </group>
   );
 };

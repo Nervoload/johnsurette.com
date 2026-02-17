@@ -230,3 +230,90 @@ body {
   background: radial-gradient(circle at 20% 12%, rgba(34, 211, 238, 0.16), transparent 36%),
     radial-gradient(circle at 84% 82%, rgba(168, 85, 247, 0.14), transparent 38%);
 }
+
+@keyframes onboardingSoftGlow {
+  0% {
+    opacity: 0.76;
+    filter: drop-shadow(0 0 0 rgba(14, 165, 233, 0));
+  }
+  100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 10px rgba(14, 165, 233, 0.34));
+  }
+}
+
+@keyframes onboardingLiquidBreathe {
+  0%,
+  100% {
+    box-shadow: 0 12px 30px -28px rgba(2, 6, 23, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  }
+  50% {
+    box-shadow: 0 14px 38px -26px rgba(2, 6, 23, 0.64), 0 0 16px rgba(14, 165, 233, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.84);
+  }
+}
+
+.onboarding-guide-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.42rem;
+}
+
+.onboarding-liquid-chip {
+  position: relative;
+  overflow: hidden;
+  border-radius: 9999px;
+  border: 1px solid rgba(125, 211, 252, 0.32);
+  background: linear-gradient(158deg, rgba(255, 255, 255, 0.66), rgba(248, 250, 252, 0.48));
+  backdrop-filter: blur(14px) saturate(1.12);
+  padding: 0.34rem 0.82rem;
+  animation: onboardingLiquidBreathe 4.4s ease-in-out infinite;
+}
+
+.onboarding-liquid-chip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(130deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.06) 42%, rgba(14, 165, 233, 0.06) 74%);
+  pointer-events: none;
+}
+
+.onboarding-liquid-chip::after {
+  content: "";
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  top: 10%;
+  height: 38%;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0));
+  pointer-events: none;
+}
+
+.onboarding-arrow-asset {
+  height: 1.4rem;
+  width: 1.4rem;
+  animation: onboardingSoftGlow 3.2s ease-in-out infinite alternate;
+}
+
+.onboarding-arrow-core {
+  stroke: rgba(2, 132, 199, 0.95);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.onboarding-copy {
+  position: relative;
+  z-index: 1;
+  color: rgba(15, 23, 42, 0.86);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-arrow-asset,
+  .onboarding-liquid-chip {
+    animation: none;
+  }
+}

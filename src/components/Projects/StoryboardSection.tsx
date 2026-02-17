@@ -9,7 +9,12 @@ interface StoryboardSectionProps {
   progress: MotionValue<number>;
   height?: number;
   forceLowPower?: boolean;
-  children: (progress: MotionValue<number>) => React.ReactNode;
+  children: (
+    progress: MotionValue<number>,
+    context: {
+      lowPowerMode: boolean;
+    },
+  ) => React.ReactNode;
 }
 
 const StoryboardSection: React.FC<StoryboardSectionProps> = ({
@@ -61,46 +66,46 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_72%,rgba(148,163,184,0.15),transparent_58%)]" />
 
         <CanvasErrorBoundary>
-        <Canvas
-          className="absolute inset-0 h-full w-full"
-          camera={{ position: [0, 0.14, 6.15], fov: 43 }}
-          dpr={effectiveLowPowerMode ? [1, 1.5] : [1, 2]}
-          shadows={false}
-          gl={{
-            preserveDrawingBuffer: false,
-            antialias: !effectiveLowPowerMode,
-            powerPreference: "high-performance",
-            alpha: true,
-          }}
-          onCreated={({ gl }) => {
-            (gl as unknown as { outputColorSpace: THREE.ColorSpace }).outputColorSpace = THREE.SRGBColorSpace;
-            THREE.ColorManagement.enabled = true;
-            gl.shadowMap.enabled = false;
-            gl.setClearColor(0xffffff, 0);
-          }}
-        >
-          <fog attach="fog" args={["#f8fafc", 8, 24]} />
+          <Canvas
+            className="absolute inset-0 h-full w-full"
+            camera={{ position: [0, 0.14, 6.15], fov: 43 }}
+            dpr={effectiveLowPowerMode ? [1, 1.5] : [1, 2]}
+            shadows={false}
+            gl={{
+              preserveDrawingBuffer: false,
+              antialias: !effectiveLowPowerMode,
+              powerPreference: "high-performance",
+              alpha: true,
+            }}
+            onCreated={({ gl }) => {
+              (gl as unknown as { outputColorSpace: THREE.ColorSpace }).outputColorSpace = THREE.SRGBColorSpace;
+              THREE.ColorManagement.enabled = true;
+              gl.shadowMap.enabled = false;
+              gl.setClearColor(0xffffff, 0);
+            }}
+          >
+            <fog attach="fog" args={["#f8fafc", 8, 24]} />
 
-          <ambientLight intensity={0.72} />
-          <spotLight
-            position={[0, 5.2, 2.6]}
-            angle={0.56}
-            penumbra={0.66}
-            intensity={effectiveLowPowerMode ? 1.45 : 1.68}
-            distance={26}
-          />
-          <directionalLight
-            position={[2.8, 2.6, 2.4]}
-            intensity={0.45}
-          />
-          <directionalLight position={[-3.2, 1.4, -2.8]} intensity={0.18} />
+            <ambientLight intensity={0.72} />
+            <spotLight
+              position={[0, 5.2, 2.6]}
+              angle={0.56}
+              penumbra={0.66}
+              intensity={effectiveLowPowerMode ? 1.45 : 1.68}
+              distance={26}
+            />
+            <directionalLight
+              position={[2.8, 2.6, 2.4]}
+              intensity={0.45}
+            />
+            <directionalLight position={[-3.2, 1.4, -2.8]} intensity={0.18} />
 
-          <SceneBloom enabled={!effectiveLowPowerMode} />
+            <SceneBloom enabled={!effectiveLowPowerMode} />
 
-          <group scale={1.14} position={[0, 0.02, 0]}>
-            {children(progress)}
-          </group>
-        </Canvas>
+            <group scale={1.14} position={[0, 0.02, 0]}>
+              {children(progress, { lowPowerMode: effectiveLowPowerMode })}
+            </group>
+          </Canvas>
         </CanvasErrorBoundary>
 
         {/* Bottom blend to avoid hard section edge into following content. */}

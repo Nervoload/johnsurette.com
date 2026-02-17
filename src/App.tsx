@@ -53,6 +53,7 @@ function App() {
   const prefersReducedMotion = useReducedMotion();
 
   const [path, setPath] = useState<string>(initialPath);
+  const [navInteractionTick, setNavInteractionTick] = useState(0);
   const pathRef = useRef<string>(initialPath);
   const navigationLockRef = useRef(false);
   const wipeRef = useRef<TransitionHandle>(null);
@@ -110,9 +111,13 @@ function App() {
     void run();
   }, []);
 
+  const handleHintNavInteraction = useCallback(() => {
+    setNavInteractionTick((prev) => prev + 1);
+  }, []);
+
   const pageNode = useMemo(() => {
     if (path === "/") {
-      return <LandingPage onNavigate={navigate} />;
+      return <LandingPage onNavigate={navigate} navInteractionTick={navInteractionTick} />;
     }
 
     if (path === "/projects") {
@@ -131,8 +136,8 @@ function App() {
       return <BlogPage />;
     }
 
-    return <LandingPage onNavigate={navigate} />;
-  }, [path, navigate]);
+    return <LandingPage onNavigate={navigate} navInteractionTick={navInteractionTick} />;
+  }, [path, navigate, navInteractionTick]);
 
   const isHeavyRoute = HEAVY_TRANSITION_ROUTES.has(path);
   const pageInitialMotion = prefersReducedMotion
@@ -149,7 +154,12 @@ function App() {
   return (
     <div className="relative h-[100dvh] w-screen overflow-hidden bg-slate-50 supports-[height:100dvh]:h-[100dvh]">
       <TransitionWipe ref={wipeRef} />
-      <NavBar routes={siteRoutes} currentPath={path} onNavigate={navigate} />
+      <NavBar
+        routes={siteRoutes}
+        currentPath={path}
+        onNavigate={navigate}
+        onHintNavInteraction={handleHintNavInteraction}
+      />
       <Suspense fallback={<PageFallback />}>
         <motion.main
           key={path}
