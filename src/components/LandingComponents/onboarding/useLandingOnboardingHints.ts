@@ -1,37 +1,31 @@
 import { RefObject, useEffect, useRef, useState } from "react";
-import { hasLandingOnboardingSeenCookie, markLandingOnboardingSeenCookie } from "./hintCookies";
-import { HintId, HintVisibilityState, OnboardingRuntimeState } from "./types";
+import { HintId, HintLifecycleState, HintVisibilityState, OnboardingRuntimeState } from "./types";
 
-export const FIRST_VISIT_LOCK_MS = 30000;
-export const IDLE_DELAY_MS = 8000;
-export const PROMPT_VISIBLE_MS = 6000;
-export const PROMPT_COOLDOWN_MS = 18000;
-export const TOP_ZONE_THRESHOLD_PX = 96;
 export const SCROLL_PROGRESS_THRESHOLD_PX = 72;
 
-interface PromptWindowState {
-  visibleUntil: number;
-  cooldownUntil: number;
-}
+const ENTER_MS = 260;
+const EXIT_MS = 360;
 
 interface UseLandingOnboardingHintsOptions {
   scrollContainerRef: RefObject<HTMLDivElement>;
   navInteractionTick?: number;
 }
 
-interface UseLandingOnboardingHintsResult extends HintVisibilityState {
-  firstVisit: boolean;
-  firstVisitLockActive: boolean;
+interface UseLandingOnboardingHintsResult {
+  scroll: boolean;
+  nav: boolean;
+  scrollState: HintLifecycleState;
+  navState: HintLifecycleState;
 }
 
-const createPromptWindow = (): PromptWindowState => ({ visibleUntil: 0, cooldownUntil: 0 });
+const hiddenState: HintVisibilityState = {
+  scroll: "hidden",
+  nav: "hidden",
+};
 
-const createRuntimeState = (now: number): OnboardingRuntimeState => ({
-  firstVisit: false,
-  firstVisitLockUntil: 0,
+const createRuntimeState = (): OnboardingRuntimeState => ({
   scrollCompleted: false,
   navCompleted: false,
-  lastActivityAt: now,
   scrollTop: 0,
 });
 
@@ -39,51 +33,68 @@ export const useLandingOnboardingHints = ({
   scrollContainerRef,
   navInteractionTick,
 }: UseLandingOnboardingHintsOptions): UseLandingOnboardingHintsResult => {
-  const [firstVisit, setFirstVisit] = useState(false);
-  const [firstVisitLockActive, setFirstVisitLockActive] = useState(false);
-  const [visible, setVisible] = useState<HintVisibilityState>({ scroll: false, nav: false });
+  const [state, setState] = useState<HintVisibilityState>(hiddenState);
+  const stateRef = useRef<HintVisibilityState>(hiddenState);
 
-  const runtimeRef = useRef<OnboardingRuntimeState>(createRuntimeState(Date.now()));
-  const promptRef = useRef<Record<HintId, PromptWindowState>>({
-    scroll: createPromptWindow(),
-    nav: createPromptWindow(),
+  const runtimeRef = useRef<OnboardingRuntimeState>(createRuntimeState());
+  const timersRef = useRef<Record<HintId, number | null>>({
+    scroll: null,
+    nav: null,
   });
   const navTickRef = useRef<number>(navInteractionTick ?? 0);
 
+  const patchState = (id: HintId, next: HintLifecycleState): void => {
+    if (stateRef.current[id] === next) return;
+    const updated: HintVisibilityState = {
+      ...stateRef.current,
+      [id]: next,
+    };
+    stateRef.current = updated;
+    setState(updated);
+  };
+
+  const clearTimer = (id: HintId): void => {
+    const timer = timersRef.current[id];
+    if (timer === null) return;
+    window.clearTimeout(timer);
+    timersRef.current[id] = null;
+  };
+
+  const showHint = (id: HintId): void => {
+    clearTimer(id);
+    const current = stateRef.current[id];
+    if (current === "visible" || current === "entering") return;
+    patchState(id, "entering");
+    timersRef.current[id] = window.setTimeout(() => {
+      timersRef.current[id] = null;
+      patchState(id, "visible");
+    }, ENTER_MS);
+  };
+
+  const hideHint = (id: HintId): void => {
+    clearTimer(id);
+    const current = stateRef.current[id];
+    if (current === "hidden" || current === "exiting") return;
+    patchState(id, "exiting");
+    timersRef.current[id] = window.setTimeout(() => {
+      timersRef.current[id] = null;
+      patchState(id, "hidden");
+    }, EXIT_MS);
+  };
+
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    showHint("scroll");
+    showHint("nav");
 
-    const now = Date.now();
-    const isFirstVisit = !hasLandingOnboardingSeenCookie();
-
-    if (isFirstVisit) {
-      markLandingOnboardingSeenCookie();
-    }
-
-    runtimeRef.current.firstVisit = isFirstVisit;
-    runtimeRef.current.firstVisitLockUntil = isFirstVisit ? now + FIRST_VISIT_LOCK_MS : 0;
-    runtimeRef.current.lastActivityAt = now;
-    runtimeRef.current.scrollCompleted = false;
-    runtimeRef.current.navCompleted = false;
-
-    setFirstVisit(isFirstVisit);
-    setFirstVisitLockActive(isFirstVisit);
-    setVisible({
-      scroll: isFirstVisit,
-      nav: isFirstVisit,
-    });
+    return () => {
+      clearTimer("scroll");
+      clearTimer("nav");
+      runtimeRef.current = createRuntimeState();
+      stateRef.current = hiddenState;
+    };
+    // Intentionally run once per landing mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const currentTick = navInteractionTick ?? 0;
-    if (currentTick === navTickRef.current) return;
-
-    navTickRef.current = currentTick;
-    runtimeRef.current.navCompleted = true;
-    runtimeRef.current.lastActivityAt = Date.now();
-  }, [navInteractionTick]);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -92,11 +103,12 @@ export const useLandingOnboardingHints = ({
     const syncScrollState = (): void => {
       const nextScrollTop = container.scrollTop;
       runtimeRef.current.scrollTop = nextScrollTop;
-      runtimeRef.current.lastActivityAt = Date.now();
 
-      if (nextScrollTop >= SCROLL_PROGRESS_THRESHOLD_PX) {
-        runtimeRef.current.scrollCompleted = true;
-      }
+      if (runtimeRef.current.scrollCompleted) return;
+      if (nextScrollTop < SCROLL_PROGRESS_THRESHOLD_PX) return;
+
+      runtimeRef.current.scrollCompleted = true;
+      hideHint("scroll");
     };
 
     syncScrollState();
@@ -105,67 +117,20 @@ export const useLandingOnboardingHints = ({
   }, [scrollContainerRef]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof navInteractionTick !== "number") return;
+    const currentTick = navInteractionTick;
+    if (currentTick === navTickRef.current) return;
+    navTickRef.current = currentTick;
 
-    const shouldShowHint = (id: HintId, now: number): boolean => {
-      const runtime = runtimeRef.current;
-      const prompt = promptRef.current[id];
-      const completed = id === "scroll" ? runtime.scrollCompleted : runtime.navCompleted;
-
-      if (completed) return false;
-      if (runtime.scrollTop > TOP_ZONE_THRESHOLD_PX) return false;
-
-      if (prompt.visibleUntil > now) return true;
-
-      if (prompt.visibleUntil !== 0 && prompt.visibleUntil <= now) {
-        prompt.visibleUntil = 0;
-        prompt.cooldownUntil = now + PROMPT_COOLDOWN_MS;
-      }
-
-      const eligibleAt = Math.max(runtime.lastActivityAt + IDLE_DELAY_MS, prompt.cooldownUntil);
-      if (now >= eligibleAt) {
-        prompt.visibleUntil = now + PROMPT_VISIBLE_MS;
-        return true;
-      }
-
-      return false;
-    };
-
-    const interval = window.setInterval(() => {
-      const now = Date.now();
-      const runtime = runtimeRef.current;
-      const lockActive = runtime.firstVisit && now < runtime.firstVisitLockUntil;
-
-      setFirstVisitLockActive((prev) => (prev === lockActive ? prev : lockActive));
-
-      if (runtime.firstVisit) {
-        const nextVisible: HintVisibilityState = {
-          scroll: !runtime.scrollCompleted,
-          nav: !runtime.navCompleted,
-        };
-        setVisible((prev) =>
-          prev.scroll === nextVisible.scroll && prev.nav === nextVisible.nav ? prev : nextVisible
-        );
-        return;
-      }
-
-      const nextVisible: HintVisibilityState = {
-        scroll: shouldShowHint("scroll", now),
-        nav: shouldShowHint("nav", now),
-      };
-
-      setVisible((prev) =>
-        prev.scroll === nextVisible.scroll && prev.nav === nextVisible.nav ? prev : nextVisible
-      );
-    }, 180);
-
-    return () => window.clearInterval(interval);
-  }, []);
+    if (runtimeRef.current.navCompleted) return;
+    runtimeRef.current.navCompleted = true;
+    hideHint("nav");
+  }, [navInteractionTick]);
 
   return {
-    firstVisit,
-    firstVisitLockActive,
-    scroll: visible.scroll,
-    nav: visible.nav,
+    scroll: state.scroll !== "hidden",
+    nav: state.nav !== "hidden",
+    scrollState: state.scroll,
+    navState: state.nav,
   };
 };

@@ -1,26 +1,6 @@
 import React from "react";
 import PageScaffold from "../components/layout/PageScaffold";
-
-const posts = [
-  {
-    title: "Designing Narrative Interfaces",
-    tag: "UX",
-    summary: "How scroll progression can guide understanding without overwhelming users.",
-    dateLabel: "Feb 2026",
-  },
-  {
-    title: "When to Use Real 3D",
-    tag: "Engineering",
-    summary: "Choosing where 3D genuinely improves storytelling and where 2D depth cues are better.",
-    dateLabel: "Jan 2026",
-  },
-  {
-    title: "Building Stable Motion Systems",
-    tag: "Architecture",
-    summary: "Patterns for reusable motion primitives that avoid fragile one-off animation logic.",
-    dateLabel: "Dec 2025",
-  },
-];
+import { blogPosts } from "../components/Blog/blogPosts";
 
 const BlogPage: React.FC = () => {
   return (
@@ -40,9 +20,9 @@ const BlogPage: React.FC = () => {
             </header>
 
             <div className="mt-12 border-t border-slate-300/60">
-              {posts.map((post) => (
+              {blogPosts.map((post) => (
                 <article
-                  key={post.title}
+                  key={post.id}
                   className="grid gap-4 border-b border-slate-300/55 py-8 sm:grid-cols-[auto_1fr_auto] sm:items-start sm:gap-8"
                 >
                   <p className="text-xs uppercase tracking-[0.18em] text-slate-500">

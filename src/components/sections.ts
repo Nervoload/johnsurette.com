@@ -51,6 +51,8 @@ export const siteRoutes: SiteRoute[] = sections.map((section) => ({
   color: section.color,
 }));
 
+export const internalRoutes = ["/origin"] as const;
+
 const canonicalizeRoutePath = (rawPath: string): string => {
   const trimmed = rawPath.trim();
   if (!trimmed) return "/";
@@ -66,10 +68,11 @@ const canonicalizeRoutePath = (rawPath: string): string => {
 };
 
 export const routeSet = new Set(siteRoutes.map((route) => canonicalizeRoutePath(route.path)));
+const internalRouteSet = new Set(internalRoutes.map((route) => canonicalizeRoutePath(route)));
 
 export const normalizeRoute = (path: string): string => {
   const normalized = canonicalizeRoutePath(path);
-  if (routeSet.has(normalized)) {
+  if (routeSet.has(normalized) || internalRouteSet.has(normalized)) {
     return normalized;
   }
   return "/";

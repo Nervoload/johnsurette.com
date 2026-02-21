@@ -14,9 +14,27 @@ interface ProjectIntroSequenceProps {
   items: ProjectItem[];
   onCardSelect?: (item: ProjectItem, screenPos: { x: number; y: number }) => void;
   lowPowerMode?: boolean;
+  mobileViewport?: boolean;
 }
 
 type ShuffleProfile = { x: number; y: number; lift: number };
+type OrientationMode = "landscape" | "portrait";
+type LayoutMetrics = {
+  width: number;
+  height: number;
+  cardSpacing: number;
+  ringRx: number;
+  ringRy: number;
+  exitDropMax: number;
+  dealEntryY: number;
+  browseParallaxX: number;
+  browseParallaxY: number;
+  dealScaleMax: number;
+  dealArcMax: number;
+  stackDepthStep: number;
+  flipArcZMax: number;
+  flipArcYMax: number;
+};
 
 /* ───────────────────── texture helpers ─────────────────── */
 
@@ -91,6 +109,48 @@ const easeInOut = (v: number) =>
   v < 0.5 ? 4 * v * v * v : 1 - Math.pow(-2 * v + 2, 3) / 2;
 const phase = (p: number, s: number, e: number) =>
   clamp01((p - s) / (e - s));
+const metricLerp = (from: number, to: number, alpha: number) =>
+  THREE.MathUtils.lerp(from, to, alpha);
+
+const createLayoutMetrics = (
+  viewportWidth: number,
+  viewportHeight: number,
+  mobileViewport: boolean,
+): LayoutMetrics => {
+  return mobileViewport
+    ? {
+        width: viewportWidth,
+        height: viewportHeight,
+        cardSpacing: viewportHeight * 0.44,
+        ringRx: viewportWidth * 0.17,
+        ringRy: viewportHeight * 0.13,
+        exitDropMax: viewportHeight * 0.34,
+        dealEntryY: viewportHeight * 0.48,
+        browseParallaxX: 0.07,
+        browseParallaxY: 0.045,
+        dealScaleMax: 2.08,
+        dealArcMax: 0.2,
+        stackDepthStep: 0.0085,
+        flipArcZMax: 0.5,
+        flipArcYMax: 0.06,
+      }
+    : {
+        width: viewportWidth,
+        height: viewportHeight,
+        cardSpacing: viewportHeight * 0.56,
+        ringRx: viewportWidth * 0.24,
+        ringRy: viewportHeight * 0.18,
+        exitDropMax: viewportHeight * 0.48,
+        dealEntryY: viewportHeight * 0.6,
+        browseParallaxX: 0.16,
+        browseParallaxY: 0.08,
+        dealScaleMax: 2.2,
+        dealArcMax: 0.3,
+        stackDepthStep: 0.008,
+        flipArcZMax: 0.7,
+        flipArcYMax: 0.12,
+      };
+};
 
 /* ═══════════════════════ component ════════════════════════ */
 
@@ -99,6 +159,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   items,
   onCardSelect,
   lowPowerMode = false,
+  mobileViewport = false,
 }) => {
   const { viewport, pointer, camera, gl } = useThree();
   const cardGroups = useRef<THREE.Group[]>([]);
@@ -106,6 +167,9 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   const flipValues = useRef<MotionValue<number>[]>([]);
   const edgeGlowValues = useRef<MotionValue<number>[]>([]);
   const popoutRevealValues = useRef<MotionValue<number>[]>([]);
+  const layoutMetricsRef = useRef<LayoutMetrics>(
+    createLayoutMetrics(viewport.width, viewport.height, mobileViewport),
+  );
   const clickableRef = useRef(false);
 
   const frontSpecs = useMemo(
@@ -114,22 +178,29 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   );
 
   const base = Math.min(viewport.width, viewport.height);
-  const cardWidth = base * 0.165 * 1.2;
+  const cardWidth = base * (mobileViewport ? 0.228 : 0.198);
   const cardHeight = cardWidth * 1.46;
+  const frontOrientation: OrientationMode = mobileViewport ? "portrait" : "landscape";
+  const popoutAttachmentScale = THREE.MathUtils.clamp(
+    cardWidth * 0.58,
+    mobileViewport ? 0.34 : 0.42,
+    mobileViewport ? 0.56 : 0.72,
+  );
+  const popoutWrapperRotationZ = mobileViewport ? 0 : -Math.PI / 2;
   const count = items.length;
 
   /* ── Build Card3D descriptors from project items ────── */
   const cards = useMemo<Card3DProps[]>(
     () =>
       items.map((item, i) => ({
-        frontSrc: makeProjectFrontTexture(item, i + 1),
+        frontSrc: makeProjectFrontTexture(item, i + 1, frontOrientation),
         backSrc: makeProjectBack(item, i + 1),
         borderColor: "#f8fafc",
         edgeColor: item.accent,
         width: cardWidth,
         height: cardHeight,
       })),
-    [items, cardHeight, cardWidth],
+    [items, cardHeight, cardWidth, frontOrientation],
   );
 
   const depthOrder = useMemo(() => buildDepthOrder(count), [count]);
@@ -174,11 +245,29 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   };
 
   /* ── Per-frame animation ────────────────────────────── */
-  useFrame((state) => {
+  useFrame((state, delta) => {
     const deck = deckRef.current;
     if (!deck) return;
     const time = state.clock.getElapsedTime();
     const t = clamp01(progress.get());
+    const targetMetrics = createLayoutMetrics(viewport.width, viewport.height, mobileViewport);
+    const metrics = layoutMetricsRef.current;
+    const metricAlpha = 1 - Math.exp(-Math.min(delta, 0.2) * 10);
+
+    metrics.width = metricLerp(metrics.width, targetMetrics.width, metricAlpha);
+    metrics.height = metricLerp(metrics.height, targetMetrics.height, metricAlpha);
+    metrics.cardSpacing = metricLerp(metrics.cardSpacing, targetMetrics.cardSpacing, metricAlpha);
+    metrics.ringRx = metricLerp(metrics.ringRx, targetMetrics.ringRx, metricAlpha);
+    metrics.ringRy = metricLerp(metrics.ringRy, targetMetrics.ringRy, metricAlpha);
+    metrics.exitDropMax = metricLerp(metrics.exitDropMax, targetMetrics.exitDropMax, metricAlpha);
+    metrics.dealEntryY = metricLerp(metrics.dealEntryY, targetMetrics.dealEntryY, metricAlpha);
+    metrics.browseParallaxX = metricLerp(metrics.browseParallaxX, targetMetrics.browseParallaxX, metricAlpha);
+    metrics.browseParallaxY = metricLerp(metrics.browseParallaxY, targetMetrics.browseParallaxY, metricAlpha);
+    metrics.dealScaleMax = metricLerp(metrics.dealScaleMax, targetMetrics.dealScaleMax, metricAlpha);
+    metrics.dealArcMax = metricLerp(metrics.dealArcMax, targetMetrics.dealArcMax, metricAlpha);
+    metrics.stackDepthStep = metricLerp(metrics.stackDepthStep, targetMetrics.stackDepthStep, metricAlpha);
+    metrics.flipArcZMax = metricLerp(metrics.flipArcZMax, targetMetrics.flipArcZMax, metricAlpha);
+    metrics.flipArcYMax = metricLerp(metrics.flipArcYMax, targetMetrics.flipArcYMax, metricAlpha);
 
     /*
      * Timeline phases (all driven by single progress 0–1):
@@ -191,19 +280,19 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
      *  0.78 – 0.98   Flip reveal  back→front   (staggered per card)
      */
 
-    const shuffleT = easeOut(phase(t, 0.0, 0.3));
-    const spreadT = easeOut(phase(t, 0.2, 0.48));
-    const orbitIdleT = easeOut(phase(t, 0.42, 0.58));
-    const exitT = easeInOut(phase(t, 0.54, 0.68));
-    const dealGlobalT = phase(t, 0.64, 0.84);
-    const flipGlobalT = phase(t, 0.78, 0.98);
-    const browseT = easeInOut(phase(t, 0.95, 1.0));
+    const shuffleT = easeOut(phase(t, 0.0, mobileViewport ? 0.3 : 0.26));
+    const spreadT = easeOut(phase(t, 0.18, 0.36));
+    const orbitIdleT = easeOut(phase(t, 0.32, 0.48));
+    const exitT = easeInOut(phase(t, 0.44, 0.58));
+    const dealGlobalT = phase(t, 0.64, mobileViewport ? 0.88 : 0.84);
+    const flipGlobalT = phase(t, mobileViewport ? 0.72 : 0.78, mobileViewport ? 0.86 : 0.98);
+    const browseT = easeInOut(phase(t, mobileViewport ? 0.86 : 0.95, 1.0));
     const dealGlowIn = easeInOut(phase(t, 0.62, 0.78));
     const browseGlowFloor = 0.56 * easeInOut(phase(t, 0.88, 1.0));
     const dealGlowWindow = clamp01(Math.max(dealGlowIn, browseGlowFloor));
 
     const inDealMode = t > 0.64;
-    clickableRef.current = t > 0.9;
+    clickableRef.current = t > (mobileViewport ? 0.95 : 0.9);
 
     /* ── Deck-level mouse tracking ─────────────────────── */
     const tiltAmount = shuffleT * (1 - spreadT);
@@ -212,23 +301,23 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
     const my = pointer.y;
     const baseRotX = Math.PI * 0.24 * tiltAmount;
     const baseRotY = -Math.PI * 0.035 * tiltAmount;
-    const subtleParallax = inDealMode ? 0.012 : 0;
+    const subtleParallax = inDealMode ? (mobileViewport ? 0.008 : 0.012) : 0;
 
     deck.rotation.x =
       (baseRotX + my * 0.03) * deckMouseFade + my * subtleParallax;
     deck.rotation.y =
       (baseRotY + mx * 0.05) * deckMouseFade + mx * subtleParallax;
     /* ── Browse pan: scroll through dealt card column ── */
-    const cardSpacing = viewport.height * 0.56;
+    const cardSpacing = metrics.cardSpacing;
     const maxBrowseShift = (count - 1) * cardSpacing;
     const browseShift = browseT * maxBrowseShift;
 
-    deck.position.x = mx * 0.16 * deckMouseFade;
-    deck.position.y = my * 0.08 * deckMouseFade + browseShift;
+    deck.position.x = mx * metrics.browseParallaxX * deckMouseFade;
+    deck.position.y = my * metrics.browseParallaxY * deckMouseFade + browseShift;
 
     /* ── Ring / orbit params ───────────────────────────── */
-    const ringRx = viewport.width * 0.24;
-    const ringRy = viewport.height * 0.18;
+    const ringRx = metrics.ringRx;
+    const ringRy = metrics.ringRy;
     const orbitRot =
       (orbitIdleT * 0.3 + exitT * 0.48) * Math.PI * 2;
 
@@ -266,7 +355,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
         const spY = THREE.MathUtils.lerp(shY, rY, spreadT);
         const spZ = THREE.MathUtils.lerp(shZ, rZ, spreadT);
 
-        const exitDrop = viewport.height * 0.48 * exitT;
+        const exitDrop = metrics.exitDropMax * exitT;
         const exitDrift = Math.sin(angle * 1.1) * 0.06 * exitT;
         const bobS = 0.01 + spreadT * 0.022;
         const bobY = Math.sin(time * 1.65 + i * 0.82) * bobS;
@@ -279,7 +368,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
 
         group.rotation.x = 0;
         group.rotation.y = 0;
-        group.rotation.z = angle * 0.1 * spreadT;
+        group.rotation.z = angle * (mobileViewport ? 0.08 : 0.1) * spreadT;
 
         // Keep cards face-down (back visible) throughout intro.
         flipValues.current[i].set(1);
@@ -302,7 +391,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
 
         // Entry from above viewport → column position
         // Each card gets its own viewport-height slot for scroll browsing
-        const dealEntryY = viewport.height * 0.6;
+        const dealEntryY = metrics.dealEntryY;
         const dealTargetY = -i * cardSpacing;
 
         const curDealY = THREE.MathUtils.lerp(
@@ -313,9 +402,9 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
 
         // Slight arc forward during descent
         const dealArc =
-          Math.sin(localDealT * Math.PI) * 0.3;
+          Math.sin(localDealT * Math.PI) * metrics.dealArcMax;
 
-        const stackDepth = -i * 0.008;
+        const stackDepth = -i * metrics.stackDepthStep;
         group.position.x = 0;
         group.position.y = THREE.MathUtils.lerp(
           curDealY,
@@ -328,16 +417,16 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
           settleDealT,
         );
 
-        // Rotate to opposite landscape side (+π/2 on Z) during deal flight
-        const landscapeRot = Math.PI / 2 * localDealT;
-        // Wobble rotation during flight, settles to landscape
+        const dealTargetRotation = mobileViewport ? 0 : Math.PI / 2;
+        const landscapeRot = dealTargetRotation * localDealT;
+        // Wobble rotation during flight, settles to target orientation.
         group.rotation.x = 0;
         const dealWobble =
           (1 - localDealT) * ((i % 2 === 0 ? -1 : 1) * 0.08);
         const flightRotZ = landscapeRot + dealWobble;
         group.rotation.z = THREE.MathUtils.lerp(
           flightRotZ,
-          Math.PI / 2,
+          dealTargetRotation,
           settleDealT,
         );
 
@@ -352,9 +441,9 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
 
         // Card lifts toward camera + lifts up during flip
         const flipArcZ =
-          Math.sin(localFlipT * Math.PI) * 0.7;
+          Math.sin(localFlipT * Math.PI) * metrics.flipArcZMax;
         const flipArcY =
-          Math.sin(localFlipT * Math.PI) * 0.12;
+          Math.sin(localFlipT * Math.PI) * metrics.flipArcYMax;
         group.position.z += flipArcZ;
         group.position.y += flipArcY;
 
@@ -373,8 +462,8 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
 
         group.rotation.y = 0; // Card3D handles Y via flip
 
-        // Scale up cards so they fill the viewport nicely in landscape
-        const dealScale = THREE.MathUtils.lerp(1, 2.4, localDealT);
+        // Scale up cards so they fill the viewport in the active orientation.
+        const dealScale = THREE.MathUtils.lerp(1, metrics.dealScaleMax, localDealT);
         group.scale.setScalar(dealScale);
       }
     }
@@ -400,7 +489,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
               edgeGlow={edgeGlowValues.current[index]}
               frontAttachment={
                 !lowPowerMode && item && frontSpec ? (
-                  <group rotation={[0, 0, -Math.PI / 2]} scale={0.56}>
+                  <group rotation={[0, 0, popoutWrapperRotationZ]} scale={popoutAttachmentScale}>
                     <ProjectCardPopoutPresets
                       preset={frontSpec.popoutPreset}
                       accent={item.accent}

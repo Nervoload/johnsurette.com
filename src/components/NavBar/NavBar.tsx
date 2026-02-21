@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import NavLogo from "./NavLogo";
 import { SiteRoute } from "../sections";
 import { WipeOptions } from "../Transitions/TransitionWipe";
 import { useIsTouch } from "../../hooks/usePointerDevice";
@@ -8,7 +7,7 @@ import { useIsTouch } from "../../hooks/usePointerDevice";
 export interface NavBarProps {
   routes: SiteRoute[];
   currentPath: string;
-  onNavigate: (path: string, opts?: WipeOptions) => void;
+  onNavigate: (path: string, opts?: WipeOptions) => boolean | void;
   onHintNavInteraction?: (kind: "hover-zone" | "menu-toggle") => void;
 }
 
@@ -33,8 +32,6 @@ const NavBar: React.FC<NavBarProps> = ({
   // On touch devices the hover zone does nothing — only hamburger toggles.
   // On desktop the nav appears on hover OR toggle.
   const visible = open || (!isTouch && hoveringTop);
-
-  const homeRoute = routes.find((route) => route.path === "/");
 
   // Close nav when route changes (important on mobile after tapping a link)
   useEffect(() => {
@@ -73,27 +70,27 @@ const NavBar: React.FC<NavBarProps> = ({
 
       <button
         type="button"
-        aria-label="Go to home"
-        className="fixed left-3 top-3 z-[72] rounded-full border border-white/55 bg-white/45 p-2 shadow-sm backdrop-blur-xl transition active:scale-95 hover:bg-white/60"
-        onClick={() => {
-          setOpen(false);
-          onNavigate("/", { color: homeRoute?.color ?? "#e2e8f0" });
-        }}
-      >
-        <NavLogo size={30} ringThickness={3} />
-      </button>
-
-      <button
-        type="button"
         aria-label="Toggle navigation"
         aria-expanded={visible}
         onClick={() => {
           setOpen((prev) => !prev);
           onHintNavInteraction?.("menu-toggle");
         }}
-        className="fixed right-3 top-3 z-[72] flex h-11 w-11 items-center justify-center rounded-full border border-white/55 bg-white/45 text-slate-700 backdrop-blur-xl transition active:scale-95 hover:bg-white/60"
+        className="fixed right-3 top-3 z-[72] flex h-11 w-11 items-center justify-center rounded-full bg-white/58 text-slate-700 shadow-[0_10px_32px_-22px_rgba(15,23,42,0.68)] backdrop-blur-xl transition duration-300 hover:bg-white/72 active:scale-95"
       >
-        <span className="text-lg leading-none">{visible ? "×" : "≡"}</span>
+        <span className="sr-only">{visible ? "Close navigation" : "Open navigation"}</span>
+        <span className="relative block h-5 w-5">
+          <span
+            className={`absolute left-0 top-1/2 h-[1.8px] w-5 -translate-y-1/2 rounded-full bg-slate-700 transition-all duration-300 ${
+              visible ? "rotate-45" : "-translate-y-[4.5px]"
+            }`}
+          />
+          <span
+            className={`absolute left-0 top-1/2 h-[1.8px] w-5 -translate-y-1/2 rounded-full bg-slate-700 transition-all duration-300 ${
+              visible ? "-rotate-45" : "translate-y-[4.5px]"
+            }`}
+          />
+        </span>
       </button>
 
       <div className="pointer-events-none fixed left-1/2 top-3 z-[70] w-[min(92vw,720px)] -translate-x-1/2">

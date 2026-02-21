@@ -2,22 +2,34 @@ import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useStat
 import { motion, useReducedMotion } from "framer-motion";
 import NavBar from "./components/NavBar/NavBar";
 import TransitionWipe, { TransitionHandle, WipeOptions } from "./components/Transitions/TransitionWipe";
-import { normalizeRoute, siteRoutes } from "./components/sections";
+import { SiteRoute, normalizeRoute, siteRoutes } from "./components/sections";
 
 const LandingPage = lazy(() => import("./pages/LandingPage"));
+const OriginStoryPage = lazy(() => import("./pages/OriginStoryPage"));
 const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const BlogPage = lazy(() => import("./pages/BlogPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
+
 const ROUTE_TRANSITION_FULL_MS = 760;
 const ROUTE_TRANSITION_LITE_MS = 620;
-const HEAVY_TRANSITION_ROUTES = new Set(["/", "/projects"]);
+const ORIGIN_DEV_ROUTE: SiteRoute = {
+  label: "Origin Lab",
+  path: "/origin",
+  color: "#22d3ee",
+};
+const transitionRoutes: SiteRoute[] = [...siteRoutes, ORIGIN_DEV_ROUTE];
+const HEAVY_TRANSITION_ROUTES = new Set(["/", "/projects", "/origin"]);
 
 const routeIndexMap = new Map<string, number>(
-  siteRoutes.map((route, index) => [normalizeRoute(route.path), index]),
+  transitionRoutes.map((route, index) => [normalizeRoute(route.path), index]),
 );
 
-const routeColorMap = new Map<string, string>(siteRoutes.map((route) => [normalizeRoute(route.path), route.color]));
+const routeColorMap = new Map<string, string>(
+  transitionRoutes.map((route) => [normalizeRoute(route.path), route.color]),
+);
+
+type LandingEntryTarget = "hero" | "conclusion";
 
 const buildTransitionOptions = (
   fromPath: string,
@@ -40,7 +52,7 @@ const buildTransitionOptions = (
 
 const PageFallback: React.FC = () => {
   return (
-    <div className="flex h-[100dvh] w-screen items-center justify-center bg-slate-50 text-slate-800">
+    <div className="flex h-[100svh] w-screen items-center justify-center bg-slate-50 text-slate-800">
       <div className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm tracking-wide text-slate-600 shadow-sm">
         Loading page...
       </div>
@@ -54,9 +66,21 @@ function App() {
 
   const [path, setPath] = useState<string>(initialPath);
   const [navInteractionTick, setNavInteractionTick] = useState(0);
+  const [landingEntryTarget, setLandingEntryTarget] = useState<LandingEntryTarget>("hero");
+  const [landingEntryNonce, setLandingEntryNonce] = useState(0);
   const pathRef = useRef<string>(initialPath);
   const navigationLockRef = useRef(false);
   const wipeRef = useRef<TransitionHandle>(null);
+
+  const navRoutes = useMemo<SiteRoute[]>(
+    () => (import.meta.env.DEV ? [...siteRoutes, ORIGIN_DEV_ROUTE] : siteRoutes),
+    [],
+  );
+
+  const setLandingEntry = useCallback((target: LandingEntryTarget) => {
+    setLandingEntryTarget(target);
+    setLandingEntryNonce((prev) => prev + 1);
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -78,46 +102,104 @@ function App() {
     return () => window.removeEventListener("popstate", onPopState);
   }, [initialPath]);
 
-  const navigate = useCallback((targetPath: string, opts?: WipeOptions) => {
-    const nextPath = normalizeRoute(targetPath);
-    if (nextPath === pathRef.current || navigationLockRef.current) return;
+  const navigate = useCallback(
+    (targetPath: string, opts?: WipeOptions): boolean => {
+      const nextPath = normalizeRoute(targetPath);
+      if (nextPath === pathRef.current || navigationLockRef.current) return false;
 
-    const transitionOptions = buildTransitionOptions(pathRef.current, nextPath, opts);
-
-    const run = async () => {
-      navigationLockRef.current = true;
-
-      try {
-        if (wipeRef.current) {
-          await wipeRef.current.start(transitionOptions);
-        }
-
-        window.history.pushState({}, "", nextPath);
-        pathRef.current = nextPath;
-        setPath(nextPath);
-
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            wipeRef.current?.done();
-          });
-        });
-      } finally {
-        window.setTimeout(() => {
-          navigationLockRef.current = false;
-        }, Math.max(260, transitionOptions.duration + 120));
+      if (nextPath === "/" && pathRef.current !== "/origin") {
+        setLandingEntry("hero");
       }
-    };
 
-    void run();
-  }, []);
+      const transitionOptions = buildTransitionOptions(pathRef.current, nextPath, opts);
+
+      const run = async () => {
+        navigationLockRef.current = true;
+
+        try {
+          if (wipeRef.current) {
+            await wipeRef.current.start(transitionOptions);
+          }
+
+          window.history.pushState({}, "", nextPath);
+          pathRef.current = nextPath;
+          setPath(nextPath);
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              wipeRef.current?.done();
+            });
+          });
+        } finally {
+          window.setTimeout(() => {
+            navigationLockRef.current = false;
+          }, Math.max(260, transitionOptions.duration + 120));
+        }
+      };
+
+      void run();
+      return true;
+    },
+    [setLandingEntry],
+  );
 
   const handleHintNavInteraction = useCallback(() => {
     setNavInteractionTick((prev) => prev + 1);
   }, []);
 
+  const handleEnterOriginExperience = useCallback(() => {
+    return navigate("/origin", {
+      color: ORIGIN_DEV_ROUTE.color,
+      direction: "down",
+      intensity: "lite",
+      duration: 640,
+    });
+  }, [navigate]);
+
+  const handleOriginExitToHero = useCallback(() => {
+    const accepted = navigate("/", {
+      color: "#dbeafe",
+      direction: "up",
+      intensity: "lite",
+      duration: 640,
+    });
+    if (accepted) {
+      setLandingEntry("hero");
+    }
+  }, [navigate, setLandingEntry]);
+
+  const handleOriginExitToConclusion = useCallback(() => {
+    const accepted = navigate("/", {
+      color: "#ddd6fe",
+      direction: "up",
+      intensity: "lite",
+      duration: 660,
+    });
+    if (accepted) {
+      setLandingEntry("conclusion");
+    }
+  }, [navigate, setLandingEntry]);
+
   const pageNode = useMemo(() => {
     if (path === "/") {
-      return <LandingPage onNavigate={navigate} navInteractionTick={navInteractionTick} />;
+      return (
+        <LandingPage
+          onNavigate={navigate}
+          navInteractionTick={navInteractionTick}
+          onEnterOriginExperience={handleEnterOriginExperience}
+          entryTarget={landingEntryTarget}
+          entryNonce={landingEntryNonce}
+        />
+      );
+    }
+
+    if (path === "/origin") {
+      return (
+        <OriginStoryPage
+          onExitToLandingHero={handleOriginExitToHero}
+          onExitToLandingConclusion={handleOriginExitToConclusion}
+        />
+      );
     }
 
     if (path === "/projects") {
@@ -136,8 +218,25 @@ function App() {
       return <BlogPage />;
     }
 
-    return <LandingPage onNavigate={navigate} navInteractionTick={navInteractionTick} />;
-  }, [path, navigate, navInteractionTick]);
+    return (
+      <LandingPage
+        onNavigate={navigate}
+        navInteractionTick={navInteractionTick}
+        onEnterOriginExperience={handleEnterOriginExperience}
+        entryTarget={landingEntryTarget}
+        entryNonce={landingEntryNonce}
+      />
+    );
+  }, [
+    handleEnterOriginExperience,
+    handleOriginExitToConclusion,
+    handleOriginExitToHero,
+    landingEntryNonce,
+    landingEntryTarget,
+    navInteractionTick,
+    navigate,
+    path,
+  ]);
 
   const isHeavyRoute = HEAVY_TRANSITION_ROUTES.has(path);
   const pageInitialMotion = prefersReducedMotion
@@ -152,10 +251,10 @@ function App() {
       : { duration: 0.7, ease: [0.14, 0.88, 0.22, 1] as [number, number, number, number] };
 
   return (
-    <div className="relative h-[100dvh] w-screen overflow-hidden bg-slate-50 supports-[height:100dvh]:h-[100dvh]">
+    <div className="relative h-[100svh] w-screen overflow-hidden bg-slate-50">
       <TransitionWipe ref={wipeRef} />
       <NavBar
-        routes={siteRoutes}
+        routes={navRoutes}
         currentPath={path}
         onNavigate={navigate}
         onHintNavInteraction={handleHintNavInteraction}
@@ -165,11 +264,7 @@ function App() {
           key={path}
           className="h-full w-full"
           initial={pageInitialMotion}
-          animate={
-            prefersReducedMotion
-              ? { opacity: 1 }
-              : { opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }
-          }
+          animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }}
           transition={pageTransition}
           style={{ willChange: prefersReducedMotion ? "auto" : "transform, opacity, filter" }}
         >

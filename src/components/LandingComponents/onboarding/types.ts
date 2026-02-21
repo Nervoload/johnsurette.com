@@ -1,16 +1,11 @@
 export type HintId = "scroll" | "nav";
 
-export interface HintVisibilityState {
-  scroll: boolean;
-  nav: boolean;
-}
+export type HintLifecycleState = "hidden" | "entering" | "visible" | "exiting";
+
+export type HintVisibilityState = Record<HintId, HintLifecycleState>;
 
 export interface OnboardingRuntimeState {
-  firstVisit: boolean;
-  firstVisitLockUntil: number;
   scrollCompleted: boolean;
   navCompleted: boolean;
-  lastActivityAt: number;
   scrollTop: number;
 }
-

@@ -13,6 +13,7 @@ interface StoryboardSectionProps {
     progress: MotionValue<number>,
     context: {
       lowPowerMode: boolean;
+      mobileViewport: boolean;
     },
   ) => React.ReactNode;
 }
@@ -23,7 +24,8 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
   forceLowPower = false,
   children,
 }) => {
-  const [lowPowerMode, setLowPowerMode] = useState(false);
+  const [mobileViewport, setMobileViewport] = useState(false);
+  const [reducedMotionMode, setReducedMotionMode] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -31,7 +33,8 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
     const viewportQuery = window.matchMedia("(max-width: 900px)");
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
     const update = () => {
-      setLowPowerMode(viewportQuery.matches || motionQuery.matches);
+      setMobileViewport(viewportQuery.matches);
+      setReducedMotionMode(motionQuery.matches);
     };
 
     update();
@@ -55,15 +58,15 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
     };
   }, []);
 
-  const effectiveLowPowerMode = lowPowerMode || forceLowPower;
-  const renderHeight = effectiveLowPowerMode ? Math.max(190, Math.min(height, 220)) : height;
+  const effectiveLowPowerMode = reducedMotionMode || forceLowPower;
+  const renderHeight = height;
 
   return (
     <section style={{ height: `${renderHeight}vh` }} className="relative">
-      <div className="sticky top-0 h-screen overflow-hidden bg-slate-50">
+      <div className="sticky top-0 h-[100svh] overflow-hidden">
         {/* Seamless full-viewport depth backdrop (no finite plane edges). */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(191,219,254,0.52),transparent_46%),radial-gradient(circle_at_78%_20%,rgba(196,181,253,0.34),transparent_42%),linear-gradient(165deg,#ffffff,#f8fafc_58%,#eef2f7)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_72%,rgba(148,163,184,0.15),transparent_58%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(191,219,254,0.34),transparent_46%),radial-gradient(circle_at_78%_20%,rgba(196,181,253,0.26),transparent_42%),linear-gradient(165deg,rgba(255,255,255,0.58),rgba(248,250,252,0.56)_58%,rgba(238,242,247,0.62))]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_72%,rgba(148,163,184,0.12),transparent_58%)]" />
 
         <CanvasErrorBoundary>
           <Canvas
@@ -103,7 +106,7 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
             <SceneBloom enabled={!effectiveLowPowerMode} />
 
             <group scale={1.14} position={[0, 0.02, 0]}>
-              {children(progress, { lowPowerMode: effectiveLowPowerMode })}
+              {children(progress, { lowPowerMode: effectiveLowPowerMode, mobileViewport })}
             </group>
           </Canvas>
         </CanvasErrorBoundary>

@@ -1,4 +1,4 @@
-import React, { RefObject, useRef } from "react";
+import React, { RefObject, useCallback, useEffect, useRef } from "react";
 import { useAnimationFrame, useMotionValue, useMotionValueEvent, useScroll } from "framer-motion";
 import StoryboardSection from "./StoryboardSection";
 import ProjectIntroSequence from "./ProjectIntroSequence";
@@ -43,6 +43,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
 }) => {
   const sceneRef = useRef<HTMLDivElement>(null);
   const rawRef = useRef(0);
+  const snapFramesRef = useRef(0);
 
   const timelineProgress = useMotionValue(0);
 
@@ -57,9 +58,59 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
     rawRef.current = value;
   });
 
+  const syncTimelineToScroll = useCallback(() => {
+    const raw = clamp01(scrollYProgress.get());
+    rawRef.current = raw;
+    timelineProgress.set(remapProgress(raw));
+    // Skip smoothing briefly so timeline instantly matches new viewport geometry.
+    snapFramesRef.current = 3;
+  }, [scrollYProgress, timelineProgress]);
+
+  useEffect(() => {
+    syncTimelineToScroll();
+  }, [syncTimelineToScroll]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleResizeSync = () => {
+      syncTimelineToScroll();
+    };
+
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => {
+            handleResizeSync();
+          })
+        : null;
+
+    const sceneEl = sceneRef.current;
+    const scrollEl = scrollContainer.current;
+    if (resizeObserver) {
+      if (sceneEl) resizeObserver.observe(sceneEl);
+      if (scrollEl) resizeObserver.observe(scrollEl);
+    }
+
+    window.addEventListener("resize", handleResizeSync);
+    const visualViewport = window.visualViewport;
+    visualViewport?.addEventListener("resize", handleResizeSync);
+
+    return () => {
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", handleResizeSync);
+      visualViewport?.removeEventListener("resize", handleResizeSync);
+    };
+  }, [scrollContainer, syncTimelineToScroll]);
+
   useAnimationFrame((_, delta) => {
     const mappedTarget = remapProgress(rawRef.current);
     const current = timelineProgress.get();
+
+    if (snapFramesRef.current > 0) {
+      timelineProgress.set(mappedTarget);
+      snapFramesRef.current -= 1;
+      return;
+    }
 
     // Keep progression deliberately slower through deal/flip so cards don't snap through.
     const introZone = mappedTarget < 0.68;
@@ -82,6 +133,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
             items={items}
             onCardSelect={onCardSelect}
             lowPowerMode={context.lowPowerMode}
+            mobileViewport={context.mobileViewport}
           />
         )}
       </StoryboardSection>

@@ -68,6 +68,9 @@ const statusTone: Record<ProjectCardStatus, { bg: string; fg: string }> = {
 
 const LANDSCAPE_WIDTH = 1024;
 const LANDSCAPE_HEIGHT = 720;
+const PORTRAIT_WIDTH = 720;
+const PORTRAIT_HEIGHT = 1024;
+export type ProjectFrontOrientation = "landscape" | "portrait";
 
 const escapeXml = (value: string) =>
   value
@@ -122,7 +125,11 @@ const tspanLines = (lines: string[], x: number, lineHeight: number) =>
     .map((line, i) => `<tspan x='${x}' dy='${i === 0 ? 0 : lineHeight}'>${escapeXml(line)}</tspan>`)
     .join("");
 
-export const makeProjectFrontTexture = (item: ProjectItem, seed: number): string => {
+export const makeProjectFrontTexture = (
+  item: ProjectItem,
+  seed: number,
+  orientation: ProjectFrontOrientation = "landscape",
+): string => {
   const front = resolveProjectCardFront(item);
   const theme = familyThemes[front.frontFamily];
   const status = statusTone[front.status];
@@ -134,22 +141,16 @@ export const makeProjectFrontTexture = (item: ProjectItem, seed: number): string
 
   const statusWidth = Math.min(280, 38 + front.status.length * 9);
   const dateWidth = Math.min(184, 36 + front.dateLabel.length * 9);
+  const landscapeMode = orientation === "landscape";
 
-  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 1024'>
-  <defs>
-    <linearGradient id='bg' x1='0' y1='0' x2='${LANDSCAPE_WIDTH}' y2='${LANDSCAPE_HEIGHT}' gradientUnits='userSpaceOnUse'>
-      <stop offset='0%' stop-color='${theme.bgStart}'/>
-      <stop offset='100%' stop-color='${theme.bgEnd}'/>
-    </linearGradient>
-    <radialGradient id='portalGlow' cx='512' cy='360' r='260' gradientUnits='userSpaceOnUse'>
-      <stop offset='0%' stop-color='${theme.portal}' stop-opacity='0.56'/>
-      <stop offset='100%' stop-color='${theme.portal}' stop-opacity='0'/>
-    </radialGradient>
-    <pattern id='grid' width='32' height='32' patternUnits='userSpaceOnUse' patternTransform='rotate(${seed * 11})'>
-      <path d='M16 0V32 M0 16H32' stroke='${theme.trim}' stroke-opacity='0.08' stroke-width='1'/>
-    </pattern>
-  </defs>
+  const gradientX2 = landscapeMode ? LANDSCAPE_WIDTH : PORTRAIT_WIDTH;
+  const gradientY2 = landscapeMode ? LANDSCAPE_HEIGHT : PORTRAIT_HEIGHT;
+  const portalCx = landscapeMode ? 512 : 360;
+  const portalCy = landscapeMode ? 360 : 512;
+  const portalR = landscapeMode ? 260 : 250;
 
+  const body = landscapeMode
+    ? `
   <g transform='translate(720 0) rotate(90)'>
     <rect width='${LANDSCAPE_WIDTH}' height='${LANDSCAPE_HEIGHT}' fill='url(#bg)'/>
     <rect width='${LANDSCAPE_WIDTH}' height='${LANDSCAPE_HEIGHT}' fill='url(#grid)'/>
@@ -193,7 +194,69 @@ export const makeProjectFrontTexture = (item: ProjectItem, seed: number): string
 
     <path d='M98 440 H262' stroke='${item.accent}' stroke-opacity='0.5' stroke-width='3'/>
     <path d='M760 440 H924' stroke='${item.accent}' stroke-opacity='0.38' stroke-width='3'/>
-  </g>
+  </g>`
+    : `
+  <g>
+    <rect width='${PORTRAIT_WIDTH}' height='${PORTRAIT_HEIGHT}' fill='url(#bg)'/>
+    <rect width='${PORTRAIT_WIDTH}' height='${PORTRAIT_HEIGHT}' fill='url(#grid)'/>
+
+    <rect x='20' y='20' width='680' height='984' rx='34' fill='none' stroke='${theme.trim}' stroke-opacity='0.34' stroke-width='9'/>
+    <rect x='20' y='20' width='680' height='984' rx='34' fill='none' stroke='${item.accent}' stroke-opacity='0.72' stroke-width='4.8'/>
+    <rect x='44' y='44' width='632' height='936' rx='28' fill='none' stroke='${theme.trim}' stroke-opacity='0.28' stroke-width='2.2'/>
+
+    <ellipse cx='360' cy='512' rx='206' ry='142' fill='url(#portalGlow)'/>
+    <circle cx='360' cy='512' r='108' fill='none' stroke='${item.accent}' stroke-opacity='0.44' stroke-width='4'/>
+    <circle cx='360' cy='512' r='68' fill='none' stroke='${theme.trim}' stroke-opacity='0.42' stroke-width='3'/>
+
+    <path d='M84 130 H150 M84 130 V196 M636 130 H570 M636 130 V196 M84 894 H150 M84 894 V828 M636 894 H570 M636 894 V828' stroke='${item.accent}' stroke-opacity='0.62' stroke-width='2.2' stroke-linecap='round' fill='none'/>
+
+    <text x='84' y='144' fill='${theme.text}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='52' font-weight='700'>
+      ${tspanLines(titleLines, 84, 58)}
+    </text>
+
+    <g transform='translate(584 84)'>
+      <rect width='96' height='96' rx='24' fill='${theme.chip}'/>
+      <rect x='1.5' y='1.5' width='93' height='93' rx='22.5' fill='none' stroke='${item.accent}' stroke-opacity='0.54'/>
+      <text x='48' y='58' text-anchor='middle' fill='${theme.chipText}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='33' font-weight='700'>${escapeXml(iconLabel)}</text>
+    </g>
+
+    <g transform='translate(84 812)'>
+      <rect x='0' y='0' width='${dateWidth}' height='44' rx='22' fill='${theme.chip}'/>
+      <text x='18' y='29' fill='${theme.muted}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='18' font-weight='600'>${escapeXml(front.dateLabel)}</text>
+
+      <rect x='${dateWidth + 12}' y='0' width='${statusWidth}' height='44' rx='22' fill='${status.bg}'/>
+      <text x='${dateWidth + 30}' y='29' fill='${status.fg}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='18' font-weight='700'>${escapeXml(front.status)}</text>
+    </g>
+
+    <g transform='translate(636 702)'>
+      <text x='0' y='0' text-anchor='end' fill='${theme.muted}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='27' font-weight='600'>
+        ${tspanLines(subtitleLines, 0, 32)}
+      </text>
+      <text x='0' y='80' text-anchor='end' fill='${theme.text}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='21' font-weight='500' opacity='0.92'>
+        ${tspanLines(summaryLines, 0, 27)}
+      </text>
+    </g>
+
+    <path d='M98 644 H262' stroke='${item.accent}' stroke-opacity='0.5' stroke-width='3'/>
+    <path d='M458 644 H622' stroke='${item.accent}' stroke-opacity='0.38' stroke-width='3'/>
+  </g>`;
+
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 1024'>
+  <defs>
+    <linearGradient id='bg' x1='0' y1='0' x2='${gradientX2}' y2='${gradientY2}' gradientUnits='userSpaceOnUse'>
+      <stop offset='0%' stop-color='${theme.bgStart}'/>
+      <stop offset='100%' stop-color='${theme.bgEnd}'/>
+    </linearGradient>
+    <radialGradient id='portalGlow' cx='${portalCx}' cy='${portalCy}' r='${portalR}' gradientUnits='userSpaceOnUse'>
+      <stop offset='0%' stop-color='${theme.portal}' stop-opacity='0.56'/>
+      <stop offset='100%' stop-color='${theme.portal}' stop-opacity='0'/>
+    </radialGradient>
+    <pattern id='grid' width='32' height='32' patternUnits='userSpaceOnUse' patternTransform='rotate(${seed * 11})'>
+      <path d='M16 0V32 M0 16H32' stroke='${theme.trim}' stroke-opacity='0.08' stroke-width='1'/>
+    </pattern>
+  </defs>
+
+  ${body}
 </svg>`;
 
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
