@@ -11,10 +11,10 @@ export interface PageScaffoldProps {
 
 const PageScaffold: React.FC<PageScaffoldProps> = ({
   children,
-  backgroundClassName = "bg-slate-50",
+  backgroundClassName = "theme-page-bg",
   footerBackgroundColor,
   scrollSnap = false,
-  footerRunwayVh = 110,
+  footerRunwayVh = 72,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -22,7 +22,7 @@ const PageScaffold: React.FC<PageScaffoldProps> = ({
     <>
       <div
         ref={scrollRef}
-        className={`relative h-[100svh] w-screen overflow-y-auto overflow-x-hidden ${backgroundClassName} ${
+        className={`theme-page-bg relative h-[100svh] w-screen overflow-y-auto overflow-x-hidden ${backgroundClassName} ${
           scrollSnap ? "snap-y snap-mandatory" : ""
         }`}
       >

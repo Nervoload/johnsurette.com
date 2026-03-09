@@ -41,6 +41,10 @@ const PRESET_SEED_OFFSET: Record<DensityPreset, number> = {
 };
 
 const GRID_CELL_SIZE = 72;
+const POINTER_BASE_RADIUS_PX = 170;
+const POINTER_MAX_RADIUS_SCALE = 0.216;
+const POINTER_REPULSION_PX = 1078;
+const POINTER_DRAG_RATIO = 0.5;
 
 const ROTATION_SPEED_RANGE: Record<BioticClass, { min: number; max: number }> = {
   bacteria: { min: -0.16, max: 0.16 },
@@ -698,6 +702,51 @@ const updateTrails = (sim: BioticSimulation): void => {
   }
 };
 
+const applyPointerInteraction = (sim: BioticSimulation, particle: BioticParticle, dt: number): void => {
+  const field = sim.pointerField;
+  if (!field.active || field.strength <= 0) return;
+
+  const px = particle.nx * sim.width;
+  const py = particle.ny * sim.height;
+  const pointerX = field.nx * sim.width;
+  const pointerY = field.ny * sim.height;
+  const dx = px - pointerX;
+  const dy = py - pointerY;
+  const radiusPx = Math.max(24, field.radiusPx * (0.7 + particle.z * 0.45));
+  const distSq = dx * dx + dy * dy;
+
+  if (distSq > radiusPx * radiusPx) return;
+
+  const dist = Math.max(0.0001, Math.sqrt(distSq));
+  const speed = Math.hypot(field.velocityX, field.velocityY);
+  const radialDirX = dx / dist;
+  const radialDirY = dy / dist;
+  const travelDirX = speed > 12 ? field.velocityX / speed : 0;
+  const travelDirY = speed > 12 ? field.velocityY / speed : 0;
+  const coreRadiusPx = radiusPx * 0.22;
+  const falloff = 1 - dist / radiusPx;
+  const eased = Math.pow(falloff, 1.35);
+  const radialBlend = clamp((dist - coreRadiusPx) / Math.max(1, radiusPx - coreRadiusPx), 0, 1);
+  const wakeWeight = speed > 12 ? (1 - radialBlend) * clamp(speed / 720, 0.35, 1.1) : 0;
+  const blendedDirX = radialDirX * (0.28 + radialBlend * 0.94) + travelDirX * wakeWeight;
+  const blendedDirY = radialDirY * (0.28 + radialBlend * 0.94) + travelDirY * wakeWeight;
+  const blendedDirLength = Math.max(0.0001, Math.hypot(blendedDirX, blendedDirY));
+  const forceDirX = blendedDirX / blendedDirLength;
+  const forceDirY = blendedDirY / blendedDirLength;
+  const pulseBoost = 1 + field.pulse * 0.24;
+  const repulsionPx =
+    eased *
+    field.strength *
+    POINTER_REPULSION_PX *
+    pulseBoost *
+    (0.72 + radialBlend * 0.28);
+  const dragPxX = field.velocityX * eased * field.strength * POINTER_DRAG_RATIO;
+  const dragPxY = field.velocityY * eased * field.strength * POINTER_DRAG_RATIO;
+
+  particle.vx += (forceDirX * repulsionPx + dragPxX) / Math.max(sim.width, 1) * dt * 1.35;
+  particle.vy += (forceDirY * repulsionPx + dragPxY) / Math.max(sim.height, 1) * dt * 1.35;
+};
+
 const updateParticleMotion = (sim: BioticSimulation, particle: BioticParticle, dt: number): void => {
   const profile = getProfile(sim, particle);
 
@@ -724,6 +773,8 @@ const updateParticleMotion = (sim: BioticSimulation, particle: BioticParticle, d
     particle.vx *= 0.88;
     particle.vy *= 0.88;
   }
+
+  applyPointerInteraction(sim, particle, dt);
 
   const flowNorm = flowPxPerSecond(sim, particle, profile) / Math.max(sim.height, 1);
   particle.ny += flowNorm * dt;
@@ -772,6 +823,16 @@ export const createSimulation = (options: CreateSimulationOptions): BioticSimula
     flowStrength: options.flowStrength,
     maxAmoebaChecks: densitySettings.maxAmoebaChecks,
     emissionCapPerVirus: densitySettings.emissionCapPerVirus,
+    pointerField: {
+      active: false,
+      nx: 0.5,
+      ny: 0.5,
+      velocityX: 0,
+      velocityY: 0,
+      strength: 0,
+      radiusPx: POINTER_BASE_RADIUS_PX,
+      pulse: 0,
+    },
     particles: [],
     profiles,
   };
@@ -788,6 +849,7 @@ export const resizeSimulation = (simulation: BioticSimulation, width: number, he
   simulation.width = width;
   simulation.height = height;
   simulation.dpr = dpr;
+  simulation.pointerField.radiusPx = Math.min(Math.max(POINTER_BASE_RADIUS_PX, Math.min(width, height) * 0.12), Math.min(width, height) * POINTER_MAX_RADIUS_SCALE);
 
   const densitySettings = DENSITY_PRESETS[simulation.preset];
   simulation.maxAmoebaChecks = densitySettings.maxAmoebaChecks;

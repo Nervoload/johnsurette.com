@@ -3,15 +3,22 @@ import { useAnimationFrame, useMotionValue, useMotionValueEvent, useScroll } fro
 import StoryboardSection from "./StoryboardSection";
 import ProjectIntroSequence from "./ProjectIntroSequence";
 import { ProjectItem } from "./projectData";
+import { ResolvedThemeMode } from "../theme/themeMode";
 
 export interface ProjectStoryboardProps {
   scrollContainer: RefObject<HTMLDivElement>;
   items: ProjectItem[];
   onCardSelect?: (item: ProjectItem, screenPos: { x: number; y: number }) => void;
   forceLowPower?: boolean;
+  themeMode: ResolvedThemeMode;
 }
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
+
+const getStoryboardHeight = (count: number) => {
+  const extraCards = Math.max(0, count - 4);
+  return 560 + extraCards * 110;
+};
 
 /**
  * Remap raw scroll 0–1 into animation-timeline 0–1.
@@ -24,15 +31,21 @@ const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
  * 0.62–0.76     →  0.84–0.96   Flip reveal (slower)
  * 0.76–1.00     →  0.96–1.00   Browse through cards
  */
-const remapProgress = (raw: number): number => {
+const remapProgress = (raw: number, count: number): number => {
   const p = clamp01(raw);
+  const extraCards = Math.max(0, count - 4);
+  const dealEnd = Math.min(0.67, 0.62 + extraCards * 0.03);
+  const flipEnd = Math.min(0.84, 0.76 + extraCards * 0.04);
+  const browseStart = Math.min(0.9, 0.76 + extraCards * 0.05);
+  const browseDenominator = Math.max(0.08, 1 - browseStart);
 
   if (p <= 0.12) return p;
   if (p <= 0.3) return 0.12 + ((p - 0.12) / 0.18) * 0.3;
   if (p <= 0.46) return 0.42 + ((p - 0.3) / 0.16) * 0.26;
-  if (p <= 0.62) return 0.68 + ((p - 0.46) / 0.16) * 0.16;
-  if (p <= 0.76) return 0.84 + ((p - 0.62) / 0.14) * 0.12;
-  return 0.96 + ((p - 0.76) / 0.24) * 0.04;
+  if (p <= dealEnd) return 0.68 + ((p - 0.46) / (dealEnd - 0.46)) * 0.16;
+  if (p <= flipEnd) return 0.84 + ((p - dealEnd) / (flipEnd - dealEnd)) * 0.12;
+  if (p <= browseStart) return 0.96;
+  return 0.96 + ((p - browseStart) / browseDenominator) * 0.04;
 };
 
 const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
@@ -40,10 +53,12 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   items,
   onCardSelect,
   forceLowPower = false,
+  themeMode,
 }) => {
   const sceneRef = useRef<HTMLDivElement>(null);
   const rawRef = useRef(0);
   const snapFramesRef = useRef(0);
+  const storyboardHeight = getStoryboardHeight(items.length);
 
   const timelineProgress = useMotionValue(0);
 
@@ -61,10 +76,10 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   const syncTimelineToScroll = useCallback(() => {
     const raw = clamp01(scrollYProgress.get());
     rawRef.current = raw;
-    timelineProgress.set(remapProgress(raw));
+    timelineProgress.set(remapProgress(raw, items.length));
     // Skip smoothing briefly so timeline instantly matches new viewport geometry.
     snapFramesRef.current = 3;
-  }, [scrollYProgress, timelineProgress]);
+  }, [items.length, scrollYProgress, timelineProgress]);
 
   useEffect(() => {
     syncTimelineToScroll();
@@ -103,7 +118,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   }, [scrollContainer, syncTimelineToScroll]);
 
   useAnimationFrame((_, delta) => {
-    const mappedTarget = remapProgress(rawRef.current);
+    const mappedTarget = remapProgress(rawRef.current, items.length);
     const current = timelineProgress.get();
 
     if (snapFramesRef.current > 0) {
@@ -126,7 +141,12 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
 
   return (
     <div ref={sceneRef}>
-      <StoryboardSection progress={timelineProgress} height={560} forceLowPower={forceLowPower}>
+      <StoryboardSection
+        progress={timelineProgress}
+        height={storyboardHeight}
+        forceLowPower={forceLowPower}
+        themeMode={themeMode}
+      >
         {(progress, context) => (
           <ProjectIntroSequence
             progress={progress}
@@ -134,6 +154,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
             onCardSelect={onCardSelect}
             lowPowerMode={context.lowPowerMode}
             mobileViewport={context.mobileViewport}
+            themeMode={themeMode}
           />
         )}
       </StoryboardSection>

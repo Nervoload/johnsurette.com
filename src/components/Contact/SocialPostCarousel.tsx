@@ -77,27 +77,27 @@ interface DefaultPostCardProps {
 
 const DefaultPostCard: React.FC<DefaultPostCardProps> = ({ post }) => {
   return (
-    <article className="h-full border-t border-slate-300/60 py-5">
+    <article className="theme-border-subtle h-full border-t py-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-slate-600">
+        <span className="theme-text-muted inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em]">
           <span className={`h-2 w-2 rounded-full ${post.accentClassName}`} aria-hidden />
           {post.platform}
         </span>
-        <span className="text-xs uppercase tracking-[0.12em] text-slate-500">{post.publishedLabel}</span>
+        <span className="theme-text-subtle text-xs uppercase tracking-[0.12em]">{post.publishedLabel}</span>
       </div>
 
-      <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900">{post.title}</h3>
-      <p className="mt-3 text-sm text-slate-600">{post.excerpt}</p>
+      <h3 className="theme-text-primary mt-4 text-2xl font-semibold tracking-tight">{post.title}</h3>
+      <p className="theme-text-muted mt-3 text-sm">{post.excerpt}</p>
 
       <div className="mt-5 flex items-center justify-between gap-3">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{post.handle}</p>
+        <p className="theme-text-subtle text-xs font-medium uppercase tracking-[0.14em]">{post.handle}</p>
         <a
           href={post.href}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex text-xs font-medium uppercase tracking-[0.14em] text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:decoration-slate-700"
+          className="theme-link inline-flex text-xs font-medium uppercase tracking-[0.14em] underline underline-offset-4 transition"
         >
-          Open Post
+          Open Profile
         </a>
       </div>
     </article>
@@ -128,29 +128,29 @@ const GithubPostCard: React.FC<GithubPostCardProps> = ({ post }) => {
   }, [github.username]);
 
   return (
-    <article className="h-full border-t border-slate-300/60 py-5">
+    <article className="theme-border-subtle h-full border-t py-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <span className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em] text-slate-600">
+        <span className="theme-text-muted inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em]">
           <span className={`h-2 w-2 rounded-full ${post.accentClassName}`} aria-hidden />
           {post.platform}
         </span>
-        <span className="text-xs uppercase tracking-[0.12em] text-slate-500">{post.publishedLabel}</span>
+        <span className="theme-text-subtle text-xs uppercase tracking-[0.12em]">{post.publishedLabel}</span>
       </div>
 
-      <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900">{post.title}</h3>
-      <p className="mt-3 text-sm text-slate-600">{post.excerpt}</p>
+      <h3 className="theme-text-primary mt-4 text-2xl font-semibold tracking-tight">{post.title}</h3>
+      <p className="theme-text-muted mt-3 text-sm">{post.excerpt}</p>
 
       <div className="mt-5 grid gap-4 md:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
         <a
           href={github.profileUrl}
           target="_blank"
           rel="noreferrer"
-          className="block rounded-2xl border border-slate-300/75 bg-white/55 p-4 transition hover:border-slate-500"
+          className="theme-surface-subtle theme-border-subtle block rounded-2xl border p-4 transition hover:opacity-90"
         >
-          <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Yearly Commit Grid</p>
+          <p className="theme-text-subtle text-[11px] uppercase tracking-[0.16em]">Yearly Commit Grid</p>
           {gridLoadFailed ? (
-            <div className="mt-3 flex h-[220px] w-full items-center justify-center rounded-xl border border-slate-200/80 bg-white p-4 text-center">
-              <p className="text-xs uppercase tracking-[0.12em] text-slate-500">
+            <div className="theme-media-frame mt-3 flex h-[220px] w-full items-center justify-center rounded-xl border p-4 text-center">
+              <p className="theme-text-subtle text-xs uppercase tracking-[0.12em]">
                 Contribution grid unavailable right now.
               </p>
             </div>
@@ -170,23 +170,23 @@ const GithubPostCard: React.FC<GithubPostCardProps> = ({ post }) => {
                   return current + 1;
                 });
               }}
-              className="mt-3 block h-[220px] w-full rounded-xl border border-slate-200/80 bg-white p-2 object-contain object-left-top"
+              className="theme-media-frame mt-3 block h-[220px] w-full rounded-xl border p-2 object-contain object-left-top"
             />
           )}
         </a>
 
-        <div className="rounded-2xl border border-slate-300/75 bg-white/55 p-4">
+        <div className="theme-surface-subtle theme-border-subtle rounded-2xl border p-4">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Latest Commits</p>
-            {rateLimited ? <span className="text-[10px] uppercase tracking-[0.12em] text-slate-400">Rate limited</span> : null}
+            <p className="theme-text-subtle text-[11px] uppercase tracking-[0.16em]">Latest Commits</p>
+            {rateLimited ? <span className="theme-text-subtle text-[10px] uppercase tracking-[0.12em]">Rate limited</span> : null}
           </div>
 
           {status === "loading" && commits.length === 0 ? (
             <ul className="mt-3 space-y-2" aria-hidden="true">
               {Array.from({ length: 4 }).map((_, index) => (
-                <li key={`commit-skeleton-${index}`} className="rounded-lg border border-slate-200/80 p-2.5">
-                  <div className="h-3 w-4/5 animate-pulse rounded bg-slate-200/85" />
-                  <div className="mt-2 h-2.5 w-2/5 animate-pulse rounded bg-slate-100" />
+                <li key={`commit-skeleton-${index}`} className="theme-media-frame rounded-lg border p-2.5">
+                  <div className="theme-skeleton-strong h-3 w-4/5 animate-pulse rounded" />
+                  <div className="theme-skeleton-soft mt-2 h-2.5 w-2/5 animate-pulse rounded" />
                 </li>
               ))}
             </ul>
@@ -198,43 +198,43 @@ const GithubPostCard: React.FC<GithubPostCardProps> = ({ post }) => {
                     href={commit.commitUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="block rounded-lg border border-slate-200/80 p-2.5 transition hover:border-slate-400"
+                    className="theme-media-frame block rounded-lg border p-2.5 transition hover:opacity-90"
                   >
-                    <p className="truncate text-xs font-medium text-slate-800">{firstLine(commit.message)}</p>
-                    <p className="mt-1 truncate text-[11px] uppercase tracking-[0.09em] text-slate-500">
+                    <p className="theme-text-primary truncate text-xs font-medium">{firstLine(commit.message)}</p>
+                    <p className="theme-text-subtle mt-1 truncate text-[11px] uppercase tracking-[0.09em]">
                       {commit.repoName}
-                      <span className="mx-1 text-slate-300">/</span>
+                      <span className="theme-text-subtle mx-1">/</span>
                       {formatRelativeTime(commit.pushedAt)}
                     </p>
                   </a>
                 </li>
               ))}
             </ul>
-          ) : <p className="mt-3 text-xs leading-relaxed text-slate-500">{commitMessage}</p>}
+          ) : <p className="theme-text-subtle mt-3 text-xs leading-relaxed">{commitMessage}</p>}
 
-          <div className="mt-4 border-t border-slate-200/80 pt-3">
+          <div className="theme-border-subtle mt-4 border-t pt-3">
             <a
               href={github.profileUrl}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex text-xs font-medium uppercase tracking-[0.14em] text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:decoration-slate-700"
+              className="theme-link inline-flex text-xs font-medium uppercase tracking-[0.14em] underline underline-offset-4 transition"
             >
               View github.com/{github.username}
             </a>
             {updatedLabel ? (
-              <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-slate-400">Updated {updatedLabel}</p>
+              <p className="theme-text-subtle mt-1 text-[10px] uppercase tracking-[0.12em]">Updated {updatedLabel}</p>
             ) : null}
           </div>
         </div>
       </div>
 
       <div className="mt-5 flex items-center justify-between gap-3">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{post.handle}</p>
+        <p className="theme-text-subtle text-xs font-medium uppercase tracking-[0.14em]">{post.handle}</p>
         <a
           href={github.profileUrl}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex text-xs font-medium uppercase tracking-[0.14em] text-slate-700 underline decoration-slate-300 underline-offset-4 transition hover:decoration-slate-700"
+          className="theme-link inline-flex text-xs font-medium uppercase tracking-[0.14em] underline underline-offset-4 transition"
         >
           Open GitHub
         </a>
@@ -278,13 +278,13 @@ const SocialPostCarousel: React.FC<SocialPostCarouselProps> = ({ posts, autoAdva
     return () => window.clearInterval(timer);
   }, [autoAdvanceMs, hasPosts, isPaused, posts.length]);
 
-  const activePostLabel = useMemo(() => {
-    if (!hasPosts) return "No posts";
+  const activeCardLabel = useMemo(() => {
+    if (!hasPosts) return "No cards";
     return `${activeIndex + 1} of ${posts.length}`;
   }, [activeIndex, hasPosts, posts.length]);
 
   if (!hasPosts) {
-    return <div className="border-t border-slate-300/60 py-8 text-slate-600">No social posts yet.</div>;
+    return <div className="theme-border-subtle theme-text-muted border-t py-8">No profiles or activity cards yet.</div>;
   }
 
   return (
@@ -297,8 +297,8 @@ const SocialPostCarousel: React.FC<SocialPostCarouselProps> = ({ posts, autoAdva
       {...swipeHandlers}
     >
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Latest Posts</p>
-        <p className="text-[11px] uppercase tracking-[0.12em] text-slate-500">{activePostLabel}</p>
+        <p className="theme-text-subtle text-xs uppercase tracking-[0.24em]">Profiles &amp; Activity</p>
+        <p className="theme-text-subtle text-[11px] uppercase tracking-[0.12em]">{activeCardLabel}</p>
       </div>
 
       <div className="overflow-hidden">
@@ -321,13 +321,13 @@ const SocialPostCarousel: React.FC<SocialPostCarouselProps> = ({ posts, autoAdva
             <button
               key={post.id}
               type="button"
-              aria-label={`Jump to ${post.platform} post ${index + 1}`}
+              aria-label={`Jump to ${post.platform} card ${index + 1}`}
               onClick={() => goTo(index)}
               className="flex h-8 w-8 items-center justify-center"
             >
               <span
                 className={`block h-2.5 w-2.5 rounded-full transition ${
-                  index === activeIndex ? "bg-slate-900" : "bg-slate-300"
+                  index === activeIndex ? "theme-carousel-dot-active" : "theme-carousel-dot-idle"
                 }`}
               />
             </button>
@@ -338,16 +338,16 @@ const SocialPostCarousel: React.FC<SocialPostCarouselProps> = ({ posts, autoAdva
           <button
             type="button"
             onClick={previous}
-            aria-label="Previous post"
-            className="rounded-full border border-slate-300/80 px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-700 transition active:scale-95 hover:border-slate-500"
+            aria-label="Previous card"
+            className="theme-pill-button rounded-full border px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] transition active:scale-95"
           >
             Prev
           </button>
           <button
             type="button"
             onClick={next}
-            aria-label="Next post"
-            className="rounded-full border border-slate-300/80 px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] text-slate-700 transition active:scale-95 hover:border-slate-500"
+            aria-label="Next card"
+            className="theme-pill-button rounded-full border px-4 py-2 text-xs font-medium uppercase tracking-[0.12em] transition active:scale-95"
           >
             Next
           </button>

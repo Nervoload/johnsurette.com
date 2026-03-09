@@ -4,6 +4,7 @@ import {
   ProjectItem,
   resolveProjectCardFront,
 } from "./projectData";
+import { ResolvedThemeMode } from "../theme/themeMode";
 
 interface FamilyTheme {
   bgStart: string;
@@ -16,54 +17,57 @@ interface FamilyTheme {
   chipText: string;
 }
 
-const familyThemes: Record<ProjectCardFrontFamily, FamilyTheme> = {
-  atlas: {
-    bgStart: "#fcfdff",
-    bgEnd: "#eef5ff",
-    portal: "#dbeafe",
-    trim: "#60a5fa",
-    text: "#0f172a",
-    muted: "#475569",
-    chip: "#e2e8f0",
-    chipText: "#334155",
-  },
-  signal: {
-    bgStart: "#f0fdff",
-    bgEnd: "#e0f2fe",
-    portal: "#bae6fd",
-    trim: "#0ea5e9",
-    text: "#082f49",
-    muted: "#155e75",
-    chip: "#d9f8ff",
-    chipText: "#0c4a6e",
-  },
-  forge: {
-    bgStart: "#faf5ff",
-    bgEnd: "#f3e8ff",
-    portal: "#e9d5ff",
-    trim: "#a855f7",
-    text: "#3b0764",
-    muted: "#6b21a8",
-    chip: "#f3e8ff",
-    chipText: "#581c87",
-  },
-  lattice: {
-    bgStart: "#f0fdf4",
-    bgEnd: "#dcfce7",
-    portal: "#bbf7d0",
-    trim: "#22c55e",
-    text: "#052e16",
-    muted: "#166534",
-    chip: "#dcfce7",
-    chipText: "#14532d",
-  },
+const createFamilyTheme = (
+  item: ProjectItem,
+  themeMode: ResolvedThemeMode,
+  family: ProjectCardFrontFamily,
+): FamilyTheme => {
+  const { palette, accent } = item;
+  const familyPortalOpacity = {
+    atlas: palette.line,
+    signal: accent,
+    forge: palette.bright,
+    lattice: palette.mid,
+  } satisfies Record<ProjectCardFrontFamily, string>;
+
+  if (themeMode === "dark") {
+    return {
+      bgStart: palette.deep,
+      bgEnd: palette.mid,
+      portal: familyPortalOpacity[family],
+      trim: palette.line,
+      text: palette.bright,
+      muted: palette.line,
+      chip: palette.deep,
+      chipText: palette.bright,
+    };
+  }
+
+  return {
+    bgStart: palette.bright,
+    bgEnd: palette.line,
+    portal: familyPortalOpacity[family],
+    trim: accent,
+    text: palette.deep,
+    muted: palette.mid,
+    chip: "#ffffff",
+    chipText: palette.deep,
+  };
 };
 
-const statusTone: Record<ProjectCardStatus, { bg: string; fg: string }> = {
-  Active: { bg: "#dcfce7", fg: "#166534" },
-  "In Progress": { bg: "#e0f2fe", fg: "#0c4a6e" },
-  Paused: { bg: "#ffedd5", fg: "#9a3412" },
-  Archived: { bg: "#e2e8f0", fg: "#334155" },
+const statusToneByMode: Record<ResolvedThemeMode, Record<ProjectCardStatus, { bg: string; fg: string }>> = {
+  light: {
+    Active: { bg: "#dcfce7", fg: "#166534" },
+    "In Progress": { bg: "#e0f2fe", fg: "#0c4a6e" },
+    Paused: { bg: "#ffedd5", fg: "#9a3412" },
+    Archived: { bg: "#e2e8f0", fg: "#334155" },
+  },
+  dark: {
+    Active: { bg: "#14532d", fg: "#bbf7d0" },
+    "In Progress": { bg: "#0c4a6e", fg: "#bae6fd" },
+    Paused: { bg: "#7c2d12", fg: "#fed7aa" },
+    Archived: { bg: "#334155", fg: "#cbd5e1" },
+  },
 };
 
 const LANDSCAPE_WIDTH = 1024;
@@ -129,10 +133,11 @@ export const makeProjectFrontTexture = (
   item: ProjectItem,
   seed: number,
   orientation: ProjectFrontOrientation = "landscape",
+  themeMode: ResolvedThemeMode = "light",
 ): string => {
   const front = resolveProjectCardFront(item);
-  const theme = familyThemes[front.frontFamily];
-  const status = statusTone[front.status];
+  const theme = createFamilyTheme(item, themeMode, front.frontFamily);
+  const status = statusToneByMode[themeMode][front.status];
 
   const titleLines = clampLines(item.title, 24, 2);
   const subtitleLines = clampLines(item.subtitle, 26, 2);

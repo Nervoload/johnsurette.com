@@ -1,40 +1,40 @@
 import { OriginBeatId, OriginSceneEntry } from "./types";
-import UniqueQuestionScene from "./scenes/UniqueQuestionScene";
-import AtomicEmergenceScene from "./scenes/AtomicEmergenceScene";
-import ConsciousnessNetworkScene from "./scenes/ConsciousnessNetworkScene";
-import HumanEyeScene from "./scenes/HumanEyeScene";
-import PlanetaryExpansionScene from "./scenes/PlanetaryExpansionScene";
-import GalaxyFutureScene from "./scenes/GalaxyFutureScene";
+import AugmentationChamberScene from "./scenes/AugmentationChamberScene";
+import BiologyLabScene from "./scenes/BiologyLabScene";
+import NeuralAtlasScene from "./scenes/NeuralAtlasScene";
+import OrbitalTrajectoryScene from "./scenes/OrbitalTrajectoryScene";
+import ObservatoryWorkbenchScene from "./scenes/ObservatoryWorkbenchScene";
+import StudioPrototypeScene from "./scenes/StudioPrototypeScene";
 
 export const originSceneRegistry: Record<OriginBeatId, OriginSceneEntry> = {
-  question: {
-    id: "question",
-    component: UniqueQuestionScene,
-    assetSlot: "quantum-question-field",
+  spark: {
+    id: "spark",
+    component: ObservatoryWorkbenchScene,
+    assetSlot: "observatory-workbench",
   },
-  atoms: {
-    id: "atoms",
-    component: AtomicEmergenceScene,
-    assetSlot: "atomic-emergence",
+  biology: {
+    id: "biology",
+    component: BiologyLabScene,
+    assetSlot: "longevity-bio-lab",
   },
-  network: {
-    id: "network",
-    component: ConsciousnessNetworkScene,
-    assetSlot: "neural-emergence-network",
+  mind: {
+    id: "mind",
+    component: NeuralAtlasScene,
+    assetSlot: "neural-atlas-lab",
   },
-  eye: {
-    id: "eye",
-    component: HumanEyeScene,
-    assetSlot: "human-eye-macro",
+  build: {
+    id: "build",
+    component: StudioPrototypeScene,
+    assetSlot: "studio-prototype-bench",
   },
-  planet: {
-    id: "planet",
-    component: PlanetaryExpansionScene,
-    assetSlot: "planetary-civilization",
+  augmentation: {
+    id: "augmentation",
+    component: AugmentationChamberScene,
+    assetSlot: "augmentation-chamber",
   },
-  galaxy: {
-    id: "galaxy",
-    component: GalaxyFutureScene,
-    assetSlot: "galaxy-future-field",
+  trajectory: {
+    id: "trajectory",
+    component: OrbitalTrajectoryScene,
+    assetSlot: "orbital-future-bridge",
   },
 };

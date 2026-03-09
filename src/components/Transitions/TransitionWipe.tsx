@@ -149,8 +149,13 @@ const usePrefersReducedMotion = (): boolean => {
       return () => mediaQuery.removeEventListener("change", syncPreference);
     }
 
-    mediaQuery.addListener(syncPreference);
-    return () => mediaQuery.removeListener(syncPreference);
+    const legacyMediaQuery = mediaQuery as MediaQueryList & {
+      addListener?: (listener: (event: MediaQueryListEvent) => void) => void;
+      removeListener?: (listener: (event: MediaQueryListEvent) => void) => void;
+    };
+
+    legacyMediaQuery.addListener?.(syncPreference);
+    return () => legacyMediaQuery.removeListener?.(syncPreference);
   }, []);
 
   return prefersReducedMotion;

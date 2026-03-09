@@ -2,10 +2,12 @@ import React, { RefObject, useCallback, useEffect, useMemo, useRef, useState } f
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-motion";
 import { TimelineScene, timelineScenes } from "./timelineData";
 import { WipeOptions } from "../Transitions/TransitionWipe";
+import { ResolvedThemeMode } from "../theme/themeMode";
 
 interface PopBookTimelineProps {
   scrollContainer: RefObject<HTMLDivElement>;
   onNavigate?: (path: string, opts?: WipeOptions) => void;
+  themeMode: ResolvedThemeMode;
 }
 
 interface SceneLayer {
@@ -14,10 +16,57 @@ interface SceneLayer {
   shift: number;
 }
 
+interface ScenePalette {
+  foreground: string;
+  midground: string;
+  background: string;
+}
+
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 const overlayEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
-const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNavigate }) => {
+const hexToRgb = (hex: string): [number, number, number] => {
+  const normalized = hex.replace("#", "").trim();
+  const safe = normalized.length === 3
+    ? normalized.split("").map((char) => `${char}${char}`).join("")
+    : normalized;
+  const parsed = Number.parseInt(safe, 16);
+  return [(parsed >> 16) & 255, (parsed >> 8) & 255, parsed & 255];
+};
+
+const toHex = (value: number): string => {
+  return Math.round(Math.max(0, Math.min(255, value))).toString(16).padStart(2, "0");
+};
+
+const mixHex = (a: string, b: string, alpha: number): string => {
+  const t = clamp01(alpha);
+  const [ar, ag, ab] = hexToRgb(a);
+  const [br, bg, bb] = hexToRgb(b);
+  return `#${toHex(ar + (br - ar) * t)}${toHex(ag + (bg - ag) * t)}${toHex(ab + (bb - ab) * t)}`;
+};
+
+const withAlpha = (hex: string, alpha: number): string => {
+  const [r, g, b] = hexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${clamp01(alpha)})`;
+};
+
+const resolveScenePalette = (scene: TimelineScene, themeMode: ResolvedThemeMode): ScenePalette => {
+  if (themeMode === "light") {
+    return {
+      foreground: scene.foreground,
+      midground: scene.midground,
+      background: scene.background,
+    };
+  }
+
+  return {
+    foreground: mixHex(scene.foreground, "#dbeafe", 0.35),
+    midground: mixHex(scene.midground, "#67e8f9", 0.22),
+    background: mixHex(scene.background, "#020617", 0.9),
+  };
+};
+
+const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNavigate, themeMode }) => {
   const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const anchorRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -88,7 +137,19 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNa
     setStageTilt(0, 0);
   }, [setStageTilt]);
 
-  const count = timelineScenes.length;
+  const themedScenes = useMemo(() => {
+    return timelineScenes.map((scene) => {
+      const palette = resolveScenePalette(scene, themeMode);
+      return {
+        ...scene,
+        foreground: palette.foreground,
+        midground: palette.midground,
+        background: palette.background,
+      };
+    });
+  }, [themeMode]);
+
+  const count = themedScenes.length;
   const raw = clamp01(progress) * (count - 1);
   const currentIndex = Math.min(count - 1, Math.floor(raw));
   const nextIndex = Math.min(count - 1, currentIndex + 1);
@@ -96,8 +157,8 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNa
   const crossfadeStart = 0.78;
   const crossfadeBlend = clamp01((blend - crossfadeStart) / (1 - crossfadeStart));
 
-  const currentScene = timelineScenes[currentIndex];
-  const nextScene = timelineScenes[nextIndex];
+  const currentScene = themedScenes[currentIndex];
+  const nextScene = themedScenes[nextIndex];
   const primaryScene = crossfadeBlend > 0.5 ? nextScene : currentScene;
   const activeSceneId = crossfadeBlend >= 0.5 ? nextScene.id : currentScene.id;
 
@@ -109,18 +170,27 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNa
   }, [crossfadeBlend, currentScene, nextScene]);
 
   const checkpointProgress = useMemo(() => {
-    return timelineScenes.map((_, index) => {
+    return themedScenes.map((_, index) => {
       if (index < currentIndex) return 1;
       if (index === currentIndex) return 1 - crossfadeBlend;
       if (index === nextIndex) return crossfadeBlend;
       return 0;
     });
-  }, [crossfadeBlend, currentIndex, nextIndex]);
+  }, [crossfadeBlend, currentIndex, nextIndex, themedScenes]);
 
   const expandedScene = useMemo<TimelineScene | null>(() => {
     if (!expandedSceneId) return null;
-    return timelineScenes.find((scene) => scene.id === expandedSceneId) ?? null;
-  }, [expandedSceneId]);
+    return themedScenes.find((scene) => scene.id === expandedSceneId) ?? null;
+  }, [expandedSceneId, themedScenes]);
+
+  const expandedSceneFacts = useMemo(() => {
+    if (!expandedScene) return [];
+    return [
+      { label: "Year", value: expandedScene.year },
+      { label: "Context", value: expandedScene.detail.kicker },
+      { label: "Track", value: expandedScene.detail.assetLabel },
+    ];
+  }, [expandedScene]);
 
   const scrollToScene = useCallback(
     (index: number) => {
@@ -228,14 +298,14 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNa
         onPointerLeave={handleStagePointerLeave}
         onPointerCancel={handleStagePointerLeave}
       >
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_18%,rgba(56,189,248,0.14),transparent_42%),radial-gradient(circle_at_82%_14%,rgba(99,102,241,0.1),transparent_40%),linear-gradient(145deg,#f8fafc,#e2e8f0)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_28%,rgba(248,250,252,0.04),rgba(248,250,252,0.72)_42%,rgba(248,250,252,0.94)_72%)]" />
+        <div className="theme-about-stage-bg-a pointer-events-none absolute inset-0" />
+        <div className="theme-about-stage-bg-b pointer-events-none absolute inset-0" />
 
         {!expandedScene && (
           <aside className="absolute left-6 top-1/2 z-30 hidden -translate-y-1/2 xl:block">
-            <div className="border-l border-slate-300/60 pl-4">
+            <div className="theme-about-rail pl-4">
               <ol className="space-y-3">
-                {timelineScenes.map((scene, index) => {
+                {themedScenes.map((scene, index) => {
                   const active = checkpointProgress[index];
                   return (
                     <li key={`rail-${scene.id}`}>
@@ -243,7 +313,7 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNa
                         type="button"
                         onClick={() => scrollToScene(index)}
                         className={`group flex items-center gap-3 text-left transition ${
-                          active > 0.55 ? "text-slate-900" : "text-slate-500 hover:text-slate-700"
+                          active > 0.55 ? "theme-about-rail-active" : "theme-about-rail-idle"
                         }`}
                       >
                         <span
@@ -294,16 +364,16 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNa
                   aria-label={`Open ${scene.title} timeline scene`}
                   aria-hidden={!interactive}
                   tabIndex={interactive ? 0 : -1}
-                  className="group absolute left-1/2 top-[52%] h-[62vh] w-[92vw] max-w-5xl -translate-x-1/2 -translate-y-1/2 rounded-[1.4rem] border border-slate-300/65 bg-[rgba(248,250,252,0.98)] text-left shadow-[0_28px_80px_-62px_rgba(15,23,42,0.55)] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/70 sm:h-[54vh] sm:w-[74vw] sm:rounded-[2.2rem]"
+                  className="theme-about-stage-card group absolute left-1/2 top-[52%] h-[62vh] w-[92vw] max-w-5xl -translate-x-1/2 -translate-y-1/2 rounded-[1.4rem] border text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/70 sm:h-[54vh] sm:w-[74vw] sm:rounded-[2.2rem]"
                   style={{
                     opacity: layerOpacity,
                     transform: `translate(-50%, calc(-50% + ${deepOffset * 0.45}px)) scale(${0.93 + layerOpacity * 0.08}) rotateX(var(--about-tilt-x, 0deg)) rotateY(var(--about-tilt-y, 0deg))`,
                     transition: "opacity 180ms linear, transform 180ms linear",
                   }}
                 >
-                  <div className="absolute inset-x-[5%] top-[12%] h-px bg-slate-300/55" />
-                  <div className="absolute inset-x-[5%] bottom-[12%] h-px bg-slate-300/55" />
-                  <div className="absolute bottom-[12%] left-[5%] top-[12%] hidden w-px bg-slate-300/45 sm:block" />
+                  <div className="theme-about-stage-line absolute inset-x-[5%] top-[12%] h-px" />
+                  <div className="theme-about-stage-line absolute inset-x-[5%] bottom-[12%] h-px" />
+                  <div className="theme-about-stage-line absolute bottom-[12%] left-[5%] top-[12%] hidden w-px sm:block" />
 
                   <div
                     className="absolute inset-0 flex flex-col justify-between p-5 sm:p-8 sm:p-10"
@@ -313,18 +383,18 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNa
                     }}
                   >
                     <div>
-                      <p className="text-xs uppercase tracking-[0.24em] text-slate-500">{scene.year}</p>
-                      <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl md:text-4xl">{scene.title}</h2>
-                      <p className="mt-3 max-w-2xl text-xs leading-relaxed text-slate-600 sm:mt-4 sm:text-sm">{scene.summary}</p>
+                      <p className="theme-text-subtle text-xs uppercase tracking-[0.24em]">{scene.year}</p>
+                      <h2 className="theme-text-primary mt-3 text-2xl font-semibold tracking-tight sm:text-3xl md:text-4xl">{scene.title}</h2>
+                      <p className="theme-text-muted mt-3 max-w-2xl text-xs leading-relaxed sm:mt-4 sm:text-sm">{scene.summary}</p>
                     </div>
 
                     <div className="grid grid-cols-3 gap-3 sm:gap-4">
                       {[0, 1, 2].map((slot) => (
                         <div
                           key={`${scene.id}-${slot}`}
-                          className="h-24 rounded-xl border border-slate-300/55"
+                          className="theme-about-stage-tile h-24 rounded-xl border"
                           style={{
-                            background: `linear-gradient(145deg, ${scene.foreground}22, rgba(255,255,255,0.08))`,
+                            background: `linear-gradient(145deg, ${withAlpha(scene.foreground, themeMode === "dark" ? 0.26 : 0.14)}, ${withAlpha(scene.background, themeMode === "dark" ? 0.2 : 0.08)})`,
                             transform: `translateY(${(2 - slot) * (1 - layerOpacity) * 18}px)`,
                             opacity: 0.38 + layerOpacity * 0.52,
                             transition: "opacity 180ms linear, transform 180ms linear",
@@ -340,17 +410,17 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNa
         </div>
 
         {showNowPanel && (
-          <div className="absolute bottom-20 right-4 z-30 w-[min(250px,calc(100vw-2rem))] border-t border-slate-300/65 pt-4 sm:bottom-auto sm:right-5 sm:top-8 sm:w-[280px]">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-slate-500">Now</p>
-            <p className="mt-2 text-lg font-semibold tracking-tight text-slate-900">{nowScene?.title}</p>
-            <p className="mt-2 text-xs leading-relaxed text-slate-600">{nowScene?.detail.studioNote}</p>
+          <div className="theme-about-now-panel absolute bottom-20 right-4 z-30 w-[min(250px,calc(100vw-2rem))] border-t pt-4 sm:bottom-auto sm:right-5 sm:top-8 sm:w-[280px]">
+            <p className="theme-text-subtle text-[10px] uppercase tracking-[0.18em]">Now</p>
+            <p className="theme-text-primary mt-2 text-lg font-semibold tracking-tight">{nowScene?.title}</p>
+            <p className="theme-text-muted mt-2 text-xs leading-relaxed">{nowScene?.detail.studioNote}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               {nowActions.map((action) => (
                 <button
                   key={`now-action-${action.path}`}
                   type="button"
                   onClick={() => onNavigate?.(action.path)}
-                  className="rounded-full border border-slate-300/70 px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.14em] text-slate-700 transition hover:border-slate-500"
+                  className="theme-about-action-pill rounded-full border px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.14em] transition"
                 >
                   {action.label}
                 </button>
@@ -360,15 +430,15 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNa
         )}
 
         {!expandedScene && (
-          <div className="absolute bottom-8 left-1/2 z-30 flex -translate-x-1/2 items-center gap-3 px-2 py-2 text-xs text-slate-700">
-            {timelineScenes.map((scene, index) => {
+          <div className="theme-about-checkpoint-bar absolute bottom-8 left-1/2 z-30 flex -translate-x-1/2 items-center gap-3 px-2 py-2 text-xs">
+            {themedScenes.map((scene, index) => {
               const active = checkpointProgress[index];
               return (
                 <button
                   key={`checkpoint-${scene.id}`}
                   type="button"
                   onClick={() => scrollToScene(index)}
-                  className="group flex items-center gap-2 rounded-full px-2 py-1 transition hover:bg-white/55"
+                  className="theme-about-checkpoint-pill group flex items-center gap-2 rounded-full px-2 py-1 transition"
                 >
                   <span
                     className="h-2.5 w-2.5 rounded-full"
@@ -379,7 +449,7 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNa
                       transition: "opacity 180ms linear, transform 180ms linear",
                     }}
                   />
-                  <span className="hidden tracking-wide text-slate-600 sm:inline">{scene.year}</span>
+                  <span className="theme-text-muted hidden tracking-wide sm:inline">{scene.year}</span>
                 </button>
               );
             })}
@@ -399,40 +469,40 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNa
                 type="button"
                 aria-label="Close expanded scene"
                 onClick={closeScene}
-                className="absolute inset-0 h-full w-full bg-slate-950/52 backdrop-blur-[2px]"
+                className="theme-about-modal-backdrop absolute inset-0 h-full w-full backdrop-blur-[2px]"
               />
 
               <motion.section
                 role="dialog"
                 aria-modal="true"
                 aria-label={`${expandedScene.title} expanded scene`}
-                className="absolute inset-3 z-10 overflow-hidden rounded-[2rem] border border-slate-300/65 bg-slate-50 shadow-[0_46px_120px_-74px_rgba(15,23,42,0.78)] sm:inset-6 lg:inset-8"
+                className="theme-about-modal-panel absolute inset-3 z-10 overflow-hidden rounded-[2rem] border sm:inset-6 lg:inset-8"
                 initial={{ opacity: 0, y: 16, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 16, scale: 0.98 }}
                 transition={{ duration: 0.32, ease: overlayEase }}
               >
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_72%_24%,rgba(255,255,255,0.28),rgba(248,250,252,0.9)_38%,rgba(248,250,252,1)_72%)]" />
-                <div className="pointer-events-none absolute inset-x-[-15%] bottom-[-42%] h-[74%] rounded-[100%] bg-[radial-gradient(circle_at_50%_45%,rgba(148,163,184,0.24),rgba(248,250,252,0.02)_68%)] [transform:rotateX(74deg)]" />
+                <div className="theme-about-modal-glass-a pointer-events-none absolute inset-0" />
+                <div className="theme-about-modal-glass-b pointer-events-none absolute inset-x-[-15%] bottom-[-42%] h-[74%] rounded-[100%] [transform:rotateX(74deg)]" />
 
                 <button
                   type="button"
                   onClick={closeScene}
                   aria-label="Minimize scene"
-                  className="absolute left-6 top-6 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300/70 bg-white/86 text-lg text-slate-600 transition hover:border-slate-400 hover:text-slate-900"
+                  className="theme-about-modal-close absolute left-6 top-6 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border text-lg transition"
                 >
                   ←
                 </button>
 
                 <div className="relative z-10 grid h-full gap-8 overflow-y-auto p-7 md:p-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:p-14">
                   <div className="self-center pt-10 lg:pt-0">
-                    <p className="text-xs uppercase tracking-[0.24em] text-slate-500">{expandedScene.detail.kicker}</p>
-                    <h3 className="mt-4 text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">{expandedScene.title}</h3>
-                    <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-slate-700">{expandedScene.detail.body}</p>
+                    <p className="theme-text-subtle text-xs uppercase tracking-[0.24em]">{expandedScene.detail.kicker}</p>
+                    <h3 className="theme-text-primary mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">{expandedScene.title}</h3>
+                    <p className="theme-text-muted mt-6 max-w-xl text-[15px] leading-relaxed">{expandedScene.detail.body}</p>
 
-                    <div className="mt-7 border-t border-slate-300/65 pt-5">
-                      <p className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Studio Note</p>
-                      <p className="mt-2 text-sm text-slate-600">{expandedScene.detail.studioNote}</p>
+                    <div className="theme-border-subtle mt-7 border-t pt-5">
+                      <p className="theme-text-subtle text-[11px] uppercase tracking-[0.16em]">Studio Note</p>
+                      <p className="theme-text-muted mt-2 text-sm">{expandedScene.detail.studioNote}</p>
                     </div>
 
                     {expandedScene.nowActions && expandedScene.nowActions.length > 0 && (
@@ -445,7 +515,7 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNa
                               closeScene();
                               onNavigate?.(action.path);
                             }}
-                            className="rounded-full border border-slate-300/70 px-3 py-1.5 text-xs font-medium uppercase tracking-[0.14em] text-slate-700 transition hover:border-slate-500"
+                            className="theme-about-action-pill rounded-full border px-3 py-1.5 text-xs font-medium uppercase tracking-[0.14em] transition"
                           >
                             {action.label}
                           </button>
@@ -456,22 +526,88 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNa
 
                   <div className="relative flex items-center justify-center">
                     <div className="relative h-[50vh] w-full max-w-[560px] [perspective:1400px]">
-                      <div className="pointer-events-none absolute inset-0 rounded-[1.9rem] border border-slate-300/45 bg-white/66 shadow-[0_56px_120px_-82px_rgba(15,23,42,0.78)] [transform:rotateY(-14deg)_rotateX(7deg)]" />
+                      <div className="theme-about-asset-shell pointer-events-none absolute inset-0 rounded-[1.9rem] border [transform:rotateY(-14deg)_rotateX(7deg)]" />
                       <div
-                        className="absolute inset-[6%] rounded-[1.5rem] border border-slate-300/45 [transform:rotateY(-14deg)_rotateX(7deg)]"
+                        className="theme-about-asset-frame absolute inset-[6%] rounded-[1.5rem] border [transform:rotateY(-14deg)_rotateX(7deg)]"
                         style={{ background: expandedScene.detail.assetGradient }}
                       >
-                        <div className="absolute inset-0 bg-[linear-gradient(140deg,rgba(255,255,255,0.44),rgba(255,255,255,0.06))]" />
+                        <div className="theme-about-asset-overlay absolute inset-0" />
                         <div className="absolute inset-0 flex flex-col justify-between p-6">
-                          <p className="text-xs uppercase tracking-[0.2em] text-slate-700">{expandedScene.detail.assetLabel}</p>
-                          <p className="max-w-[14rem] text-xs uppercase tracking-[0.14em] text-slate-600">
-                            TODO: replace with scene image or cutout asset.
-                          </p>
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <p className="theme-text-primary text-xs uppercase tracking-[0.2em]">
+                                {expandedScene.detail.assetLabel}
+                              </p>
+                              <p className="theme-text-primary mt-3 text-3xl font-semibold tracking-tight">
+                                {expandedScene.year}
+                              </p>
+                            </div>
+
+                            <div
+                              className="theme-border-subtle max-w-[11rem] rounded-[1.15rem] border px-3 py-2 text-right backdrop-blur-sm"
+                              style={{
+                                background: withAlpha(
+                                  expandedScene.background,
+                                  themeMode === "dark" ? 0.2 : 0.54,
+                                ),
+                              }}
+                            >
+                              <p className="theme-text-subtle text-[10px] uppercase tracking-[0.16em]">Context</p>
+                              <p className="theme-text-primary mt-1 text-sm font-medium leading-tight">
+                                {expandedScene.detail.kicker}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div
+                              className="theme-border-subtle rounded-[1.3rem] border p-4 backdrop-blur-sm"
+                              style={{
+                                background: `linear-gradient(145deg, ${withAlpha(
+                                  expandedScene.foreground,
+                                  themeMode === "dark" ? 0.18 : 0.12,
+                                )}, ${withAlpha(expandedScene.background, themeMode === "dark" ? 0.2 : 0.66)})`,
+                              }}
+                            >
+                              <p className="theme-text-subtle text-[10px] uppercase tracking-[0.16em]">Scene Summary</p>
+                              <p className="theme-text-primary mt-2 text-sm leading-relaxed">
+                                {expandedScene.summary}
+                              </p>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-2">
+                              {expandedSceneFacts.map((fact) => (
+                                <div
+                                  key={`${expandedScene.id}-${fact.label}`}
+                                  className="theme-border-subtle rounded-[1rem] border p-3 backdrop-blur-sm"
+                                  style={{
+                                    background: withAlpha(
+                                      expandedScene.background,
+                                      themeMode === "dark" ? 0.14 : 0.46,
+                                    ),
+                                  }}
+                                >
+                                  <p className="theme-text-subtle text-[10px] uppercase tracking-[0.16em]">
+                                    {fact.label}
+                                  </p>
+                                  <p className="theme-text-primary mt-1 text-xs font-medium leading-tight">
+                                    {fact.value}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="pointer-events-none absolute -left-4 top-[16%] h-16 w-16 rounded-full border border-slate-300/45" style={{ background: `${expandedScene.foreground}33` }} />
-                      <div className="pointer-events-none absolute -right-3 bottom-[14%] h-20 w-20 rounded-[1.15rem] border border-slate-300/45" style={{ background: `${expandedScene.midground}33` }} />
+                      <div
+                        className="theme-about-asset-orb pointer-events-none absolute -left-4 top-[16%] h-16 w-16 rounded-full border"
+                        style={{ background: withAlpha(expandedScene.foreground, themeMode === "dark" ? 0.28 : 0.2) }}
+                      />
+                      <div
+                        className="theme-about-asset-orb pointer-events-none absolute -right-3 bottom-[14%] h-20 w-20 rounded-[1.15rem] border"
+                        style={{ background: withAlpha(expandedScene.midground, themeMode === "dark" ? 0.28 : 0.2) }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -482,19 +618,19 @@ const PopBookTimeline: React.FC<PopBookTimelineProps> = ({ scrollContainer, onNa
       </div>
 
       <div className="relative z-0">
-        {timelineScenes.map((scene, index) => (
+        {themedScenes.map((scene, index) => (
           <div
             key={`anchor-${scene.id}`}
             ref={(node) => {
               anchorRefs.current[index] = node;
             }}
-            className="flex h-[130vh] snap-start items-end px-6 pb-16"
+            className="flex h-[112vh] snap-start items-end px-6 pb-16 sm:h-[118vh]"
           >
             <div
-              className="mx-auto w-full max-w-4xl border-t border-slate-300/60 py-5 text-slate-600 transition-opacity duration-150"
+              className="theme-about-checkpoint-row theme-text-muted mx-auto w-full max-w-4xl border-t py-5 transition-opacity duration-150"
               style={{ opacity: expandedScene ? 0 : 1 }}
             >
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Checkpoint</p>
+              <p className="theme-text-subtle text-xs uppercase tracking-[0.2em]">Checkpoint</p>
               <p className="mt-2 text-sm tracking-wide">
                 {scene.year} · {scene.title}
               </p>

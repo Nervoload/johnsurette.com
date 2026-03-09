@@ -1,6 +1,6 @@
-import { RefObject, useCallback, useMemo, useState } from "react";
-import { useMotionValueEvent, useScroll } from "framer-motion";
-import { OriginBeatDefinition, OriginTimelineState } from "../types";
+import { RefObject, useCallback, useMemo, useRef, useState } from "react";
+import { useMotionValueEvent, useScroll, useSpring } from "framer-motion";
+import { OriginBeatDefinition, OriginDirection, OriginTimelineState } from "../types";
 import {
   OriginChapterBound,
   buildChapterBounds,
@@ -15,7 +15,8 @@ interface UseOriginTimelineOptions {
 }
 
 interface UseOriginTimelineResult {
-  progress: number;
+  rawProgress: number;
+  smoothedProgress: number;
   timeline: OriginTimelineState;
   chapterBounds: OriginChapterBound[];
   jumpToChapter: (index: number, behavior?: ScrollBehavior) => void;
@@ -30,7 +31,10 @@ export const useOriginTimeline = ({
   scrollContainerRef,
   stageRef,
 }: UseOriginTimelineOptions): UseOriginTimelineResult => {
-  const [progress, setProgress] = useState(0);
+  const [rawProgress, setRawProgress] = useState(0);
+  const [smoothedProgress, setSmoothedProgress] = useState(0);
+  const directionRef = useRef<OriginDirection>(1);
+  const previousRawProgressRef = useRef(0);
 
   const chapterBounds = useMemo(() => buildChapterBounds(beats), [beats]);
 
@@ -41,11 +45,29 @@ export const useOriginTimeline = ({
     layoutEffect: false,
   });
 
-  useMotionValueEvent(scrollYProgress, "change", (value) => {
-    setProgress(value);
+  const smoothedScrollYProgress = useSpring(scrollYProgress, {
+    damping: 34,
+    stiffness: 200,
+    mass: 0.32,
   });
 
-  const timeline = useMemo(() => computeOriginTimeline(progress, chapterBounds), [chapterBounds, progress]);
+  useMotionValueEvent(scrollYProgress, "change", (value) => {
+    const delta = value - previousRawProgressRef.current;
+    if (Math.abs(delta) > 0.0008) {
+      directionRef.current = delta >= 0 ? 1 : -1;
+    }
+    previousRawProgressRef.current = value;
+    setRawProgress(value);
+  });
+
+  useMotionValueEvent(smoothedScrollYProgress, "change", (value) => {
+    setSmoothedProgress(value);
+  });
+
+  const timeline = useMemo(
+    () => computeOriginTimeline(rawProgress, smoothedProgress, directionRef.current, chapterBounds),
+    [chapterBounds, rawProgress, smoothedProgress],
+  );
 
   const jumpToChapter = useCallback(
     (index: number, behavior: ScrollBehavior = "smooth"): void => {
@@ -76,7 +98,8 @@ export const useOriginTimeline = ({
   );
 
   return {
-    progress,
+    rawProgress,
+    smoothedProgress,
     timeline,
     chapterBounds,
     jumpToChapter,

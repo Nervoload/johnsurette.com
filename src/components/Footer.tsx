@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { siteMeta } from "../content";
 
 export interface FooterProps {
   scrollContainerRef?: React.RefObject<HTMLElement>;
@@ -13,9 +14,9 @@ const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
 const Footer: React.FC<FooterProps> = ({
   scrollContainerRef,
-  backgroundColor = "#ffffff",
-  ownerName = "John Surette",
-  ownerEmail = "john@johnsurette.com",
+  backgroundColor = "var(--theme-footer-panel-bg)",
+  ownerName = siteMeta.ownerName,
+  ownerEmail = siteMeta.ownerEmail,
   runwayVh = 110,
 }) => {
   const [isScrollable, setIsScrollable] = useState(false);
@@ -72,6 +73,7 @@ const Footer: React.FC<FooterProps> = ({
 
   const peekProgress = clamp01(footerProgress / 0.35);
   const panelProgress = clamp01((footerProgress - 0.32) / 0.68);
+  const footerBarBackground = backgroundColor === "var(--theme-footer-panel-bg)" ? "var(--theme-footer-bar-bg)" : backgroundColor;
 
   const barOpacity = 0.4 + peekProgress * 0.6;
   const panelOpacity = panelProgress;
@@ -80,53 +82,60 @@ const Footer: React.FC<FooterProps> = ({
   return (
     <>
       <motion.div
-        className="pointer-events-none fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200/80 backdrop-blur-xl"
+        className="theme-footer-bar theme-border-subtle pointer-events-none fixed bottom-0 left-0 right-0 z-40 border-t backdrop-blur-xl"
         style={{
-          backgroundColor: `${backgroundColor}eb`,
+          backgroundColor: footerBarBackground,
           opacity: barOpacity,
           transform: `translateY(${(1 - peekProgress) * 14}px)`,
         }}
       >
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 pb-[env(safe-area-inset-bottom,0px)] text-sm text-slate-800">
+        <div className="theme-text-primary mx-auto flex h-14 max-w-6xl items-center justify-between px-5 pb-[env(safe-area-inset-bottom,0px)] text-sm">
           <p className="font-medium tracking-wide">{ownerName}</p>
-          <p className="text-slate-500">{ownerEmail}</p>
+          <p className="theme-text-muted">{ownerEmail}</p>
         </div>
       </motion.div>
 
       <motion.div
-        className="pointer-events-none fixed bottom-0 left-0 right-0 z-50 overflow-hidden border-t border-slate-200/90"
+        className="theme-footer-panel theme-border-subtle pointer-events-none fixed bottom-0 left-0 right-0 z-50 overflow-hidden border-t"
         style={{
           height: `${panelHeightVh}vh`,
           opacity: panelOpacity,
-          backgroundColor: `${backgroundColor}f3`,
+          backgroundColor,
           backdropFilter: "blur(16px)",
         }}
       >
         <motion.div
-          className="absolute -left-16 top-8 h-56 w-56 rounded-full bg-cyan-200/40 blur-3xl"
+          className="absolute -left-16 top-8 h-56 w-56 rounded-full blur-3xl"
+          style={{ background: "var(--theme-accent-soft)" }}
           animate={{ x: [0, 50, -12, 0], y: [0, -16, 22, 0] }}
           transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute -right-16 bottom-8 h-64 w-64 rounded-full bg-indigo-200/35 blur-3xl"
+          className="absolute -right-16 bottom-8 h-64 w-64 rounded-full blur-3xl"
+          style={{ background: "var(--theme-accent-soft)" }}
           animate={{ x: [0, -56, 16, 0], y: [0, 24, -26, 0] }}
           transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        <div className="relative mx-auto flex h-full max-w-3xl flex-col items-center justify-center gap-4 px-6 text-center text-slate-800">
+        <div className="theme-text-primary relative mx-auto flex h-full max-w-3xl flex-col items-center justify-center gap-4 px-6 text-center">
           <h2 className="text-3xl font-medium tracking-tight sm:text-4xl" style={{ opacity: 0.45 + panelProgress * 0.55 }}>
             {ownerName}
           </h2>
-          <p className="max-w-xl text-slate-600" style={{ opacity: 0.25 + panelProgress * 0.75 }}>
-            Last to die, or first to live without the fear of death.
+          <p className="theme-text-muted max-w-xl" style={{ opacity: 0.25 + panelProgress * 0.75 }}>
+            {siteMeta.footerTagline}
           </p>
-          <div className="flex items-center gap-5 text-sm text-slate-600" style={{ opacity: 0.2 + panelProgress * 0.8 }}>
-            <a className="pointer-events-auto underline decoration-slate-400 underline-offset-4" href="https://github.com/Nervoload" target="_blank" rel="noreferrer">
-              GitHub
-            </a>
-            <a className="pointer-events-auto underline decoration-slate-400 underline-offset-4" href="https://www.linkedin.com/in/johnmsurette" target="_blank" rel="noreferrer">
-              LinkedIn
-            </a>
+          <div className="theme-text-muted flex items-center gap-5 text-sm" style={{ opacity: 0.2 + panelProgress * 0.8 }}>
+            {siteMeta.socialLinks.map((link) => (
+              <a
+                key={link.label}
+                className="theme-link pointer-events-auto underline underline-offset-4"
+                href={link.href}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {link.label}
+              </a>
+            ))}
           </div>
         </div>
       </motion.div>

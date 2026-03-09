@@ -6,6 +6,7 @@ import Card3D, { Card3DProps } from "./Card3D";
 import ProjectCardPopoutPresets from "./ProjectCardPopoutPresets";
 import { ProjectItem, resolveProjectCardFront } from "./projectData";
 import { makeProjectFrontTexture } from "./projectFrontTexture";
+import { ResolvedThemeMode } from "../theme/themeMode";
 
 /* ───────────────────────── types ───────────────────────── */
 
@@ -15,6 +16,7 @@ interface ProjectIntroSequenceProps {
   onCardSelect?: (item: ProjectItem, screenPos: { x: number; y: number }) => void;
   lowPowerMode?: boolean;
   mobileViewport?: boolean;
+  themeMode: ResolvedThemeMode;
 }
 
 type ShuffleProfile = { x: number; y: number; lift: number };
@@ -112,6 +114,28 @@ const phase = (p: number, s: number, e: number) =>
 const metricLerp = (from: number, to: number, alpha: number) =>
   THREE.MathUtils.lerp(from, to, alpha);
 
+const getLatePhaseTiming = (count: number, mobileViewport: boolean) => {
+  const extraCards = Math.max(0, count - 4);
+
+  return {
+    dealStart: 0.64,
+    dealEnd: mobileViewport
+      ? Math.min(0.91, 0.88 + extraCards * 0.025)
+      : Math.min(0.92, 0.84 + extraCards * 0.03),
+    flipStart: mobileViewport
+      ? Math.max(0.7, 0.72 - extraCards * 0.01)
+      : Math.max(0.74, 0.78 - extraCards * 0.01),
+    flipEnd: mobileViewport
+      ? Math.min(0.94, 0.86 + extraCards * 0.03)
+      : 0.98,
+    browseStart: mobileViewport
+      ? Math.min(0.92, 0.86 + extraCards * 0.025)
+      : Math.min(0.97, 0.95 + extraCards * 0.015),
+    dealDelaySpan: Math.min(0.5, 0.32 + extraCards * 0.045),
+    flipDelaySpan: Math.min(0.52, 0.35 + extraCards * 0.05),
+  };
+};
+
 const createLayoutMetrics = (
   viewportWidth: number,
   viewportHeight: number,
@@ -160,6 +184,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   onCardSelect,
   lowPowerMode = false,
   mobileViewport = false,
+  themeMode,
 }) => {
   const { viewport, pointer, camera, gl } = useThree();
   const cardGroups = useRef<THREE.Group[]>([]);
@@ -193,14 +218,15 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   const cards = useMemo<Card3DProps[]>(
     () =>
       items.map((item, i) => ({
-        frontSrc: makeProjectFrontTexture(item, i + 1, frontOrientation),
+        frontSrc: makeProjectFrontTexture(item, i + 1, frontOrientation, themeMode),
         backSrc: makeProjectBack(item, i + 1),
-        borderColor: "#f8fafc",
+        borderColor: themeMode === "dark" ? "#172036" : "#f8fafc",
         edgeColor: item.accent,
+        themeMode,
         width: cardWidth,
         height: cardHeight,
       })),
-    [items, cardHeight, cardWidth, frontOrientation],
+    [items, cardHeight, cardWidth, frontOrientation, themeMode],
   );
 
   const depthOrder = useMemo(() => buildDepthOrder(count), [count]);
@@ -253,6 +279,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
     const targetMetrics = createLayoutMetrics(viewport.width, viewport.height, mobileViewport);
     const metrics = layoutMetricsRef.current;
     const metricAlpha = 1 - Math.exp(-Math.min(delta, 0.2) * 10);
+    const latePhaseTiming = getLatePhaseTiming(count, mobileViewport);
 
     metrics.width = metricLerp(metrics.width, targetMetrics.width, metricAlpha);
     metrics.height = metricLerp(metrics.height, targetMetrics.height, metricAlpha);
@@ -284,9 +311,9 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
     const spreadT = easeOut(phase(t, 0.18, 0.36));
     const orbitIdleT = easeOut(phase(t, 0.32, 0.48));
     const exitT = easeInOut(phase(t, 0.44, 0.58));
-    const dealGlobalT = phase(t, 0.64, mobileViewport ? 0.88 : 0.84);
-    const flipGlobalT = phase(t, mobileViewport ? 0.72 : 0.78, mobileViewport ? 0.86 : 0.98);
-    const browseT = easeInOut(phase(t, mobileViewport ? 0.86 : 0.95, 1.0));
+    const dealGlobalT = phase(t, latePhaseTiming.dealStart, latePhaseTiming.dealEnd);
+    const flipGlobalT = phase(t, latePhaseTiming.flipStart, latePhaseTiming.flipEnd);
+    const browseT = easeInOut(phase(t, latePhaseTiming.browseStart, 1.0));
     const dealGlowIn = easeInOut(phase(t, 0.62, 0.78));
     const browseGlowFloor = 0.56 * easeInOut(phase(t, 0.88, 1.0));
     const dealGlowWindow = clamp01(Math.max(dealGlowIn, browseGlowFloor));
@@ -380,7 +407,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
         /* ═══ DEAL MODE: deal from above → flip reveal ═══ */
 
         // Per-card staggered deal progress
-        const cardDealDelay = stagger * 0.32;
+        const cardDealDelay = stagger * latePhaseTiming.dealDelaySpan;
         const localDealT = easeInOut(
           clamp01(
             (dealGlobalT - cardDealDelay) /
@@ -431,7 +458,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
         );
 
         /* ── Flip reveal (hand-flip arc) ── */
-        const cardFlipDelay = stagger * 0.35;
+        const cardFlipDelay = stagger * latePhaseTiming.flipDelaySpan;
         const localFlipT = easeInOut(
           clamp01(
             (flipGlobalT - cardFlipDelay) /

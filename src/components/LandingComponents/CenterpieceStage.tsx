@@ -1,17 +1,26 @@
 import React, { useEffect, useRef, useState } from "react";
 import TypewriterTerminal from "./TypewriterTerminal";
 import { CenterpieceProps, PointerVector } from "./centerpieceTypes";
+import { ShadowAssetId } from "../theme/shadowAssetRegistry";
+import { ShadowMode } from "../theme/shadowMode";
 
 interface CenterpieceStageProps {
   activeSection: string | null;
   centerpiece: React.ComponentType<CenterpieceProps>;
+  shadowMode: ShadowMode;
+  shadowAssetId?: ShadowAssetId;
 }
 
 const INTRO_MS = 1700;
 
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
-const CenterpieceStage: React.FC<CenterpieceStageProps> = ({ activeSection, centerpiece: Centerpiece }) => {
+const CenterpieceStage: React.FC<CenterpieceStageProps> = ({
+  activeSection,
+  centerpiece: Centerpiece,
+  shadowMode,
+  shadowAssetId = "heroCenterpiece",
+}) => {
   const stageRef = useRef<HTMLDivElement>(null);
   const [pointer, setPointer] = useState<PointerVector>({ x: 0, y: 0 });
   const [hovering, setHovering] = useState(false);
@@ -49,12 +58,9 @@ const CenterpieceStage: React.FC<CenterpieceStageProps> = ({ activeSection, cent
 
   return (
     <div className="relative h-[clamp(220px,65vmin,720px)] w-[clamp(220px,65vmin,720px)] sm:h-[clamp(260px,74vmin,720px)] sm:w-[clamp(260px,74vmin,720px)]">
-      <div className="pointer-events-none absolute inset-[-24%] rounded-full bg-[radial-gradient(circle_at_40%_30%,rgba(56,189,248,0.25),rgba(99,102,241,0.17)_36%,rgba(217,70,239,0.14)_54%,rgba(2,6,23,0)_75%)] blur-[40px]" />
-      <div className="pointer-events-none absolute inset-[-8%] stage-flow-ring" />
-      <div className="pointer-events-none absolute inset-[2%] stage-flow-ring-alt" />
       <div
         ref={stageRef}
-        className="relative h-full w-full touch-pan-y overflow-hidden rounded-full border border-cyan-200/10 bg-[radial-gradient(circle_at_50%_36%,rgba(30,41,59,0.72),rgba(15,23,42,0.62)_44%,rgba(2,6,23,0.42)_100%)] shadow-[0_55px_140px_-85px_rgba(14,116,144,0.82),inset_0_0_80px_rgba(56,189,248,0.08)]"
+        className="relative h-full w-full touch-pan-y"
         onPointerEnter={() => setHovering(true)}
         onPointerLeave={() => {
           setHovering(false);
@@ -65,20 +71,20 @@ const CenterpieceStage: React.FC<CenterpieceStageProps> = ({ activeSection, cent
         onPointerUp={() => setPressed(false)}
         onPointerMove={handlePointerMove}
       >
-        <div className="pointer-events-none absolute inset-[8%] rounded-full bg-[radial-gradient(circle_at_50%_34%,rgba(56,189,248,0.06),rgba(15,23,42,0.03)_46%,rgba(2,6,23,0.08)_100%)] backdrop-blur-[1px]" />
-
-        <div className="absolute inset-0 z-10">
+        <div className="absolute left-1/2 top-1/2 z-10 h-[114%] w-[136%] -translate-x-1/2 -translate-y-1/2">
           <Centerpiece
             activeSection={activeSection}
             pointer={pointer}
             hovering={hovering}
             pressed={pressed}
             introProgress={introProgress}
+            shadowMode={shadowMode}
+            shadowAssetId={shadowAssetId}
           />
         </div>
       </div>
 
-      <TypewriterTerminal activeSection={activeSection} />
+      <TypewriterTerminal activeSection={activeSection} shadowMode={shadowMode} />
     </div>
   );
 };

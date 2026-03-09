@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import NavBar from "./components/NavBar/NavBar";
 import TransitionWipe, { TransitionHandle, WipeOptions } from "./components/Transitions/TransitionWipe";
 import { SiteRoute, normalizeRoute, siteRoutes } from "./components/sections";
+import { useThemeMode } from "./components/theme/useThemeMode";
 
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const OriginStoryPage = lazy(() => import("./pages/OriginStoryPage"));
@@ -52,8 +53,8 @@ const buildTransitionOptions = (
 
 const PageFallback: React.FC = () => {
   return (
-    <div className="flex h-[100svh] w-screen items-center justify-center bg-slate-50 text-slate-800">
-      <div className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm tracking-wide text-slate-600 shadow-sm">
+    <div className="theme-page-bg theme-text-primary flex h-[100svh] w-screen items-center justify-center">
+      <div className="theme-surface-elevated theme-border-subtle theme-text-muted rounded-xl border px-5 py-3 text-sm tracking-wide shadow-sm">
         Loading page...
       </div>
     </div>
@@ -63,6 +64,7 @@ const PageFallback: React.FC = () => {
 function App() {
   const initialPath = typeof window === "undefined" ? "/" : normalizeRoute(window.location.pathname);
   const prefersReducedMotion = useReducedMotion();
+  const { resolvedMode, toggleTheme } = useThemeMode();
 
   const [path, setPath] = useState<string>(initialPath);
   const [navInteractionTick, setNavInteractionTick] = useState(0);
@@ -185,6 +187,7 @@ function App() {
       return (
         <LandingPage
           onNavigate={navigate}
+          shadowMode={resolvedMode}
           navInteractionTick={navInteractionTick}
           onEnterOriginExperience={handleEnterOriginExperience}
           entryTarget={landingEntryTarget}
@@ -203,15 +206,15 @@ function App() {
     }
 
     if (path === "/projects") {
-      return <ProjectsPage />;
+      return <ProjectsPage themeMode={resolvedMode} />;
     }
 
     if (path === "/about") {
-      return <AboutPage onNavigate={navigate} />;
+      return <AboutPage onNavigate={navigate} themeMode={resolvedMode} />;
     }
 
     if (path === "/contact") {
-      return <ContactPage />;
+      return <ContactPage themeMode={resolvedMode} />;
     }
 
     if (path === "/blog") {
@@ -221,6 +224,7 @@ function App() {
     return (
       <LandingPage
         onNavigate={navigate}
+        shadowMode={resolvedMode}
         navInteractionTick={navInteractionTick}
         onEnterOriginExperience={handleEnterOriginExperience}
         entryTarget={landingEntryTarget}
@@ -236,6 +240,7 @@ function App() {
     navInteractionTick,
     navigate,
     path,
+    resolvedMode,
   ]);
 
   const isHeavyRoute = HEAVY_TRANSITION_ROUTES.has(path);
@@ -251,12 +256,14 @@ function App() {
       : { duration: 0.7, ease: [0.14, 0.88, 0.22, 1] as [number, number, number, number] };
 
   return (
-    <div className="relative h-[100svh] w-screen overflow-hidden bg-slate-50">
+    <div className="relative h-[100svh] w-screen overflow-hidden theme-page-bg" data-theme={resolvedMode}>
       <TransitionWipe ref={wipeRef} />
       <NavBar
         routes={navRoutes}
         currentPath={path}
         onNavigate={navigate}
+        resolvedThemeMode={resolvedMode}
+        onToggleTheme={toggleTheme}
         onHintNavInteraction={handleHintNavInteraction}
       />
       <Suspense fallback={<PageFallback />}>

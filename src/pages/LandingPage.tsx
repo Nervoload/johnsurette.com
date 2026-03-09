@@ -1,21 +1,25 @@
 import React, { RefObject, useEffect, useRef } from "react";
+import {
+  landingOriginLabContent,
+  pageVisuals,
+} from "../content";
 import CenterpieceStage from "../components/LandingComponents/CenterpieceStage";
 import DepthRainBackdrop from "../components/LandingComponents/DepthRainBackdrop";
-import { defaultBackgroundEffectId } from "../components/LandingComponents/backgroundEffects/backgroundEffectRegistry";
 import LandingOnboardingOverlay from "../components/LandingComponents/onboarding/LandingOnboardingOverlay";
 import {
   centerpieceRegistry,
-  defaultCenterpieceId,
 } from "../components/LandingComponents/centerpieces/centerpieceRegistry";
 import LandingConclusionSection from "../components/LandingStory/LandingConclusionSection";
 import { WipeOptions } from "../components/Transitions/TransitionWipe";
 import { useIsTouch } from "../hooks/usePointerDevice";
 import PageScaffold from "../components/layout/PageScaffold";
+import { ShadowMode } from "../components/theme/shadowMode";
 
 export type LandingEntryTarget = "hero" | "conclusion";
 
 export interface LandingPageProps {
   onNavigate: (path: string, opts?: WipeOptions) => boolean | void;
+  shadowMode: ShadowMode;
   navInteractionTick?: number;
   onEnterOriginExperience?: () => boolean | void;
   entryTarget?: LandingEntryTarget;
@@ -25,6 +29,7 @@ export interface LandingPageProps {
 interface LandingContentProps {
   scrollContainerRef: RefObject<HTMLDivElement>;
   onNavigate: (path: string, opts?: WipeOptions) => boolean | void;
+  shadowMode: ShadowMode;
   navInteractionTick?: number;
   onEnterOriginExperience?: () => boolean | void;
   entryTarget: LandingEntryTarget;
@@ -34,14 +39,18 @@ interface LandingContentProps {
 const LandingContent: React.FC<LandingContentProps> = ({
   scrollContainerRef,
   onNavigate,
+  shadowMode,
   navInteractionTick,
   onEnterOriginExperience,
   entryTarget,
   entryNonce,
 }) => {
-  const ActiveCenterpiece = centerpieceRegistry[defaultCenterpieceId].component;
+  const landingVisuals = pageVisuals.landing;
+  const activeCenterpieceEntry = centerpieceRegistry[landingVisuals.centerpieceId ?? "waveOrb"];
+  const ActiveCenterpiece = activeCenterpieceEntry.component;
+  const shadowAssetId = activeCenterpieceEntry.shadowAssetId;
   const isTouch = useIsTouch();
-  const conclusionSectionRef = useRef<HTMLElement>(null);
+  const conclusionSectionRef = useRef<HTMLDivElement>(null);
   const lastEntryNonceRef = useRef<number>(-1);
 
   useEffect(() => {
@@ -88,7 +97,7 @@ const LandingContent: React.FC<LandingContentProps> = ({
       if (accepted !== false) return;
     }
 
-    onNavigate("/origin", {
+    onNavigate(landingOriginLabContent.ctaPath, {
       color: "#22d3ee",
       direction: "down",
       intensity: "lite",
@@ -101,10 +110,10 @@ const LandingContent: React.FC<LandingContentProps> = ({
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
         <div className="sticky top-0 h-[100dvh]">
           <DepthRainBackdrop
-            effectId={defaultBackgroundEffectId}
-            quality="balanced"
-            interactionMode="medium"
-            styleSeed={37}
+            effectId={landingVisuals.backdropEffectId}
+            quality={landingVisuals.backdropQuality}
+            interactionMode={landingVisuals.backdropInteractionMode}
+            styleSeed={landingVisuals.backdropStyleSeed}
           />
         </div>
       </div>
@@ -118,26 +127,29 @@ const LandingContent: React.FC<LandingContentProps> = ({
       <div className="relative z-10">
         <section className="relative flex min-h-[100dvh] items-center justify-center">
           <div className="relative z-10 px-4 sm:px-6">
-            <CenterpieceStage activeSection={null} centerpiece={ActiveCenterpiece} />
+            <CenterpieceStage
+              activeSection={null}
+              centerpiece={ActiveCenterpiece}
+              shadowMode={shadowMode}
+              shadowAssetId={shadowAssetId}
+            />
           </div>
         </section>
 
         <section className="relative flex min-h-[72dvh] items-center justify-center px-5 text-center">
-          <div className="max-w-3xl rounded-[2rem] bg-white/42 px-8 py-10 shadow-[0_40px_90px_-70px_rgba(2,6,23,0.88)] backdrop-blur-xl">
-            <p className="text-xs uppercase tracking-[0.24em] text-slate-500">02 · Origin Sequence</p>
-            <h2 className="mt-4 text-2xl font-semibold text-slate-900 sm:text-4xl">
-              Enter the cinematic origin sequence.
+          <div className="theme-surface-elevated max-w-3xl rounded-[2rem] px-8 py-10 backdrop-blur-xl">
+            <p className="theme-text-subtle text-xs uppercase tracking-[0.24em]">{landingOriginLabContent.eyebrow}</p>
+            <h2 className="theme-text-primary mt-4 text-2xl font-semibold sm:text-4xl">
+              {landingOriginLabContent.title}
             </h2>
-            <p className="mt-4 text-base leading-relaxed text-slate-600">
-              From particles to galaxies, this is a dedicated immersive stage rendered on a separate route.
-            </p>
+            <p className="theme-text-muted mt-4 text-base leading-relaxed">{landingOriginLabContent.summary}</p>
             <div className="mt-7 flex justify-center">
               <button
                 type="button"
                 onClick={handleOpenOriginLab}
-                className="rounded-full bg-slate-900 px-6 py-3 text-sm font-medium uppercase tracking-[0.12em] text-cyan-100 transition hover:scale-[1.02]"
+                className="theme-cta-button rounded-full px-6 py-3 text-sm font-medium uppercase tracking-[0.12em] transition hover:scale-[1.02]"
               >
-                Open Origin Lab
+                {landingOriginLabContent.ctaLabel}
               </button>
             </div>
           </div>
@@ -153,6 +165,7 @@ const LandingContent: React.FC<LandingContentProps> = ({
 
 const LandingPage: React.FC<LandingPageProps> = ({
   onNavigate,
+  shadowMode,
   navInteractionTick,
   onEnterOriginExperience,
   entryTarget = "hero",
@@ -160,13 +173,14 @@ const LandingPage: React.FC<LandingPageProps> = ({
 }) => {
   return (
     <PageScaffold
-      backgroundClassName="bg-[radial-gradient(circle_at_20%_0%,rgba(186,230,253,0.55),rgba(224,231,255,0.42)_34%,rgba(248,250,252,1)_78%)]"
-      footerBackgroundColor="#ffffff"
+      backgroundClassName={pageVisuals.landing.backgroundClassName}
+      footerBackgroundColor={pageVisuals.landing.footerBackgroundColor}
     >
       {(scrollRef) => (
         <LandingContent
           scrollContainerRef={scrollRef}
           onNavigate={onNavigate}
+          shadowMode={shadowMode}
           navInteractionTick={navInteractionTick}
           onEnterOriginExperience={onEnterOriginExperience}
           entryTarget={entryTarget}

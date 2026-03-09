@@ -1,14 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { MotionValue } from "framer-motion";
 import * as THREE from "three";
 import CanvasErrorBoundary from "../CanvasErrorBoundary";
 import SceneBloom from "./SceneBloom";
+import { ResolvedThemeMode } from "../theme/themeMode";
 
 interface StoryboardSectionProps {
   progress: MotionValue<number>;
   height?: number;
   forceLowPower?: boolean;
+  themeMode: ResolvedThemeMode;
   children: (
     progress: MotionValue<number>,
     context: {
@@ -22,6 +24,7 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
   progress,
   height = 200,
   forceLowPower = false,
+  themeMode,
   children,
 }) => {
   const [mobileViewport, setMobileViewport] = useState(false);
@@ -60,13 +63,15 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
 
   const effectiveLowPowerMode = reducedMotionMode || forceLowPower;
   const renderHeight = height;
+  const fogColor = useMemo(() => {
+    return themeMode === "dark" ? "#0b1326" : "#eef4fb";
+  }, [themeMode]);
 
   return (
     <section style={{ height: `${renderHeight}vh` }} className="relative">
       <div className="sticky top-0 h-[100svh] overflow-hidden">
-        {/* Seamless full-viewport depth backdrop (no finite plane edges). */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(191,219,254,0.34),transparent_46%),radial-gradient(circle_at_78%_20%,rgba(196,181,253,0.26),transparent_42%),linear-gradient(165deg,rgba(255,255,255,0.58),rgba(248,250,252,0.56)_58%,rgba(238,242,247,0.62))]" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_72%,rgba(148,163,184,0.12),transparent_58%)]" />
+        <div className="theme-project-scene-haze-a pointer-events-none absolute inset-0" />
+        <div className="theme-project-scene-haze-b pointer-events-none absolute inset-0" />
 
         <CanvasErrorBoundary>
           <Canvas
@@ -87,7 +92,7 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
               gl.setClearColor(0xffffff, 0);
             }}
           >
-            <fog attach="fog" args={["#f8fafc", 8, 24]} />
+            <fog attach="fog" args={[fogColor, 8, 24]} />
 
             <ambientLight intensity={0.72} />
             <spotLight
@@ -111,8 +116,7 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
           </Canvas>
         </CanvasErrorBoundary>
 
-        {/* Bottom blend to avoid hard section edge into following content. */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-b from-transparent to-slate-50" />
+        <div className="theme-project-scene-bottom-fade pointer-events-none absolute inset-x-0 bottom-0 h-36" />
       </div>
     </section>
   );

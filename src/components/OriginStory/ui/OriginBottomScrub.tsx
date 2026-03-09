@@ -6,6 +6,7 @@ interface OriginBottomScrubProps {
   activeIndex: number;
   progress: number;
   chapterProgressTargets: number[];
+  disabled?: boolean;
   onSelect: (index: number) => void;
 }
 
@@ -22,6 +23,7 @@ const OriginBottomScrub: React.FC<OriginBottomScrubProps> = ({
   activeIndex,
   progress,
   chapterProgressTargets,
+  disabled = false,
   onSelect,
 }) => {
   const railRef = useRef<HTMLDivElement>(null);
@@ -41,6 +43,10 @@ const OriginBottomScrub: React.FC<OriginBottomScrubProps> = ({
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>): void => {
     event.preventDefault();
+    if (disabled) {
+      return;
+    }
+
     selectByPointer(event.clientX);
 
     const move = (moveEvent: PointerEvent): void => {
@@ -56,8 +62,8 @@ const OriginBottomScrub: React.FC<OriginBottomScrubProps> = ({
   };
 
   return (
-    <div className="pointer-events-auto absolute inset-x-6 bottom-5 z-40 md:inset-x-20">
-      <div className="origin-scrub-shell">
+    <div className={`pointer-events-auto absolute inset-x-6 bottom-5 z-40 md:inset-x-20 ${disabled ? "opacity-40" : ""}`}>
+      <div className={`origin-scrub-shell ${disabled ? "is-disabled" : ""}`}>
         <div
           ref={railRef}
           className="origin-scrub-rail"
@@ -68,7 +74,12 @@ const OriginBottomScrub: React.FC<OriginBottomScrubProps> = ({
           aria-valuenow={activeIndex + 1}
           aria-valuetext={beats[activeIndex]?.chapterLabel}
           onPointerDown={handlePointerDown}
+          aria-disabled={disabled}
           onKeyDown={(event) => {
+            if (disabled) {
+              return;
+            }
+
             if (event.key === "ArrowRight" || event.key === "ArrowDown") {
               event.preventDefault();
               onSelect(Math.min(beats.length - 1, activeIndex + 1));
@@ -89,6 +100,7 @@ const OriginBottomScrub: React.FC<OriginBottomScrubProps> = ({
               style={{ left: `${target * 100}%` }}
               onClick={() => onSelect(index)}
               aria-label={`Jump to ${beats[index].chapterLabel}`}
+              disabled={disabled}
             />
           ))}
         </div>

@@ -11,22 +11,22 @@ const OriginExitControls: React.FC<OriginExitControlsProps> = ({
 }) => {
   return (
     <>
-      <div className="pointer-events-auto absolute left-4 top-5 z-40">
+      <div className="pointer-events-auto absolute left-4 top-5 z-40 md:left-6 md:top-6">
         <button
           type="button"
           className="origin-exit-chip"
           onClick={() => onRequestExitHero?.()}
         >
-          Back to Hero
+          Return to Hero
         </button>
       </div>
-      <div className="pointer-events-auto absolute bottom-5 right-4 z-40">
+      <div className="pointer-events-auto absolute right-4 top-5 z-40 md:right-6 md:top-6">
         <button
           type="button"
           className="origin-exit-chip"
           onClick={() => onRequestExitConclusion?.()}
         >
-          Continue to Conclusion
+          Continue On
         </button>
       </div>
     </>

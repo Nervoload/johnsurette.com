@@ -1,10 +1,11 @@
-import React, { useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Sparkles } from "@react-three/drei";
 import * as THREE from "three";
 import { sections } from "../../sections";
 import { CenterpieceProps } from "../centerpieceTypes";
 import CanvasErrorBoundary from "../../CanvasErrorBoundary";
+import { getShadowAssetConfig, resolveShadowGlowColor } from "../../theme/shadowAssetRegistry";
 
 interface Palette {
   baseHex: string;
@@ -436,12 +437,49 @@ const OrbScene: React.FC<CoreSceneProps> = ({
   hovering,
   pressed,
   introProgress,
+  shadowMode,
+  shadowAssetId = "heroCenterpiece",
   palette,
 }) => {
   const groupRef = useRef<THREE.Group>(null);
   const coreRef = useRef<THREE.Mesh>(null);
   const haloRef = useRef<THREE.Mesh>(null);
   const coreMaterialRef = useRef<THREE.ShaderMaterial>(null);
+  const shadowLayerRef = useRef<THREE.Sprite>(null);
+  const shadowMaterialRef = useRef<THREE.SpriteMaterial>(null);
+  const shadowViewportTargetRef = useRef(new THREE.Vector3(0, -0.08, -2.2));
+
+  const shadowConfig = useMemo(
+    () => getShadowAssetConfig(shadowAssetId),
+    [shadowAssetId]
+  );
+  const shadowColor = useMemo(
+    () => new THREE.Color(resolveShadowGlowColor(shadowAssetId, shadowMode)),
+    [shadowAssetId, shadowMode]
+  );
+  const shadowTexture = useMemo(() => {
+    const size = 196;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    const center = size / 2;
+    const gradient = ctx.createRadialGradient(center, center, 0, center, center, center);
+    gradient.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+    gradient.addColorStop(0.42, "rgba(255, 255, 255, 0.3)");
+    gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = false;
+    texture.needsUpdate = true;
+    return texture;
+  }, []);
 
   const coreUniforms = useMemo(
     () => ({
@@ -456,6 +494,19 @@ const OrbScene: React.FC<CoreSceneProps> = ({
     }),
     [palette]
   );
+
+  useEffect(() => {
+    return () => {
+      shadowTexture?.dispose();
+    };
+  }, [shadowTexture]);
+
+  useEffect(() => {
+    if (!shadowMaterialRef.current) return;
+    shadowMaterialRef.current.blending =
+      shadowMode === "dark" ? THREE.AdditiveBlending : THREE.NormalBlending;
+    shadowMaterialRef.current.needsUpdate = true;
+  }, [shadowMode]);
 
   useFrame((state, delta) => {
     const time = state.clock.elapsedTime;
@@ -497,10 +548,56 @@ const OrbScene: React.FC<CoreSceneProps> = ({
         material.opacity = (hovering ? 0.22 : 0.16) * Math.max(0.2, introProgress);
       }
     }
+
+    if (shadowLayerRef.current) {
+      const blurPx = shadowMode === "dark" ? shadowConfig.darkGlowBlurPx : shadowConfig.lightShadowBlurPx;
+      const blurScale = THREE.MathUtils.clamp(blurPx / 24, 0.8, 1.9);
+      const hoverBoost = hovering ? 0.14 : 0;
+      const pressBoost = pressed ? 0.2 : 0;
+      const pulse = 1 + Math.sin(time * 1.2) * (shadowMode === "dark" ? 0.03 : 0.015);
+      const desiredWidth = ((shadowMode === "dark" ? 4.9 : 4.3) + hoverBoost + pressBoost) * blurScale;
+      const desiredHeight = ((shadowMode === "dark" ? 3.4 : 3.0) + hoverBoost * 0.8 + pressBoost * 0.9) * blurScale;
+      const shadowY = -0.08 + (pressed ? -0.02 : 0);
+
+      shadowViewportTargetRef.current.set(0, shadowY, -2.2);
+      const shadowViewport = state.viewport.getCurrentViewport(state.camera, shadowViewportTargetRef.current);
+      const fitScale = Math.min(
+        1,
+        (shadowViewport.width * 0.94) / desiredWidth,
+        (shadowViewport.height * 0.88) / desiredHeight
+      );
+
+      shadowLayerRef.current.scale.set(desiredWidth * fitScale * pulse, desiredHeight * fitScale * pulse, 1);
+      shadowLayerRef.current.position.y = shadowY;
+    }
+
+    if (shadowMaterialRef.current) {
+      shadowMaterialRef.current.color.copy(shadowColor);
+      const baseOpacity = shadowMode === "dark" ? shadowConfig.darkGlowOpacity : shadowConfig.lightShadowOpacity;
+      const interactionBoost = (hovering ? 0.06 : 0) + (pressed ? 0.08 : 0);
+      shadowMaterialRef.current.opacity = Math.min(
+        0.84,
+        (baseOpacity + interactionBoost) * Math.max(0.2, introProgress)
+      );
+    }
   });
 
   return (
     <>
+      {shadowTexture ? (
+        <sprite ref={shadowLayerRef} position={[0, -0.08, -2.2]} scale={[4.3, 3, 1]} renderOrder={-2}>
+          <spriteMaterial
+            ref={shadowMaterialRef}
+            map={shadowTexture}
+            color={shadowColor}
+            transparent
+            opacity={shadowConfig.lightShadowOpacity}
+            depthWrite={false}
+            toneMapped={false}
+          />
+        </sprite>
+      ) : null}
+
       <ambientLight intensity={0.24} />
       <pointLight position={[3.2, 2.1, 3.8]} color={palette.accentColor} intensity={2.0} />
       <pointLight position={[-3.4, -2.3, -2.5]} color={palette.glowColor} intensity={1.6} />

@@ -146,6 +146,17 @@ export interface BioticParticle {
 
 export type ProfilesByClass = Record<BioticClass, BehaviorProfile[]>;
 
+export interface BioticPointerField {
+  active: boolean;
+  nx: number;
+  ny: number;
+  velocityX: number;
+  velocityY: number;
+  strength: number;
+  radiusPx: number;
+  pulse: number;
+}
+
 export interface BioticSimulation {
   width: number;
   height: number;
@@ -157,6 +168,7 @@ export interface BioticSimulation {
   flowStrength: number;
   maxAmoebaChecks: number;
   emissionCapPerVirus: number;
+  pointerField: BioticPointerField;
   particles: BioticParticle[];
   profiles: ProfilesByClass;
 }

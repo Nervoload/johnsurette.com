@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef } from "react";
 import { drawSimulation } from "../../biotic/draw";
 import { createSimulation, resizeSimulation, stepSimulation } from "../../biotic/sim";
 import { DensityPreset } from "../../biotic/types";
+import { usePointerTracker } from "../runtime/usePointerTracker";
 import { BackgroundEffectProps } from "../types";
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
@@ -20,12 +21,16 @@ const presetFromQuality = (quality: BackgroundEffectProps["quality"]): DensityPr
 
 const BioticParticlesEffect: React.FC<BackgroundEffectProps> = ({
   quality,
+  interactionMode,
+  reducedMotion,
   className,
   preset,
   palette,
   flowStrength,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const pointerRef = usePointerTracker(interactionMode, reducedMotion);
+  const pointerSampleRef = useRef<{ x: number; y: number }>({ x: 0.5, y: 0.5 });
 
   const effectivePreset = useMemo(() => preset ?? presetFromQuality(quality), [preset, quality]);
   const effectivePalette = palette ?? "biotic";
@@ -78,6 +83,28 @@ const BioticParticlesEffect: React.FC<BackgroundEffectProps> = ({
       lastTime = time;
 
       simulation.flowStrength = effectiveFlow;
+      const pointer = pointerRef.current;
+      const nextPointerX = (pointer.targetX + 1) * 0.5;
+      const nextPointerY = (1 - pointer.targetY) * 0.5;
+      const prevPointer = pointerSampleRef.current;
+      const pointerVelocityX = width > 0 ? ((nextPointerX - prevPointer.x) * width) / Math.max(delta, 0.001) : 0;
+      const pointerVelocityY = height > 0 ? ((nextPointerY - prevPointer.y) * height) / Math.max(delta, 0.001) : 0;
+      const pointerSpeed = Math.hypot(pointerVelocityX, pointerVelocityY);
+      const speedBoost = clamp(pointerSpeed / 900, 0, 0.45);
+
+      simulation.pointerField.active = pointer.active && pointer.strength > 0;
+      simulation.pointerField.nx = nextPointerX;
+      simulation.pointerField.ny = nextPointerY;
+      simulation.pointerField.velocityX = pointerVelocityX;
+      simulation.pointerField.velocityY = pointerVelocityY;
+      simulation.pointerField.strength = simulation.pointerField.active ? Math.min(1.28, pointer.strength * 1.18 + speedBoost) : 0;
+      simulation.pointerField.pulse = pointer.clickPulse;
+
+      pointerSampleRef.current = {
+        x: nextPointerX,
+        y: nextPointerY,
+      };
+
       stepSimulation(simulation, delta);
       drawSimulation(context, simulation);
       raf = window.requestAnimationFrame(tick);
@@ -104,7 +131,7 @@ const BioticParticlesEffect: React.FC<BackgroundEffectProps> = ({
       }
       window.cancelAnimationFrame(raf);
     };
-  }, [effectiveFlow, effectivePalette, effectivePreset]);
+  }, [effectiveFlow, effectivePalette, effectivePreset, interactionMode, pointerRef, reducedMotion]);
 
   return (
     <canvas

@@ -8,6 +8,7 @@ import React, {
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import { MotionValue } from "framer-motion";
 import * as THREE from "three";
+import { ResolvedThemeMode } from "../theme/themeMode";
 
 export interface Card3DProps {
   frontSrc?: string;
@@ -24,11 +25,16 @@ export interface Card3DProps {
   onClick?: () => void;
   isClickable?: () => boolean;
   frontAttachment?: React.ReactNode;
+  themeMode?: ResolvedThemeMode;
 }
 
-const FALLBACK_FRONT =
+const FALLBACK_FRONT = (themeMode: ResolvedThemeMode) =>
   "data:image/svg+xml;utf8," +
-  encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 1024'><rect width='720' height='1024' fill='#f8fafc'/><rect x='36' y='36' width='648' height='952' rx='28' fill='none' stroke='#94a3b8' stroke-width='8'/></svg>");
+  encodeURIComponent(
+    themeMode === "dark"
+      ? "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 1024'><rect width='720' height='1024' fill='#0f172a'/><rect x='36' y='36' width='648' height='952' rx='28' fill='none' stroke='#334155' stroke-width='8'/></svg>"
+      : "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 720 1024'><rect width='720' height='1024' fill='#f8fafc'/><rect x='36' y='36' width='648' height='952' rx='28' fill='none' stroke='#94a3b8' stroke-width='8'/></svg>"
+  );
 
 const FALLBACK_BACK =
   "data:image/svg+xml;utf8," +
@@ -51,6 +57,7 @@ const Card3D = forwardRef<THREE.Group, Card3DProps>(
       onClick,
       isClickable,
       frontAttachment,
+      themeMode = "light",
       ...rest
     },
     ref
@@ -69,7 +76,7 @@ const Card3D = forwardRef<THREE.Group, Card3DProps>(
     const hoveredRef = useRef(false);
     useImperativeHandle(ref, () => innerRef.current, []);
 
-    const frontMap = useLoader(THREE.TextureLoader, frontSrc ?? FALLBACK_FRONT);
+    const frontMap = useLoader(THREE.TextureLoader, frontSrc ?? FALLBACK_FRONT(themeMode));
     const backMap = useLoader(THREE.TextureLoader, backSrc ?? FALLBACK_BACK);
     const glowColor = useMemo(
       () => new THREE.Color(edgeColor ?? borderColor),

@@ -50,17 +50,30 @@ const Cue: React.FC<CueProps> = ({ state, anchorClassName, label, direction }) =
   if (state === "hidden") return null;
 
   const animateState = state === "exiting" ? "exiting" : "visible";
+  const edgeClassName = direction === "up" ? "onboarding-cue-shell is-top" : "onboarding-cue-shell is-bottom";
+  const content =
+    direction === "up" ? (
+      <>
+        <ArrowShape direction={direction} />
+        <p className="onboarding-cue-text">{label}</p>
+      </>
+    ) : (
+      <>
+        <p className="onboarding-cue-text">{label}</p>
+        <ArrowShape direction={direction} />
+      </>
+    );
+
   return (
     <div className={anchorClassName}>
       <motion.div
+        className={edgeClassName}
         initial="hidden"
         animate={animateState}
         variants={cueMotion}
       >
-        <div className="onboarding-cue-shell">
-          <ArrowShape direction={direction} />
-          <p className="onboarding-cue-text">{label}</p>
-        </div>
+        <span className="onboarding-cue-glow" aria-hidden />
+        {content}
       </motion.div>
     </div>
   );
@@ -83,14 +96,14 @@ const LandingOnboardingOverlay: React.FC<LandingOnboardingOverlayProps> = ({
       <div className="sticky top-0 h-[100dvh] w-full">
         <Cue
           state={hints.navState}
-          anchorClassName="absolute left-1/2 top-8 -translate-x-1/2"
+          anchorClassName="absolute inset-x-0 top-0 flex justify-center pt-[max(0.85rem,env(safe-area-inset-top))]"
           label={isTouch ? "Tap or drag up" : "Hover for more"}
           direction="up"
         />
 
         <Cue
           state={hints.scrollState}
-          anchorClassName="absolute bottom-8 left-1/2 -translate-x-1/2"
+          anchorClassName="absolute inset-x-0 bottom-0 flex justify-center pb-[max(0.85rem,env(safe-area-inset-bottom))]"
           label="Scroll"
           direction="down"
         />

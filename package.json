@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "BROWSERSLIST_IGNORE_OLD_DATA=true vite --open",
     "build": "BROWSERSLIST_IGNORE_OLD_DATA=true vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@react-three/drei": "^9.122.0",

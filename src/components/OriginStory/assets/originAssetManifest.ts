@@ -1,70 +1,148 @@
 import { OriginAssetManifest } from "../types";
 
 export const originAssetManifest: OriginAssetManifest = {
-  "quantum-question-field": {
-    slotId: "quantum-question-field",
-    fallbackSceneId: "question",
-    materialPreset: "crystalline-cyan",
-    lodPolicy: "balanced",
+  "observatory-workbench": {
+    slotId: "observatory-workbench",
+    supportingModels: [],
+    fallbackSceneId: "spark",
+    fallbackKind: "observatory",
+    materialPreset: "obsidian-brass",
+    lodPolicy: "high-desktop",
     transform: {
-      position: [0, 0, 0],
+      position: [0, -0.1, 0],
       rotation: [0, 0, 0],
       scale: [1, 1, 1],
     },
+    quality: {
+      particleMultiplier: 1.04,
+      allowBloom: true,
+      secondaryProps: false,
+      assetScaleByTier: {
+        mobile: 0.94,
+        balanced: 1,
+        ultra: 1.06,
+      },
+    },
+    creditIds: [],
   },
-  "atomic-emergence": {
-    slotId: "atomic-emergence",
-    fallbackSceneId: "atoms",
-    materialPreset: "bio-lattice",
+  "longevity-bio-lab": {
+    slotId: "longevity-bio-lab",
+    supportingModels: [],
+    fallbackSceneId: "biology",
+    fallbackKind: "biology",
+    materialPreset: "bioluminescent-gel",
     lodPolicy: "high-desktop",
     transform: {
       position: [0, 0, 0],
       rotation: [0, 0, 0],
       scale: [1, 1, 1],
     },
+    quality: {
+      particleMultiplier: 1.18,
+      allowBloom: true,
+      secondaryProps: false,
+      assetScaleByTier: {
+        mobile: 0.92,
+        balanced: 1,
+        ultra: 1.08,
+      },
+    },
+    creditIds: [],
   },
-  "neural-emergence-network": {
-    slotId: "neural-emergence-network",
-    fallbackSceneId: "network",
-    materialPreset: "neural-ember",
+  "neural-atlas-lab": {
+    slotId: "neural-atlas-lab",
+    supportingModels: [],
+    fallbackSceneId: "mind",
+    fallbackKind: "mind",
+    materialPreset: "cortical-glass",
+    lodPolicy: "balanced",
+    transform: {
+      position: [0, 0.06, 0],
+      rotation: [0, 0, 0],
+      scale: [1, 1, 1],
+    },
+    quality: {
+      particleMultiplier: 1.14,
+      allowBloom: true,
+      secondaryProps: false,
+      assetScaleByTier: {
+        mobile: 0.9,
+        balanced: 1,
+        ultra: 1.05,
+      },
+    },
+    creditIds: [],
+  },
+  "studio-prototype-bench": {
+    slotId: "studio-prototype-bench",
+    supportingModels: [],
+    fallbackSceneId: "build",
+    fallbackKind: "build",
+    materialPreset: "studio-carbon",
+    lodPolicy: "balanced",
+    transform: {
+      position: [0, -0.08, 0],
+      rotation: [0, 0, 0],
+      scale: [1, 1, 1],
+    },
+    quality: {
+      particleMultiplier: 0.88,
+      allowBloom: true,
+      secondaryProps: false,
+      assetScaleByTier: {
+        mobile: 0.92,
+        balanced: 1,
+        ultra: 1.08,
+      },
+    },
+    creditIds: [],
+  },
+  "augmentation-chamber": {
+    slotId: "augmentation-chamber",
+    supportingModels: [],
+    fallbackSceneId: "augmentation",
+    fallbackKind: "augmentation",
+    materialPreset: "surgical-titanium",
     lodPolicy: "balanced",
     transform: {
       position: [0, 0, 0],
       rotation: [0, 0, 0],
       scale: [1, 1, 1],
     },
+    quality: {
+      particleMultiplier: 0.94,
+      allowBloom: true,
+      secondaryProps: false,
+      assetScaleByTier: {
+        mobile: 0.9,
+        balanced: 1,
+        ultra: 1.04,
+      },
+    },
+    creditIds: [],
   },
-  "human-eye-macro": {
-    slotId: "human-eye-macro",
-    fallbackSceneId: "eye",
-    materialPreset: "ocular-wet",
+  "orbital-future-bridge": {
+    slotId: "orbital-future-bridge",
+    supportingModels: [],
+    fallbackSceneId: "trajectory",
+    fallbackKind: "trajectory",
+    materialPreset: "orbital-composite",
     lodPolicy: "high-desktop",
     transform: {
-      position: [0, 0, 0],
+      position: [0, 0.02, 0],
       rotation: [0, 0, 0],
       scale: [1, 1, 1],
     },
-  },
-  "planetary-civilization": {
-    slotId: "planetary-civilization",
-    fallbackSceneId: "planet",
-    materialPreset: "orbital-steel",
-    lodPolicy: "balanced",
-    transform: {
-      position: [0, 0, 0],
-      rotation: [0, 0, 0],
-      scale: [1, 1, 1],
+    quality: {
+      particleMultiplier: 1.2,
+      allowBloom: true,
+      secondaryProps: false,
+      assetScaleByTier: {
+        mobile: 0.9,
+        balanced: 1,
+        ultra: 1.1,
+      },
     },
-  },
-  "galaxy-future-field": {
-    slotId: "galaxy-future-field",
-    fallbackSceneId: "galaxy",
-    materialPreset: "stellar-dust",
-    lodPolicy: "high-desktop",
-    transform: {
-      position: [0, 0, 0],
-      rotation: [0, 0, 0],
-      scale: [1, 1, 1],
-    },
+    creditIds: [],
   },
 };

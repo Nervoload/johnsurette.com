@@ -1,6 +1,8 @@
 import {
   OriginBeatDefinition,
   OriginChapterRuntime,
+  OriginDirection,
+  OriginScrollPhase,
   OriginTimelineState,
   OriginTransitionState,
 } from "../types";
@@ -74,15 +76,61 @@ const computeHoldProgress = (rawProgress: number, beat: OriginBeatDefinition): n
   return clamp01((rawProgress - phases.entry) / Math.max(0.001, phases.hold));
 };
 
-const computeWeight = (globalProgress: number, bound: OriginChapterBound): number => {
-  const influence = bound.length * 0.82;
-  const raw = clamp01(1 - Math.abs(globalProgress - bound.center) / Math.max(0.0001, influence));
-  return smoothStep(raw);
+const computePhase = (
+  rawProgress: number,
+  beat: OriginBeatDefinition,
+): { phase: OriginScrollPhase; phaseProgress: number } => {
+  const phases = normalizedPhaseTriplet(beat);
+  const introEnd = phases.entry;
+  const floatEnd = phases.entry + phases.hold;
+  const handoffEnd = floatEnd + phases.exit * 0.66;
+
+  if (rawProgress <= introEnd) {
+    return {
+      phase: "intro",
+      phaseProgress: clamp01(rawProgress / Math.max(0.001, introEnd)),
+    };
+  }
+
+  if (rawProgress <= floatEnd) {
+    return {
+      phase: "float",
+      phaseProgress: clamp01((rawProgress - introEnd) / Math.max(0.001, phases.hold)),
+    };
+  }
+
+  if (rawProgress <= handoffEnd) {
+    return {
+      phase: "handoff",
+      phaseProgress: clamp01((rawProgress - floatEnd) / Math.max(0.001, phases.exit * 0.66)),
+    };
+  }
+
+  return {
+    phase: "outro",
+    phaseProgress: clamp01((rawProgress - handoffEnd) / Math.max(0.001, phases.exit * 0.34)),
+  };
+};
+
+const getActiveIndex = (progress: number, bounds: OriginChapterBound[]): number => {
+  if (!bounds.length) return 0;
+
+  for (let index = 0; index < bounds.length; index += 1) {
+    const bound = bounds[index];
+    const isLast = index === bounds.length - 1;
+
+    if (progress >= bound.start && (progress < bound.end || isLast)) {
+      return index;
+    }
+  }
+
+  return bounds.length - 1;
 };
 
 const computeTransitionState = (
   progress: number,
   bounds: OriginChapterBound[],
+  direction: OriginDirection,
 ): OriginTransitionState | null => {
   let strongest: OriginTransitionState | null = null;
 
@@ -90,12 +138,17 @@ const computeTransitionState = (
     const from = bounds[index];
     const to = bounds[index + 1];
     const boundary = from.end;
-    const range = Math.max(0.01, Math.min(from.length, to.length) * 0.36);
+    const range = Math.max(0.014, Math.min(from.length, to.length) * 0.28);
     const distance = Math.abs(progress - boundary);
-    if (distance > range) continue;
+
+    if (distance > range) {
+      continue;
+    }
 
     const strength = smoothStep(1 - distance / range);
     const transitionProgress = clamp01((progress - (boundary - range)) / (range * 2));
+    const sceneMix = smoothStep(transitionProgress);
+    const cameraMix = clamp01(smoothStep((transitionProgress - 0.08) / 0.84));
 
     if (!strongest || strength > strongest.strength) {
       strongest = {
@@ -104,6 +157,10 @@ const computeTransitionState = (
         boundaryIndex: index,
         strength,
         progress: transitionProgress,
+        direction,
+        adjacentIndex: null,
+        sceneMix,
+        cameraMix,
       };
     }
   }
@@ -112,13 +169,39 @@ const computeTransitionState = (
 };
 
 export const computeOriginTimeline = (
-  progress: number,
+  rawProgress: number,
+  smoothedProgress: number,
+  direction: OriginDirection,
   bounds: OriginChapterBound[],
 ): OriginTimelineState => {
-  const clampedProgress = clamp01(progress);
+  const clampedRawProgress = clamp01(rawProgress);
+  const clampedSmoothedProgress = clamp01(smoothedProgress);
+  const activeIndex = getActiveIndex(clampedSmoothedProgress, bounds);
+  const transition = computeTransitionState(clampedSmoothedProgress, bounds, direction);
+
+  let adjacentIndex: number | null = null;
+  let renderedChapterIndices = [activeIndex];
+  const transitionWeights = new Map<number, number>();
+
+  if (transition) {
+    const fromIndex = transition.boundaryIndex;
+    const toIndex = transition.boundaryIndex + 1;
+    adjacentIndex = activeIndex === fromIndex ? toIndex : fromIndex;
+    transition.adjacentIndex = adjacentIndex;
+
+    renderedChapterIndices = Array.from(new Set([activeIndex, adjacentIndex])).sort((left, right) => left - right);
+    transitionWeights.set(fromIndex, 1 - transition.sceneMix);
+    transitionWeights.set(toIndex, transition.sceneMix);
+  }
 
   const chapters: OriginChapterRuntime[] = bounds.map((bound) => {
-    const raw = clamp01((clampedProgress - bound.start) / Math.max(0.0001, bound.length));
+    const raw = clamp01((clampedSmoothedProgress - bound.start) / Math.max(0.0001, bound.length));
+    const { phase, phaseProgress } = computePhase(raw, bound.beat);
+    const weight = transition
+      ? transitionWeights.get(bound.index) ?? 0
+      : bound.index === activeIndex
+        ? 1
+        : 0;
 
     return {
       beat: bound.beat,
@@ -129,17 +212,19 @@ export const computeOriginTimeline = (
       rawProgress: raw,
       localProgress: computeLocalProgress(raw, bound.beat),
       holdProgress: computeHoldProgress(raw, bound.beat),
-      weight: computeWeight(clampedProgress, bound),
+      phase,
+      phaseProgress,
+      weight,
     };
   });
 
-  const active = chapters.reduce((best, chapter) => (chapter.weight > best.weight ? chapter : best), chapters[0]);
-  const transition = computeTransitionState(clampedProgress, bounds);
-
   return {
-    progress: clampedProgress,
+    rawProgress: clampedRawProgress,
+    smoothedProgress: clampedSmoothedProgress,
     chapters,
-    activeIndex: active.index,
+    activeIndex,
+    adjacentIndex,
+    renderedChapterIndices,
     transition,
   };
 };

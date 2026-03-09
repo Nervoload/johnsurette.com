@@ -1,31 +1,5 @@
-export interface BlogPostSeed {
-  id: string;
-  title: string;
-  tag: string;
-  summary: string;
-  dateLabel: string;
-}
+import { blogPosts as publishedBlogPosts } from "../../content";
+import type { BlogPostEntry } from "../../content";
 
-export const blogPosts: BlogPostSeed[] = [
-  {
-    id: "narrative-interfaces",
-    title: "Designing Narrative Interfaces",
-    tag: "UX",
-    summary: "How scroll progression can guide understanding without overwhelming users.",
-    dateLabel: "Feb 2026",
-  },
-  {
-    id: "real-3d-decisions",
-    title: "When to Use Real 3D",
-    tag: "Engineering",
-    summary: "Choosing where 3D genuinely improves storytelling and where 2D depth cues are better.",
-    dateLabel: "Jan 2026",
-  },
-  {
-    id: "stable-motion-systems",
-    title: "Building Stable Motion Systems",
-    tag: "Architecture",
-    summary: "Patterns for reusable motion primitives that avoid fragile one-off animation logic.",
-    dateLabel: "Dec 2025",
-  },
-];
+export type BlogPostSeed = BlogPostEntry;
+export const blogPosts: BlogPostSeed[] = publishedBlogPosts;

@@ -1,11 +1,13 @@
 import React, { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ProjectItem } from "./projectData";
+import { ResolvedThemeMode } from "../theme/themeMode";
 
 interface ProjectExpandOverlayProps {
   item: ProjectItem | null;
   originPos: { x: number; y: number } | null;
   onClose: () => void;
+  themeMode: ResolvedThemeMode;
 }
 
 /**
@@ -34,7 +36,7 @@ const ProjectExpandOverlay: React.FC<ProjectExpandOverlayProps> = ({
           {/* ── Backdrop ───────────────────────────────── */}
           <motion.div
             key="overlay-backdrop"
-            className="fixed inset-0 z-[90] bg-black/30 backdrop-blur-sm"
+            className="theme-overlay-backdrop fixed inset-0 z-[90]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -52,7 +54,7 @@ const ProjectExpandOverlay: React.FC<ProjectExpandOverlayProps> = ({
             onClick={onClose}
           >
             <motion.div
-              className="relative w-full max-w-[720px] max-h-[82vh] overflow-y-auto rounded-3xl border border-slate-200/80 bg-white/95 shadow-2xl backdrop-blur-xl"
+              className="theme-overlay-panel relative max-h-[82vh] w-full max-w-[720px] overflow-y-auto rounded-3xl border backdrop-blur-xl"
               initial={{
                 scale: 0.25,
                 x: originPos.x - window.innerWidth / 2,
@@ -74,7 +76,7 @@ const ProjectExpandOverlay: React.FC<ProjectExpandOverlayProps> = ({
                 {/* Close button */}
                 <button
                   onClick={onClose}
-                  className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                  className="theme-overlay-close absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full transition"
                   aria-label="Close"
                 >
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -88,7 +90,7 @@ const ProjectExpandOverlay: React.FC<ProjectExpandOverlayProps> = ({
                 </button>
 
                 {/* Header */}
-                <p className="text-[11px] uppercase tracking-[0.24em] text-slate-500">
+                <p className="theme-text-subtle text-[11px] uppercase tracking-[0.24em]">
                   {item.subtitle}
                 </p>
                 <h3
@@ -99,10 +101,10 @@ const ProjectExpandOverlay: React.FC<ProjectExpandOverlayProps> = ({
                 </h3>
 
                 {/* Summary + details */}
-                <p className="mt-4 text-[15px] leading-relaxed text-slate-600">
+                <p className="theme-text-muted mt-4 text-[15px] leading-relaxed">
                   {item.summary}
                 </p>
-                <p className="mt-3 text-[14px] leading-relaxed text-slate-700">
+                <p className="theme-text-primary mt-3 text-[14px] leading-relaxed">
                   {item.details}
                 </p>
 
@@ -111,7 +113,7 @@ const ProjectExpandOverlay: React.FC<ProjectExpandOverlayProps> = ({
                   {item.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-medium text-slate-600"
+                      className="theme-chip-subtle rounded-full px-3 py-1 text-[11px] font-medium"
                     >
                       {tag}
                     </span>
@@ -124,7 +126,7 @@ const ProjectExpandOverlay: React.FC<ProjectExpandOverlayProps> = ({
                     {item.media.map((src, idx) => (
                       <div
                         key={`${item.id}-media-${idx}`}
-                        className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-100"
+                        className="theme-media-frame overflow-hidden rounded-2xl border"
                       >
                         <img
                           src={src}
@@ -146,7 +148,7 @@ const ProjectExpandOverlay: React.FC<ProjectExpandOverlayProps> = ({
                         href={link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="rounded-lg border border-slate-300 px-4 py-2 text-[13px] font-medium text-slate-700 transition hover:bg-slate-100"
+                        className="theme-pill-button rounded-lg border px-4 py-2 text-[13px] font-medium transition"
                       >
                         {link.label} ↗
                       </a>

@@ -1,3 +1,6 @@
+import { ShadowAssetId } from "../theme/shadowAssetRegistry";
+import { ShadowMode } from "../theme/shadowMode";
+
 export type PointerVector = {
   x: number;
   y: number;
@@ -9,4 +12,6 @@ export interface CenterpieceProps {
   hovering: boolean;
   pressed: boolean;
   introProgress: number;
+  shadowMode: ShadowMode;
+  shadowAssetId?: ShadowAssetId;
 }
