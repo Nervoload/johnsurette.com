@@ -3,6 +3,7 @@ import TypewriterTerminal from "./TypewriterTerminal";
 import { CenterpieceProps, PointerVector } from "./centerpieceTypes";
 import { ShadowAssetId } from "../theme/shadowAssetRegistry";
 import { ShadowMode } from "../theme/shadowMode";
+import { createCodexProbeAttributes } from "../../devtools/codexContext/probe";
 
 interface CenterpieceStageProps {
   activeSection: string | null;
@@ -21,6 +22,13 @@ const CenterpieceStage: React.FC<CenterpieceStageProps> = ({
   shadowMode,
   shadowAssetId = "heroCenterpiece",
 }) => {
+  const stageProbe = createCodexProbeAttributes({
+    componentName: "CenterpieceStage",
+    filePath: "/src/components/LandingComponents/CenterpieceStage.tsx",
+    componentPath: ["LandingPage", "LandingContent", "CenterpieceStage"],
+    role: "interactive-stage",
+  });
+
   const stageRef = useRef<HTMLDivElement>(null);
   const [pointer, setPointer] = useState<PointerVector>({ x: 0, y: 0 });
   const [hovering, setHovering] = useState(false);
@@ -57,7 +65,10 @@ const CenterpieceStage: React.FC<CenterpieceStageProps> = ({
   };
 
   return (
-    <div className="relative h-[clamp(220px,65vmin,720px)] w-[clamp(220px,65vmin,720px)] sm:h-[clamp(260px,74vmin,720px)] sm:w-[clamp(260px,74vmin,720px)]">
+    <div
+      {...stageProbe}
+      className="relative h-[clamp(220px,65vmin,720px)] w-[clamp(220px,65vmin,720px)] sm:h-[clamp(260px,74vmin,720px)] sm:w-[clamp(260px,74vmin,720px)]"
+    >
       <div
         ref={stageRef}
         className="relative h-full w-full touch-pan-y"

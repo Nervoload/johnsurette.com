@@ -13,6 +13,7 @@ export const canonicalizeRoutePath = (rawPath: string): string => {
 };
 
 export const internalNavigationPaths = ["/origin"] as const;
+export const disabledInternalNavigationPaths = ["/origin"] as const;
 
 // EDIT HERE: update the public site navigation and route metadata.
 export const navigationItems = [
@@ -36,6 +37,8 @@ export const navigationItems = [
     color: "#08ff94",
     path: "/about",
     description: "Personal timeline and milestones.",
+    navVisible: false,
+    routeEnabled: false,
   }),
   defineRoute({
     id: "contact",
@@ -52,3 +55,18 @@ export const navigationItems = [
     description: "Essays, notes, and experiments.",
   }),
 ] satisfies NavigationItem[];
+
+const disabledInternalRouteSet = new Set(disabledInternalNavigationPaths.map((path) => canonicalizeRoutePath(path)));
+
+export const enabledNavigationItems = navigationItems.filter((item) => item.routeEnabled !== false);
+export const visibleNavigationItems = enabledNavigationItems.filter((item) => item.navVisible !== false);
+export const enabledInternalNavigationPaths = internalNavigationPaths.filter(
+  (path) => !disabledInternalRouteSet.has(canonicalizeRoutePath(path)),
+);
+
+const enabledRouteSet = new Set([
+  ...enabledNavigationItems.map((item) => canonicalizeRoutePath(item.path)),
+  ...enabledInternalNavigationPaths.map((path) => canonicalizeRoutePath(path)),
+]);
+
+export const isRouteEnabled = (path: string): boolean => enabledRouteSet.has(canonicalizeRoutePath(path));

@@ -1,5 +1,6 @@
 import React, { RefObject, useRef } from "react";
 import Footer from "../Footer";
+import { createCodexProbeAttributes } from "../../devtools/codexContext/probe";
 
 export interface PageScaffoldProps {
   children: (scrollRef: RefObject<HTMLDivElement>) => React.ReactNode;
@@ -17,11 +18,19 @@ const PageScaffold: React.FC<PageScaffoldProps> = ({
   footerRunwayVh = 72,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const scaffoldProbe = createCodexProbeAttributes({
+    componentName: "PageScaffold",
+    filePath: "/src/components/layout/PageScaffold.tsx",
+    componentPath: ["PageScaffold"],
+    role: "scroll-container",
+  });
 
   return (
     <>
       <div
         ref={scrollRef}
+        {...scaffoldProbe}
+        data-codex-scroll-container="page-scaffold"
         className={`theme-page-bg relative h-[100svh] w-screen overflow-y-auto overflow-x-hidden ${backgroundClassName} ${
           scrollSnap ? "snap-y snap-mandatory" : ""
         }`}

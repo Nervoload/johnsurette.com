@@ -6,7 +6,7 @@ export const siteMeta = defineSiteMeta({
   ownerEmail: "johnmsurette@gmail.com",
   footerTagline: "Computational neuroscience researcher and full-stack engineer.",
   socialLinks: [
-    { label: "LinkedIn", href: "https://www.linkedin.com/in/johnmsurette" },
     { label: "GitHub", href: "https://github.com/Nervoload" },
+    { label: "LinkedIn", href: "https://www.linkedin.com/in/johnmsurette" },
   ],
 });

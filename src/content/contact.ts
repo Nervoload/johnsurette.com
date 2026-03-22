@@ -24,16 +24,6 @@ export const contactPageContent: ContactPageContent = defineContactPage({
   socialFeedSummary: "Primary public profiles plus a live GitHub activity snapshot.",
   socialPosts: [
     {
-      id: "linkedin-profile",
-      platform: "LinkedIn",
-      handle: "linkedin.com/in/johnmsurette",
-      publishedLabel: "Professional profile",
-      title: "LinkedIn",
-      excerpt: "Background, experience history, and broader professional profile.",
-      href: "https://www.linkedin.com/in/johnmsurette",
-      accentClassName: "bg-sky-700",
-    },
-    {
       id: "github-profile",
       platform: "GitHub",
       handle: "github.com/Nervoload",
@@ -46,6 +36,16 @@ export const contactPageContent: ContactPageContent = defineContactPage({
         username: "Nervoload",
         profileUrl: "https://github.com/Nervoload",
       },
+    },
+    {
+      id: "linkedin-profile",
+      platform: "LinkedIn",
+      handle: "linkedin.com/in/johnmsurette",
+      publishedLabel: "Professional profile",
+      title: "LinkedIn",
+      excerpt: "Background, experience history, and broader professional profile.",
+      href: "https://www.linkedin.com/in/johnmsurette",
+      accentClassName: "bg-sky-700",
     },
   ],
 });

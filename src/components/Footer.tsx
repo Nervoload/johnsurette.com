@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { siteMeta } from "../content";
+import {
+  removeRuntimeContextEntry,
+  upsertRuntimeContextEntry,
+} from "../devtools/codexContext/runtimeRegistry";
 
 export interface FooterProps {
   scrollContainerRef?: React.RefObject<HTMLElement>;
@@ -21,6 +25,7 @@ const Footer: React.FC<FooterProps> = ({
 }) => {
   const [isScrollable, setIsScrollable] = useState(false);
   const [footerProgress, setFooterProgress] = useState(0);
+  const footerVisible = isScrollable && footerProgress > 0.03;
 
   useEffect(() => {
     const container = scrollContainerRef?.current;
@@ -67,7 +72,42 @@ const Footer: React.FC<FooterProps> = ({
     };
   }, [scrollContainerRef, runwayVh]);
 
-  if (!isScrollable || footerProgress <= 0.03) {
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    const pagePath = window.location.pathname || "/";
+    const contextId = "site:footer-state";
+
+    if (!footerVisible) {
+      removeRuntimeContextEntry(pagePath, contextId);
+      return;
+    }
+
+    const peekProgress = clamp01(footerProgress / 0.35);
+    const panelProgress = clamp01((footerProgress - 0.32) / 0.68);
+
+    upsertRuntimeContextEntry({
+      pagePath,
+      id: contextId,
+      componentName: "Footer",
+      componentPath: ["App", "Footer"],
+      filePath: "/src/components/Footer.tsx",
+      role: "footer-shell",
+      metadata: {
+        isScrollable,
+        footerProgress: Number(footerProgress.toFixed(4)),
+        peekProgress: Number(peekProgress.toFixed(4)),
+        panelProgress: Number(panelProgress.toFixed(4)),
+        runwayVh,
+      },
+    });
+
+    return () => {
+      removeRuntimeContextEntry(pagePath, contextId);
+    };
+  }, [footerProgress, footerVisible, isScrollable, runwayVh]);
+
+  if (!footerVisible) {
     return null;
   }
 

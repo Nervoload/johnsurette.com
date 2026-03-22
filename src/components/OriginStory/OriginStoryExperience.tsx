@@ -22,6 +22,7 @@ import OriginExitControls from "./ui/OriginExitControls";
 import OriginHotspotLayer from "./ui/OriginHotspotLayer";
 import OriginNarrativeOverlay from "./ui/OriginNarrativeOverlay";
 import OriginSubsceneOverlay from "./ui/OriginSubsceneOverlay";
+import { removeRuntimeContextEntry, upsertRuntimeContextEntry } from "../../devtools/codexContext/runtimeRegistry";
 import {
   OriginAssetCreditEntry,
   OriginBeatDefinition,
@@ -50,6 +51,8 @@ const dprByTier: Record<OriginQualityTier, [number, number]> = {
   balanced: [1, 1.6],
   ultra: [1.2, 2],
 };
+
+const ORIGIN_RUNTIME_CONTEXT_ID = "origin:story-runtime";
 
 const mixVector3 = (
   from: [number, number, number],
@@ -305,6 +308,78 @@ const OriginStoryExperience: React.FC<OriginStoryExperienceProps> = ({
       .map((id) => originAssetCreditsById[id])
       .filter(Boolean);
   }, [activeChapter.beat.assetSlot, blendToChapter, stageTransition]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) {
+      return;
+    }
+
+    upsertRuntimeContextEntry({
+      pagePath: "/origin",
+      id: ORIGIN_RUNTIME_CONTEXT_ID,
+      componentName: "OriginStoryExperience",
+      componentPath: ["OriginStoryPage", "OriginStoryExperience"],
+      filePath: "/src/components/OriginStory/OriginStoryExperience.tsx",
+      role: "story-runtime",
+      metadata: {
+        activeBeatId: activeChapter.beat.id,
+        chapterLabel: activeChapter.beat.chapterLabel,
+        chapterIndex: timeline.activeIndex,
+        chapterProgress: Number(activeChapter.localProgress.toFixed(4)),
+        holdProgress: Number(activeChapter.holdProgress.toFixed(4)),
+        timelineProgress: Number(timeline.smoothedProgress.toFixed(4)),
+        phase: activeChapter.phase,
+        phaseProgress: Number(activeChapter.phaseProgress.toFixed(4)),
+        renderedChapterIndices,
+        transition: stageTransition
+          ? {
+              fromId: stageTransition.fromId,
+              toId: stageTransition.toId,
+              boundaryIndex: stageTransition.boundaryIndex,
+              progress: Number(stageTransition.progress.toFixed(4)),
+              sceneMix: Number(stageTransition.sceneMix.toFixed(4)),
+              cameraMix: Number(stageTransition.cameraMix.toFixed(4)),
+              direction: stageTransition.direction,
+              adjacentIndex: stageTransition.adjacentIndex,
+            }
+          : null,
+        hotspotState: {
+          activeHotspotId,
+          activeSubsceneId: activeSubscene?.definition.id ?? null,
+          subsceneBeatId: activeSubscene?.beatId ?? null,
+          subsceneMode: activeSubscene?.mode ?? null,
+          subsceneProgress: activeSubscene ? Number(activeSubscene.progress.toFixed(4)) : null,
+        },
+        creditsOpen,
+        creditCount: activeCredits.length,
+        assetSlot: activeChapter.beat.assetSlot,
+        qualityTier: tier,
+        qualityFactor: Number(qualityFactor.toFixed(4)),
+      },
+    });
+
+    return () => {
+      removeRuntimeContextEntry("/origin", ORIGIN_RUNTIME_CONTEXT_ID);
+    };
+  }, [
+    activeChapter.beat.assetSlot,
+    activeChapter.beat.chapterLabel,
+    activeChapter.beat.id,
+    activeChapter.holdProgress,
+    activeChapter.localProgress,
+    activeChapter.phase,
+    activeChapter.phaseProgress,
+    activeCredits.length,
+    activeHotspotId,
+    activeSubscene,
+    creditsOpen,
+    qualityFactor,
+    renderedChapterIndices,
+    stageTransition,
+    tier,
+    timeline.activeIndex,
+    timeline.smoothedProgress,
+  ]);
 
   const environmentUrl = useMemo(() => {
     if (!stageTransition || !blendToChapter) {

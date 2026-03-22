@@ -7,7 +7,15 @@ import {
   landingStory,
   landingStoryTransitions,
 } from "./landing";
-import { canonicalizeRoutePath, internalNavigationPaths, navigationItems } from "./navigation";
+import {
+  canonicalizeRoutePath,
+  enabledInternalNavigationPaths,
+  enabledNavigationItems,
+  internalNavigationPaths,
+  isRouteEnabled,
+  navigationItems,
+  visibleNavigationItems,
+} from "./navigation";
 import { projects, projectsPageContent } from "./projects";
 import { siteMeta } from "./site";
 import { pageVisuals } from "./visuals";
@@ -32,8 +40,11 @@ export {
   blogPageContent,
   blogPosts,
   canonicalizeRoutePath,
+  enabledInternalNavigationPaths,
+  enabledNavigationItems,
   contactPageContent,
   internalNavigationPaths,
+  isRouteEnabled,
   landingConclusionContent,
   landingOriginLabContent,
   landingStory,
@@ -44,6 +55,7 @@ export {
   projectsPageContent,
   siteMeta,
   timelineEntries,
+  visibleNavigationItems,
 };
 
 export * from "./types";

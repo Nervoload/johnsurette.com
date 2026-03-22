@@ -7,6 +7,12 @@ import {
   BackgroundInteractionMode,
   BackgroundQualityPreset,
 } from "./types";
+import {
+  removeRuntimeContextEntry,
+  upsertRuntimeContextEntry,
+} from "../../../devtools/codexContext/runtimeRegistry";
+
+const BACKGROUND_EFFECT_HOST_CONTEXT_ID = "landing:background-effect-host";
 
 export interface BackgroundEffectHostProps {
   effectId?: BackgroundEffectId;
@@ -58,6 +64,36 @@ const BackgroundEffectHost: React.FC<BackgroundEffectHostProps> = ({
     : requestedEntry;
 
   const ActiveComponent = activeEntry.component;
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    const pagePath = window.location.pathname || "/";
+
+    upsertRuntimeContextEntry({
+      pagePath,
+      id: BACKGROUND_EFFECT_HOST_CONTEXT_ID,
+      componentName: "BackgroundEffectHost",
+      componentPath: ["LandingPage", "DepthRainBackdrop", "BackgroundEffectHost"],
+      filePath: "/src/components/LandingComponents/backgroundEffects/BackgroundEffectHost.tsx",
+      role: "backdrop-effect",
+      metadata: {
+        requestedEffectId: requestedId,
+        resolvedEffectId: activeEntry.id,
+        effectLabel: activeEntry.label,
+        interactionMode,
+        quality: resolvedQuality,
+        styleSeed,
+        reducedMotion,
+        supportsWebGL,
+        fallbackEffectId: requestedEntry.requiresWebGL && !supportsWebGL ? backgroundEffectRegistry.bioticParticles.id : null,
+      },
+    });
+
+    return () => {
+      removeRuntimeContextEntry(pagePath, BACKGROUND_EFFECT_HOST_CONTEXT_ID);
+    };
+  }, [activeEntry.id, activeEntry.label, interactionMode, reducedMotion, requestedEntry.requiresWebGL, requestedId, resolvedQuality, styleSeed, supportsWebGL]);
 
   return (
     <ActiveComponent

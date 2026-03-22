@@ -6,12 +6,20 @@ import ProjectExpandOverlay from "../components/Projects/ProjectExpandOverlay";
 import { ProjectItem, projectItems } from "../components/Projects/projectData";
 import PageScaffold from "../components/layout/PageScaffold";
 import { ResolvedThemeMode } from "../components/theme/themeMode";
+import { createCodexProbeAttributes } from "../devtools/codexContext/probe";
 
 export interface ProjectsPageProps {
   themeMode: ResolvedThemeMode;
 }
 
 const ProjectsPage: React.FC<ProjectsPageProps> = ({ themeMode }) => {
+  const projectsPageProbe = createCodexProbeAttributes({
+    componentName: "ProjectsPage",
+    filePath: "/src/pages/ProjectsPage.tsx",
+    componentPath: ["ProjectsPage"],
+    role: "page",
+  });
+
   const [bootLowPower, setBootLowPower] = useState(true);
   const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
   const [originPos, setOriginPos] = useState<{ x: number; y: number } | null>(null);
@@ -45,7 +53,7 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({ themeMode }) => {
       footerRunwayVh={projectVisuals.footerRunwayVh}
     >
       {(scrollRef) => (
-        <div className="relative isolate">
+        <div {...projectsPageProbe} className="relative isolate">
           <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
             <div className="sticky top-0 h-[100svh]">
               <DepthRainBackdrop

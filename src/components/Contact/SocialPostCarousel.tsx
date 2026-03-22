@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useTouchSwipe } from "../../hooks/useTouchSwipe";
 import { useGithubActivity } from "./useGithubActivity";
+import { removeRuntimeContextEntry, upsertRuntimeContextEntry } from "../../devtools/codexContext/runtimeRegistry";
 
 export interface SocialPostGithubConfig {
   username: string;
@@ -248,6 +249,7 @@ const SocialPostCarousel: React.FC<SocialPostCarouselProps> = ({ posts, autoAdva
   const [isPaused, setIsPaused] = useState(false);
 
   const hasPosts = posts.length > 0;
+  const activePost = hasPosts ? posts[Math.min(activeIndex, posts.length - 1)] : null;
 
   const goTo = (index: number) => {
     if (!hasPosts) return;
@@ -282,6 +284,34 @@ const SocialPostCarousel: React.FC<SocialPostCarouselProps> = ({ posts, autoAdva
     if (!hasPosts) return "No cards";
     return `${activeIndex + 1} of ${posts.length}`;
   }, [activeIndex, hasPosts, posts.length]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) {
+      return;
+    }
+
+    upsertRuntimeContextEntry({
+      pagePath: "/contact",
+      id: "contact:social-carousel",
+      componentName: "SocialPostCarousel",
+      componentPath: ["ContactPage", "SocialPostCarousel"],
+      filePath: "/src/components/Contact/SocialPostCarousel.tsx",
+      role: "social-carousel",
+      metadata: {
+        activeIndex,
+        activePostId: activePost?.id ?? null,
+        activePostTitle: activePost?.title ?? null,
+        activePostPlatform: activePost?.platform ?? null,
+        postCount: posts.length,
+        isPaused,
+        cardVariant: activePost?.github ? "github" : "default",
+      },
+    });
+
+    return () => {
+      removeRuntimeContextEntry("/contact", "contact:social-carousel");
+    };
+  }, [activeIndex, activePost, isPaused, posts.length]);
 
   if (!hasPosts) {
     return <div className="theme-border-subtle theme-text-muted border-t py-8">No profiles or activity cards yet.</div>;

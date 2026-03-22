@@ -4,6 +4,10 @@ import { SiteRoute } from "../sections";
 import { WipeOptions } from "../Transitions/TransitionWipe";
 import { useIsTouch } from "../../hooks/usePointerDevice";
 import { ResolvedThemeMode } from "../theme/themeMode";
+import {
+  removeRuntimeContextEntry,
+  upsertRuntimeContextEntry,
+} from "../../devtools/codexContext/runtimeRegistry";
 
 export interface NavBarProps {
   routes: SiteRoute[];
@@ -69,6 +73,30 @@ const NavBar: React.FC<NavBarProps> = ({
   useEffect(() => {
     setOpen(false);
   }, [currentPath]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    const contextId = "site:navigation-state";
+    upsertRuntimeContextEntry({
+      pagePath: currentPath,
+      id: contextId,
+      componentName: "NavBar",
+      componentPath: ["App", "NavBar"],
+      filePath: "/src/components/NavBar/NavBar.tsx",
+      role: "navigation-shell",
+      metadata: {
+        currentPath,
+        open,
+        visible,
+        isTouch,
+      },
+    });
+
+    return () => {
+      removeRuntimeContextEntry(currentPath, contextId);
+    };
+  }, [currentPath, isTouch, open, visible]);
 
   // Close nav on outside tap (touch only)
   const handleBackdropTap = useCallback(() => {

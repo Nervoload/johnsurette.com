@@ -4,12 +4,20 @@ import DotFieldGlobeBackground from "../components/visuals/DotFieldGlobeBackgrou
 import SocialPostCarousel from "../components/Contact/SocialPostCarousel";
 import PageScaffold from "../components/layout/PageScaffold";
 import { ResolvedThemeMode } from "../components/theme/themeMode";
+import { createCodexProbeAttributes } from "../devtools/codexContext/probe";
 
 export interface ContactPageProps {
   themeMode: ResolvedThemeMode;
 }
 
 const ContactPage: React.FC<ContactPageProps> = ({ themeMode }) => {
+  const contactPageProbe = createCodexProbeAttributes({
+    componentName: "ContactPage",
+    filePath: "/src/pages/ContactPage.tsx",
+    componentPath: ["ContactPage"],
+    role: "page",
+  });
+
   const emailAddress = siteMeta.ownerEmail;
   const [copyStatus, setCopyStatus] = useState<"idle" | "success" | "error">("idle");
 
@@ -48,7 +56,10 @@ const ContactPage: React.FC<ContactPageProps> = ({ themeMode }) => {
       footerRunwayVh={pageVisuals.contact.footerRunwayVh}
     >
       {() => (
-        <section className="theme-text-primary relative min-h-[100dvh] w-full overflow-hidden px-4 pb-24 pt-24 xs:px-6">
+        <section
+          {...contactPageProbe}
+          className="theme-text-primary relative min-h-[100dvh] w-full overflow-hidden px-4 pb-24 pt-24 xs:px-6"
+        >
           <div className="pointer-events-none absolute inset-0">
             <DotFieldGlobeBackground
               pointCount={pageVisuals.contact.dotFieldPointCount ?? 240}

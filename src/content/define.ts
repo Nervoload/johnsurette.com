@@ -54,6 +54,8 @@ export const defineRoute = (input: NavigationItem): NavigationItem => {
     path: trim(input.path),
     color: trim(input.color),
     description: trim(input.description),
+    navVisible: input.navVisible ?? true,
+    routeEnabled: input.routeEnabled ?? true,
   };
 };
 
@@ -165,6 +167,7 @@ export const defineOriginLabContent = (input: LandingOriginLabContent): LandingO
   summary: trim(input.summary),
   ctaLabel: trim(input.ctaLabel),
   ctaPath: trim(input.ctaPath),
+  isVisible: input.isVisible ?? true,
 });
 
 export const defineLandingConclusion = (input: LandingConclusionContent): LandingConclusionContent => ({

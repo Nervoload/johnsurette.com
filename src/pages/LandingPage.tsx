@@ -14,6 +14,7 @@ import { WipeOptions } from "../components/Transitions/TransitionWipe";
 import { useIsTouch } from "../hooks/usePointerDevice";
 import PageScaffold from "../components/layout/PageScaffold";
 import { ShadowMode } from "../components/theme/shadowMode";
+import { createCodexProbeAttributes } from "../devtools/codexContext/probe";
 
 export type LandingEntryTarget = "hero" | "conclusion";
 
@@ -45,6 +46,13 @@ const LandingContent: React.FC<LandingContentProps> = ({
   entryTarget,
   entryNonce,
 }) => {
+  const landingContentProbe = createCodexProbeAttributes({
+    componentName: "LandingContent",
+    filePath: "/src/pages/LandingPage.tsx",
+    componentPath: ["LandingPage", "LandingContent"],
+    role: "page-content",
+  });
+
   const landingVisuals = pageVisuals.landing;
   const activeCenterpieceEntry = centerpieceRegistry[landingVisuals.centerpieceId ?? "waveOrb"];
   const ActiveCenterpiece = activeCenterpieceEntry.component;
@@ -106,7 +114,7 @@ const LandingContent: React.FC<LandingContentProps> = ({
   };
 
   return (
-    <div className="relative isolate">
+    <div {...landingContentProbe} className="relative isolate">
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
         <div className="sticky top-0 h-[100dvh]">
           <DepthRainBackdrop
@@ -136,24 +144,26 @@ const LandingContent: React.FC<LandingContentProps> = ({
           </div>
         </section>
 
-        <section className="relative flex min-h-[72dvh] items-center justify-center px-5 text-center">
-          <div className="theme-surface-elevated max-w-3xl rounded-[2rem] px-8 py-10 backdrop-blur-xl">
-            <p className="theme-text-subtle text-xs uppercase tracking-[0.24em]">{landingOriginLabContent.eyebrow}</p>
-            <h2 className="theme-text-primary mt-4 text-2xl font-semibold sm:text-4xl">
-              {landingOriginLabContent.title}
-            </h2>
-            <p className="theme-text-muted mt-4 text-base leading-relaxed">{landingOriginLabContent.summary}</p>
-            <div className="mt-7 flex justify-center">
-              <button
-                type="button"
-                onClick={handleOpenOriginLab}
-                className="theme-cta-button rounded-full px-6 py-3 text-sm font-medium uppercase tracking-[0.12em] transition hover:scale-[1.02]"
-              >
-                {landingOriginLabContent.ctaLabel}
-              </button>
+        {landingOriginLabContent.isVisible !== false && (
+          <section className="relative flex min-h-[72dvh] items-center justify-center px-5 text-center">
+            <div className="theme-surface-elevated max-w-3xl rounded-[2rem] px-8 py-10 backdrop-blur-xl">
+              <p className="theme-text-subtle text-xs uppercase tracking-[0.24em]">{landingOriginLabContent.eyebrow}</p>
+              <h2 className="theme-text-primary mt-4 text-2xl font-semibold sm:text-4xl">
+                {landingOriginLabContent.title}
+              </h2>
+              <p className="theme-text-muted mt-4 text-base leading-relaxed">{landingOriginLabContent.summary}</p>
+              <div className="mt-7 flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleOpenOriginLab}
+                  className="theme-cta-button rounded-full px-6 py-3 text-sm font-medium uppercase tracking-[0.12em] transition hover:scale-[1.02]"
+                >
+                  {landingOriginLabContent.ctaLabel}
+                </button>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         <div ref={conclusionSectionRef}>
           <LandingConclusionSection onNavigate={onNavigate} />

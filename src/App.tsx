@@ -3,7 +3,9 @@ import { motion, useReducedMotion } from "framer-motion";
 import NavBar from "./components/NavBar/NavBar";
 import TransitionWipe, { TransitionHandle, WipeOptions } from "./components/Transitions/TransitionWipe";
 import { SiteRoute, normalizeRoute, siteRoutes } from "./components/sections";
+import { canonicalizeRoutePath, isRouteEnabled } from "./content";
 import { useThemeMode } from "./components/theme/useThemeMode";
+import CodexContextInspector from "./devtools/codexContext/CodexContextInspector";
 
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const OriginStoryPage = lazy(() => import("./pages/OriginStoryPage"));
@@ -19,8 +21,9 @@ const ORIGIN_DEV_ROUTE: SiteRoute = {
   path: "/origin",
   color: "#22d3ee",
 };
-const transitionRoutes: SiteRoute[] = [...siteRoutes, ORIGIN_DEV_ROUTE];
-const HEAVY_TRANSITION_ROUTES = new Set(["/", "/projects", "/origin"]);
+const originRouteEnabled = isRouteEnabled("/origin");
+const transitionRoutes: SiteRoute[] = originRouteEnabled ? [...siteRoutes, ORIGIN_DEV_ROUTE] : [...siteRoutes];
+const HEAVY_TRANSITION_ROUTES = new Set(originRouteEnabled ? ["/", "/projects", "/origin"] : ["/", "/projects"]);
 
 const routeIndexMap = new Map<string, number>(
   transitionRoutes.map((route, index) => [normalizeRoute(route.path), index]),
@@ -75,7 +78,7 @@ function App() {
   const wipeRef = useRef<TransitionHandle>(null);
 
   const navRoutes = useMemo<SiteRoute[]>(
-    () => (import.meta.env.DEV ? [...siteRoutes, ORIGIN_DEV_ROUTE] : siteRoutes),
+    () => (import.meta.env.DEV && originRouteEnabled ? [...siteRoutes, ORIGIN_DEV_ROUTE] : siteRoutes),
     [],
   );
 
@@ -106,6 +109,9 @@ function App() {
 
   const navigate = useCallback(
     (targetPath: string, opts?: WipeOptions): boolean => {
+      const requestedPath = canonicalizeRoutePath(targetPath);
+      if (requestedPath !== "/" && !isRouteEnabled(requestedPath)) return false;
+
       const nextPath = normalizeRoute(targetPath);
       if (nextPath === pathRef.current || navigationLockRef.current) return false;
 
@@ -278,6 +284,7 @@ function App() {
           {pageNode}
         </motion.main>
       </Suspense>
+      {import.meta.env.DEV ? <CodexContextInspector currentPath={path} /> : null}
     </div>
   );
 }

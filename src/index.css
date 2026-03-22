@@ -530,6 +530,107 @@
   border-color: var(--theme-about-checkpoint-row-border);
 }
 
+.theme-about-story-backdrop {
+  background:
+    radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--theme-accent) 18%, transparent), transparent 34%),
+    radial-gradient(circle at 82% 16%, color-mix(in srgb, #c084fc 16%, transparent), transparent 28%),
+    linear-gradient(180deg, color-mix(in srgb, var(--theme-bg-root) 92%, white 8%), var(--theme-bg-root));
+}
+
+.theme-about-story-haze {
+  background:
+    radial-gradient(circle at 48% 52%, rgba(255, 255, 255, 0.34), transparent 46%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 34%, transparent 68%, rgba(255, 255, 255, 0.08));
+  mix-blend-mode: screen;
+}
+
+[data-theme="dark"] .theme-about-story-haze {
+  background:
+    radial-gradient(circle at 48% 52%, rgba(103, 232, 249, 0.08), transparent 46%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 34%, transparent 68%, rgba(255, 255, 255, 0.02));
+  mix-blend-mode: normal;
+}
+
+.theme-about-story-grid {
+  background-image:
+    linear-gradient(rgba(125, 211, 252, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+  background-size: 38px 38px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.08) 24%, transparent 72%);
+}
+
+.theme-about-story-panel {
+  background: color-mix(in srgb, var(--theme-bg-elevated) 88%, white 12%);
+  border-color: color-mix(in srgb, var(--theme-border-subtle) 88%, white 12%);
+  box-shadow: 0 28px 84px -56px rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(18px);
+}
+
+[data-theme="dark"] .theme-about-story-panel {
+  background: color-mix(in srgb, var(--theme-bg-elevated) 92%, black 8%);
+  box-shadow: 0 32px 96px -62px rgba(2, 6, 23, 0.92);
+}
+
+.theme-about-story-chip {
+  background: color-mix(in srgb, var(--theme-pill-bg) 88%, white 12%);
+  border-color: color-mix(in srgb, var(--theme-pill-border) 92%, white 8%);
+  color: var(--theme-pill-text);
+}
+
+.theme-about-story-timeline {
+  background: color-mix(in srgb, var(--theme-bg-elevated) 86%, white 14%);
+  border-color: color-mix(in srgb, var(--theme-border-subtle) 90%, white 10%);
+  box-shadow: 0 28px 96px -68px rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(20px);
+}
+
+[data-theme="dark"] .theme-about-story-timeline {
+  background: color-mix(in srgb, var(--theme-bg-elevated) 92%, black 8%);
+  box-shadow: 0 34px 108px -68px rgba(2, 6, 23, 0.94);
+}
+
+.theme-about-story-timeline-prominent {
+  border-radius: 999px;
+}
+
+.theme-about-story-timeline-button,
+.theme-about-story-rail-button,
+.theme-about-story-branch-button {
+  color: var(--theme-text-muted);
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease, border-color 160ms ease;
+}
+
+.theme-about-story-timeline-button:hover,
+.theme-about-story-rail-button:hover,
+.theme-about-story-branch-button:hover {
+  background: color-mix(in srgb, var(--theme-pill-hover-bg) 82%, transparent);
+  color: var(--theme-text-primary);
+  transform: translateY(-1px);
+}
+
+.theme-about-story-branch-button {
+  background: color-mix(in srgb, var(--theme-bg-surface) 82%, white 18%);
+  border-color: color-mix(in srgb, var(--theme-border-subtle) 88%, white 12%);
+}
+
+[data-theme="dark"] .theme-about-story-branch-button {
+  background: color-mix(in srgb, var(--theme-bg-surface) 94%, black 6%);
+}
+
+.theme-about-story-branch-host {
+  background: color-mix(in srgb, var(--theme-bg-surface) 72%, transparent);
+  border-color: color-mix(in srgb, var(--theme-border-subtle) 80%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.theme-about-story-debug {
+  background: rgba(2, 6, 23, 0.84);
+  border-color: rgba(125, 211, 252, 0.22);
+  color: #dbeafe;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 80px -52px rgba(2, 6, 23, 0.94);
+}
+
 .theme-cta-button {
   background: #0f172a;
   color: #e0f2fe;

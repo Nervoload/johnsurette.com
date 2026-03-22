@@ -4,6 +4,9 @@ import StoryboardSection from "./StoryboardSection";
 import ProjectIntroSequence from "./ProjectIntroSequence";
 import { ProjectItem } from "./projectData";
 import { ResolvedThemeMode } from "../theme/themeMode";
+import { createCodexProbeAttributes } from "../../devtools/codexContext/probe";
+import { upsertRuntimeContextEntry, removeRuntimeContextEntry } from "../../devtools/codexContext/runtimeRegistry";
+import { getProjectStoryboardPhaseLabel } from "./storyboardPhase";
 
 export interface ProjectStoryboardProps {
   scrollContainer: RefObject<HTMLDivElement>;
@@ -55,10 +58,18 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   forceLowPower = false,
   themeMode,
 }) => {
+  const storyboardProbe = createCodexProbeAttributes({
+    componentName: "ProjectStoryboard",
+    filePath: "/src/components/Projects/ProjectStoryboard.tsx",
+    componentPath: ["ProjectsPage", "ProjectStoryboard"],
+    role: "storyboard",
+  });
+
   const sceneRef = useRef<HTMLDivElement>(null);
   const rawRef = useRef(0);
   const snapFramesRef = useRef(0);
   const storyboardHeight = getStoryboardHeight(items.length);
+  const runtimeContextId = "projects:storyboard-scroll";
 
   const timelineProgress = useMotionValue(0);
 
@@ -71,6 +82,32 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
 
   useMotionValueEvent(scrollYProgress, "change", (value) => {
     rawRef.current = value;
+    if (!import.meta.env.DEV) return;
+
+    const raw = clamp01(value);
+    const mapped = remapProgress(raw, items.length);
+    const container = scrollContainer.current;
+    const maxScrollTop = Math.max(0, (container?.scrollHeight ?? 0) - (container?.clientHeight ?? 0));
+
+    upsertRuntimeContextEntry({
+      pagePath: "/projects",
+      id: runtimeContextId,
+      componentName: "ProjectStoryboard",
+      componentPath: ["ProjectsPage", "ProjectStoryboard"],
+      filePath: "/src/components/Projects/ProjectStoryboard.tsx",
+      role: "storyboard-scroll",
+      metadata: {
+        rawScrollProgress: Number(raw.toFixed(4)),
+        timelineProgress: Number(mapped.toFixed(4)),
+        phase: getProjectStoryboardPhaseLabel(mapped),
+        storyboardHeightVh: storyboardHeight,
+        itemCount: items.length,
+        forceLowPower,
+        scrollTop: Math.round(container?.scrollTop ?? 0),
+        maxScrollTop: Math.round(maxScrollTop),
+        containerScrollProgress: maxScrollTop > 0 ? Number(clamp01((container?.scrollTop ?? 0) / maxScrollTop).toFixed(4)) : 0,
+      },
+    });
   });
 
   const syncTimelineToScroll = useCallback(() => {
@@ -84,6 +121,39 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   useEffect(() => {
     syncTimelineToScroll();
   }, [syncTimelineToScroll]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    const raw = clamp01(scrollYProgress.get());
+    const mapped = remapProgress(raw, items.length);
+    const container = scrollContainer.current;
+    const maxScrollTop = Math.max(0, (container?.scrollHeight ?? 0) - (container?.clientHeight ?? 0));
+
+    upsertRuntimeContextEntry({
+      pagePath: "/projects",
+      id: runtimeContextId,
+      componentName: "ProjectStoryboard",
+      componentPath: ["ProjectsPage", "ProjectStoryboard"],
+      filePath: "/src/components/Projects/ProjectStoryboard.tsx",
+      role: "storyboard-scroll",
+      metadata: {
+        rawScrollProgress: Number(raw.toFixed(4)),
+        timelineProgress: Number(mapped.toFixed(4)),
+        phase: getProjectStoryboardPhaseLabel(mapped),
+        storyboardHeightVh: storyboardHeight,
+        itemCount: items.length,
+        forceLowPower,
+        scrollTop: Math.round(container?.scrollTop ?? 0),
+        maxScrollTop: Math.round(maxScrollTop),
+        containerScrollProgress: maxScrollTop > 0 ? Number(clamp01((container?.scrollTop ?? 0) / maxScrollTop).toFixed(4)) : 0,
+      },
+    });
+
+    return () => {
+      removeRuntimeContextEntry("/projects", runtimeContextId);
+    };
+  }, [forceLowPower, items.length, runtimeContextId, scrollContainer, scrollYProgress, storyboardHeight]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -140,7 +210,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   });
 
   return (
-    <div ref={sceneRef}>
+    <div ref={sceneRef} {...storyboardProbe}>
       <StoryboardSection
         progress={timelineProgress}
         height={storyboardHeight}

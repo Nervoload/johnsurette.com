@@ -2,15 +2,23 @@ import React from "react";
 import { blogPageContent, pageVisuals } from "../content";
 import PageScaffold from "../components/layout/PageScaffold";
 import { blogPosts } from "../components/Blog/blogPosts";
+import { createCodexProbeAttributes } from "../devtools/codexContext/probe";
 
 const BlogPage: React.FC = () => {
+  const blogPageProbe = createCodexProbeAttributes({
+    componentName: "BlogPage",
+    filePath: "/src/pages/BlogPage.tsx",
+    componentPath: ["BlogPage"],
+    role: "page",
+  });
+
   return (
     <PageScaffold
       backgroundClassName={pageVisuals.blog.backgroundClassName}
       footerBackgroundColor={pageVisuals.blog.footerBackgroundColor}
     >
       {() => (
-        <section className="theme-text-primary relative min-h-[100dvh] w-full pb-24 pt-24">
+        <section {...blogPageProbe} className="theme-text-primary relative min-h-[100dvh] w-full pb-24 pt-24">
           <div className="mx-auto w-full max-w-5xl px-6">
             <header className="max-w-3xl">
               <p className="theme-text-subtle text-xs uppercase tracking-[0.24em]">{blogPageContent.eyebrow}</p>

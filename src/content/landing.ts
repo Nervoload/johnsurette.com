@@ -114,6 +114,7 @@ export const landingOriginLabContent: LandingOriginLabContent = defineOriginLabC
   summary: "From particles to galaxies, this is a dedicated immersive stage rendered on a separate route.",
   ctaLabel: "Open Origin Lab",
   ctaPath: "/origin",
+  isVisible: false,
 });
 
 export const landingConclusionContent: LandingConclusionContent = defineLandingConclusion({

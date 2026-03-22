@@ -23,6 +23,8 @@ export interface NavigationItem {
   path: string;
   color: string;
   description: string;
+  navVisible?: boolean;
+  routeEnabled?: boolean;
 }
 
 export interface ProjectLink {
@@ -107,6 +109,7 @@ export interface LandingOriginLabContent {
   summary: string;
   ctaLabel: string;
   ctaPath: string;
+  isVisible?: boolean;
 }
 
 export interface LandingConclusionContent {

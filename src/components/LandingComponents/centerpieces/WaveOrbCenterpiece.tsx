@@ -6,6 +6,7 @@ import { sections } from "../../sections";
 import { CenterpieceProps } from "../centerpieceTypes";
 import CanvasErrorBoundary from "../../CanvasErrorBoundary";
 import { getShadowAssetConfig, resolveShadowGlowColor } from "../../theme/shadowAssetRegistry";
+import { removeRuntimeContextEntry, upsertRuntimeContextEntry } from "../../../devtools/codexContext/runtimeRegistry";
 
 interface Palette {
   baseHex: string;
@@ -34,6 +35,7 @@ interface PlasmaStream {
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 const smoothStep = (value: number) => value * value * (3 - 2 * value);
+const WAVE_ORB_RUNTIME_CONTEXT_ID = "landing:wave-orb-centerpiece";
 
 const randomUnitVector = (): THREE.Vector3 => {
   const z = Math.random() * 2 - 1;
@@ -680,6 +682,54 @@ const WaveOrbCenterpiece: React.FC<CenterpieceProps> = ({ activeSection, ...rest
       deepColor,
     };
   }, [activeSection]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) {
+      return;
+    }
+
+    upsertRuntimeContextEntry({
+      pagePath: "/",
+      id: WAVE_ORB_RUNTIME_CONTEXT_ID,
+      componentName: "WaveOrbCenterpiece",
+      componentPath: ["LandingPage", "LandingContent", "CenterpieceStage", "WaveOrbCenterpiece"],
+      filePath: "/src/components/LandingComponents/centerpieces/WaveOrbCenterpiece.tsx",
+      role: "centerpiece-runtime",
+      metadata: {
+        centerpieceId: "waveOrb",
+        sectionLabel: activeSection ?? "hero",
+        introProgress: Number(rest.introProgress.toFixed(4)),
+        interactionState: {
+          hovering: rest.hovering,
+          pressed: rest.pressed,
+          shadowMode: rest.shadowMode,
+        },
+        palette: {
+          baseHex: palette.baseHex,
+          glowHex: palette.glowHex,
+          accentHex: palette.accentHex,
+          deepHex: palette.deepHex,
+        },
+        labels: ["coreOrb", "formationSwarm", "coronaDust", "plasmaStreams"],
+        shadowAssetId: rest.shadowAssetId ?? "heroCenterpiece",
+      },
+    });
+
+    return () => {
+      removeRuntimeContextEntry("/", WAVE_ORB_RUNTIME_CONTEXT_ID);
+    };
+  }, [
+    activeSection,
+    palette.accentHex,
+    palette.baseHex,
+    palette.deepHex,
+    palette.glowHex,
+    rest.hovering,
+    rest.introProgress,
+    rest.pressed,
+    rest.shadowAssetId,
+    rest.shadowMode,
+  ]);
 
   return (
     <CanvasErrorBoundary>

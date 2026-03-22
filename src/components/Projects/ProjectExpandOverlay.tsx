@@ -2,6 +2,8 @@ import React, { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ProjectItem } from "./projectData";
 import { ResolvedThemeMode } from "../theme/themeMode";
+import { createCodexProbeAttributes } from "../../devtools/codexContext/probe";
+import { removeRuntimeContextEntry, upsertRuntimeContextEntry } from "../../devtools/codexContext/runtimeRegistry";
 
 interface ProjectExpandOverlayProps {
   item: ProjectItem | null;
@@ -9,6 +11,8 @@ interface ProjectExpandOverlayProps {
   onClose: () => void;
   themeMode: ResolvedThemeMode;
 }
+
+const PROJECT_EXPAND_RUNTIME_CONTEXT_ID = "projects:expand-overlay";
 
 /**
  * Pure-DOM overlay that expands from a 3D card's screen position.
@@ -18,6 +22,7 @@ const ProjectExpandOverlay: React.FC<ProjectExpandOverlayProps> = ({
   item,
   originPos,
   onClose,
+  themeMode,
 }) => {
   /* Close on Escape key */
   useEffect(() => {
@@ -29,6 +34,55 @@ const ProjectExpandOverlay: React.FC<ProjectExpandOverlayProps> = ({
     return () => window.removeEventListener("keydown", handler);
   }, [item, onClose]);
 
+  useEffect(() => {
+    if (!import.meta.env.DEV || !item || !originPos) {
+      if (import.meta.env.DEV) {
+        removeRuntimeContextEntry("/projects", PROJECT_EXPAND_RUNTIME_CONTEXT_ID);
+      }
+      return;
+    }
+
+    upsertRuntimeContextEntry({
+      pagePath: "/projects",
+      id: PROJECT_EXPAND_RUNTIME_CONTEXT_ID,
+      componentName: "ProjectExpandOverlay",
+      componentPath: ["ProjectsPage", "ProjectExpandOverlay"],
+      filePath: "/src/components/Projects/ProjectExpandOverlay.tsx",
+      role: "overlay-runtime",
+      metadata: {
+        overlayOpen: true,
+        projectId: item.id,
+        projectTitle: item.title,
+        originPos,
+        counts: {
+          media: item.media.length,
+          links: item.links.length,
+          tags: item.tags.length,
+        },
+        linkLabels: item.links.map((link) => link.label),
+        themeMode,
+      },
+    });
+
+    return () => {
+      removeRuntimeContextEntry("/projects", PROJECT_EXPAND_RUNTIME_CONTEXT_ID);
+    };
+  }, [item, originPos, themeMode]);
+
+  const overlayBackdropProbe = createCodexProbeAttributes({
+    componentName: "ProjectExpandOverlay",
+    filePath: "/src/components/Projects/ProjectExpandOverlay.tsx",
+    componentPath: ["ProjectsPage", "ProjectExpandOverlay"],
+    role: "overlay-backdrop",
+  });
+
+  const overlayPanelProbe = createCodexProbeAttributes({
+    componentName: "ProjectExpandOverlay",
+    filePath: "/src/components/Projects/ProjectExpandOverlay.tsx",
+    componentPath: ["ProjectsPage", "ProjectExpandOverlay"],
+    role: "overlay-panel",
+  });
+
   return (
     <AnimatePresence>
       {item && originPos && (
@@ -36,6 +90,7 @@ const ProjectExpandOverlay: React.FC<ProjectExpandOverlayProps> = ({
           {/* ── Backdrop ───────────────────────────────── */}
           <motion.div
             key="overlay-backdrop"
+            {...overlayBackdropProbe}
             className="theme-overlay-backdrop fixed inset-0 z-[90]"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -54,6 +109,7 @@ const ProjectExpandOverlay: React.FC<ProjectExpandOverlayProps> = ({
             onClick={onClose}
           >
             <motion.div
+              {...overlayPanelProbe}
               className="theme-overlay-panel relative max-h-[82vh] w-full max-w-[720px] overflow-y-auto rounded-3xl border backdrop-blur-xl"
               initial={{
                 scale: 0.25,

@@ -1,6 +1,5 @@
 import {
   ProjectCardFrontFamily,
-  ProjectCardStatus,
   ProjectItem,
   resolveProjectCardFront,
 } from "./projectData";
@@ -55,21 +54,6 @@ const createFamilyTheme = (
   };
 };
 
-const statusToneByMode: Record<ResolvedThemeMode, Record<ProjectCardStatus, { bg: string; fg: string }>> = {
-  light: {
-    Active: { bg: "#dcfce7", fg: "#166534" },
-    "In Progress": { bg: "#e0f2fe", fg: "#0c4a6e" },
-    Paused: { bg: "#ffedd5", fg: "#9a3412" },
-    Archived: { bg: "#e2e8f0", fg: "#334155" },
-  },
-  dark: {
-    Active: { bg: "#14532d", fg: "#bbf7d0" },
-    "In Progress": { bg: "#0c4a6e", fg: "#bae6fd" },
-    Paused: { bg: "#7c2d12", fg: "#fed7aa" },
-    Archived: { bg: "#334155", fg: "#cbd5e1" },
-  },
-};
-
 const LANDSCAPE_WIDTH = 1024;
 const LANDSCAPE_HEIGHT = 720;
 const PORTRAIT_WIDTH = 720;
@@ -117,17 +101,13 @@ const clampLines = (text: string, maxCharsPerLine: number, maxLines: number) => 
   return lines;
 };
 
-const initials = (title: string) => {
-  const parts = title.trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return "PR";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-};
-
 const tspanLines = (lines: string[], x: number, lineHeight: number) =>
   lines
     .map((line, i) => `<tspan x='${x}' dy='${i === 0 ? 0 : lineHeight}'>${escapeXml(line)}</tspan>`)
     .join("");
+
+const estimateChipWidth = (label: string, { min, max }: { min: number; max: number }) =>
+  Math.max(min, Math.min(max, 44 + label.trim().length * 10.4));
 
 export const makeProjectFrontTexture = (
   item: ProjectItem,
@@ -137,16 +117,16 @@ export const makeProjectFrontTexture = (
 ): string => {
   const front = resolveProjectCardFront(item);
   const theme = createFamilyTheme(item, themeMode, front.frontFamily);
-  const status = statusToneByMode[themeMode][front.status];
 
   const titleLines = clampLines(item.title, 24, 2);
   const subtitleLines = clampLines(item.subtitle, 26, 2);
   const summaryLines = clampLines(item.summary, 40, 2);
-  const iconLabel = initials(item.title);
-
-  const statusWidth = Math.min(280, 38 + front.status.length * 9);
-  const dateWidth = Math.min(184, 36 + front.dateLabel.length * 9);
   const landscapeMode = orientation === "landscape";
+
+  const dateWidth = estimateChipWidth(front.dateLabel, {
+    min: 188,
+    max: landscapeMode ? 336 : 308,
+  });
 
   const gradientX2 = landscapeMode ? LANDSCAPE_WIDTH : PORTRAIT_WIDTH;
   const gradientY2 = landscapeMode ? LANDSCAPE_HEIGHT : PORTRAIT_HEIGHT;
@@ -168,24 +148,13 @@ export const makeProjectFrontTexture = (
     <circle cx='512' cy='360' r='108' fill='none' stroke='${item.accent}' stroke-opacity='0.44' stroke-width='4'/>
     <circle cx='512' cy='360' r='68' fill='none' stroke='${theme.trim}' stroke-opacity='0.42' stroke-width='3'/>
 
-    <path d='M84 86 H150 M84 86 V152 M940 86 H874 M940 86 V152 M84 634 H150 M84 634 V568 M940 634 H874 M940 634 V568' stroke='${item.accent}' stroke-opacity='0.62' stroke-width='2.2' stroke-linecap='round' fill='none'/>
-
     <text x='84' y='122' fill='${theme.text}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='54' font-weight='700'>
       ${tspanLines(titleLines, 84, 60)}
     </text>
 
-    <g transform='translate(852 74)'>
-      <rect width='96' height='96' rx='24' fill='${theme.chip}'/>
-      <rect x='1.5' y='1.5' width='93' height='93' rx='22.5' fill='none' stroke='${item.accent}' stroke-opacity='0.54'/>
-      <text x='48' y='58' text-anchor='middle' fill='${theme.chipText}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='33' font-weight='700'>${escapeXml(iconLabel)}</text>
-    </g>
-
     <g transform='translate(84 588)'>
       <rect x='0' y='0' width='${dateWidth}' height='44' rx='22' fill='${theme.chip}'/>
       <text x='18' y='29' fill='${theme.muted}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='18' font-weight='600'>${escapeXml(front.dateLabel)}</text>
-
-      <rect x='${dateWidth + 12}' y='0' width='${statusWidth}' height='44' rx='22' fill='${status.bg}'/>
-      <text x='${dateWidth + 30}' y='29' fill='${status.fg}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='18' font-weight='700'>${escapeXml(front.status)}</text>
     </g>
 
     <g transform='translate(938 520)'>
@@ -213,24 +182,13 @@ export const makeProjectFrontTexture = (
     <circle cx='360' cy='512' r='108' fill='none' stroke='${item.accent}' stroke-opacity='0.44' stroke-width='4'/>
     <circle cx='360' cy='512' r='68' fill='none' stroke='${theme.trim}' stroke-opacity='0.42' stroke-width='3'/>
 
-    <path d='M84 130 H150 M84 130 V196 M636 130 H570 M636 130 V196 M84 894 H150 M84 894 V828 M636 894 H570 M636 894 V828' stroke='${item.accent}' stroke-opacity='0.62' stroke-width='2.2' stroke-linecap='round' fill='none'/>
-
     <text x='84' y='144' fill='${theme.text}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='52' font-weight='700'>
       ${tspanLines(titleLines, 84, 58)}
     </text>
 
-    <g transform='translate(584 84)'>
-      <rect width='96' height='96' rx='24' fill='${theme.chip}'/>
-      <rect x='1.5' y='1.5' width='93' height='93' rx='22.5' fill='none' stroke='${item.accent}' stroke-opacity='0.54'/>
-      <text x='48' y='58' text-anchor='middle' fill='${theme.chipText}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='33' font-weight='700'>${escapeXml(iconLabel)}</text>
-    </g>
-
     <g transform='translate(84 812)'>
       <rect x='0' y='0' width='${dateWidth}' height='44' rx='22' fill='${theme.chip}'/>
       <text x='18' y='29' fill='${theme.muted}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='18' font-weight='600'>${escapeXml(front.dateLabel)}</text>
-
-      <rect x='${dateWidth + 12}' y='0' width='${statusWidth}' height='44' rx='22' fill='${status.bg}'/>
-      <text x='${dateWidth + 30}' y='29' fill='${status.fg}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='18' font-weight='700'>${escapeXml(front.status)}</text>
     </g>
 
     <g transform='translate(636 702)'>

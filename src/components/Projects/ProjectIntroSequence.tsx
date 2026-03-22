@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { motionValue, MotionValue } from "framer-motion";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
@@ -7,6 +7,14 @@ import ProjectCardPopoutPresets from "./ProjectCardPopoutPresets";
 import { ProjectItem, resolveProjectCardFront } from "./projectData";
 import { makeProjectFrontTexture } from "./projectFrontTexture";
 import { ResolvedThemeMode } from "../theme/themeMode";
+import { RectSnapshot } from "../../devtools/codexContext/types";
+import {
+  removeRuntimeContextEntry,
+  removeRuntimeSceneEntity,
+  upsertRuntimeContextEntry,
+  upsertRuntimeSceneEntity,
+} from "../../devtools/codexContext/runtimeRegistry";
+import { getProjectStoryboardPhaseLabel } from "./storyboardPhase";
 
 /* ───────────────────────── types ───────────────────────── */
 
@@ -113,6 +121,62 @@ const phase = (p: number, s: number, e: number) =>
   clamp01((p - s) / (e - s));
 const metricLerp = (from: number, to: number, alpha: number) =>
   THREE.MathUtils.lerp(from, to, alpha);
+const PROJECT_CARD_THICKNESS = 0.02;
+const INTRO_SEQUENCE_CONTEXT_ID = "projects:intro-sequence";
+
+const toScreenRectSnapshot = (
+  object: THREE.Object3D | null | undefined,
+  camera: THREE.Camera,
+  canvas: HTMLCanvasElement,
+  width: number,
+  height: number,
+  thickness: number,
+): RectSnapshot | null => {
+  if (!object) return null;
+
+  object.updateWorldMatrix(true, false);
+
+  const corners = [
+    new THREE.Vector3(-width / 2, -height / 2, thickness / 2),
+    new THREE.Vector3(width / 2, -height / 2, thickness / 2),
+    new THREE.Vector3(width / 2, height / 2, thickness / 2),
+    new THREE.Vector3(-width / 2, height / 2, thickness / 2),
+  ];
+  const canvasRect = canvas.getBoundingClientRect();
+
+  let left = Number.POSITIVE_INFINITY;
+  let right = Number.NEGATIVE_INFINITY;
+  let top = Number.POSITIVE_INFINITY;
+  let bottom = Number.NEGATIVE_INFINITY;
+
+  for (const corner of corners) {
+    const projected = corner.clone().applyMatrix4(object.matrixWorld).project(camera);
+    const screenX = canvasRect.left + (projected.x * 0.5 + 0.5) * canvasRect.width;
+    const screenY = canvasRect.top + (-projected.y * 0.5 + 0.5) * canvasRect.height;
+
+    left = Math.min(left, screenX);
+    right = Math.max(right, screenX);
+    top = Math.min(top, screenY);
+    bottom = Math.max(bottom, screenY);
+  }
+
+  const rectWidth = right - left;
+  const rectHeight = bottom - top;
+  if (!Number.isFinite(rectWidth) || !Number.isFinite(rectHeight) || rectWidth <= 1 || rectHeight <= 1) {
+    return null;
+  }
+
+  return {
+    left,
+    top,
+    right,
+    bottom,
+    width: rectWidth,
+    height: rectHeight,
+    centerX: (left + right) / 2,
+    centerY: (top + bottom) / 2,
+  };
+};
 
 const getLatePhaseTiming = (count: number, mobileViewport: boolean) => {
   const extraCards = Math.max(0, count - 4);
@@ -188,6 +252,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
 }) => {
   const { viewport, pointer, camera, gl } = useThree();
   const cardGroups = useRef<THREE.Group[]>([]);
+  const cardObjectRefs = useRef<Array<THREE.Group | null>>([]);
   const deckRef = useRef<THREE.Group>(null);
   const flipValues = useRef<MotionValue<number>[]>([]);
   const edgeGlowValues = useRef<MotionValue<number>[]>([]);
@@ -230,6 +295,17 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   );
 
   const depthOrder = useMemo(() => buildDepthOrder(count), [count]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    return () => {
+      removeRuntimeContextEntry("/projects", INTRO_SEQUENCE_CONTEXT_ID);
+      items.forEach((item) => {
+        removeRuntimeSceneEntity("/projects", `projects:card:${item.id}`);
+      });
+    };
+  }, [items]);
 
   if (flipValues.current.length !== count) {
     flipValues.current = Array.from({ length: count }, () => motionValue(0));
@@ -338,6 +414,12 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
     const cardSpacing = metrics.cardSpacing;
     const maxBrowseShift = (count - 1) * cardSpacing;
     const browseShift = browseT * maxBrowseShift;
+    const phaseLabel = getProjectStoryboardPhaseLabel(t);
+    const estimatedCenteredCardIndex =
+      inDealMode && count > 0
+        ? THREE.MathUtils.clamp(Math.round(browseShift / Math.max(cardSpacing, 0.0001)), 0, count - 1)
+        : null;
+    const estimatedCenteredProject = estimatedCenteredCardIndex !== null ? items[estimatedCenteredCardIndex] : null;
 
     deck.position.x = mx * metrics.browseParallaxX * deckMouseFade;
     deck.position.y = my * metrics.browseParallaxY * deckMouseFade + browseShift;
@@ -494,6 +576,74 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
         group.scale.setScalar(dealScale);
       }
     }
+
+    if (import.meta.env.DEV) {
+      upsertRuntimeContextEntry({
+        pagePath: "/projects",
+        id: INTRO_SEQUENCE_CONTEXT_ID,
+        componentName: "ProjectIntroSequence",
+        componentPath: ["ProjectsPage", "ProjectStoryboard", "ProjectIntroSequence"],
+        filePath: "/src/components/Projects/ProjectIntroSequence.tsx",
+        role: "scene-sequence",
+        metadata: {
+          timelineProgress: Number(t.toFixed(4)),
+          phase: phaseLabel,
+          inDealMode,
+          lowPowerMode,
+          mobileViewport,
+          clickableCards: clickableRef.current,
+          estimatedCenteredCardIndex,
+          estimatedCenteredProjectId: estimatedCenteredProject?.id ?? null,
+          estimatedCenteredProjectTitle: estimatedCenteredProject?.title ?? null,
+          popoutReady: !lowPowerMode,
+          popoutOrientation: frontOrientation,
+        },
+      });
+
+      for (let index = 0; index < count; index += 1) {
+        const item = items[index];
+        const frontSpec = frontSpecs[index];
+        const cardObject = cardObjectRefs.current[index];
+        const screenRect = toScreenRectSnapshot(
+          cardObject,
+          camera,
+          gl.domElement,
+          cardWidth,
+          cardHeight,
+          PROJECT_CARD_THICKNESS,
+        );
+
+        if (!item || !frontSpec || !screenRect) {
+          continue;
+        }
+
+        upsertRuntimeSceneEntity({
+          pagePath: "/projects",
+          id: `projects:card:${item.id}`,
+          componentName: "ProjectCard3D",
+          componentPath: ["ProjectsPage", "ProjectStoryboard", "ProjectIntroSequence", "ProjectCard3D"],
+          filePath: "/src/components/Projects/ProjectIntroSequence.tsx",
+          role: "project-card",
+          rect: screenRect,
+          domTag: "scene-entity",
+          domIdentifier: item.id,
+          metadata: {
+            projectId: item.id,
+            projectTitle: item.title,
+            projectAccent: item.accent,
+            projectStatus: frontSpec.status,
+            projectDateLabel: frontSpec.dateLabel,
+            cardIndex: index,
+            clickable: clickableRef.current,
+            phase: phaseLabel,
+            timelineProgress: Number(t.toFixed(4)),
+            estimatedCentered: estimatedCenteredCardIndex === index,
+            popoutPreset: frontSpec.popoutPreset,
+            popoutReveal: Number(popoutRevealValues.current[index].get().toFixed(4)),
+          },
+        });
+      }
+    }
   });
 
   /* ── Render ──────────────────────────────────────────── */
@@ -511,6 +661,9 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
             position={[0, 0, -index * 0.05]}
           >
             <Card3D
+              ref={(el) => {
+                cardObjectRefs.current[index] = el;
+              }}
               {...card}
               flip={flipValues.current[index]}
               edgeGlow={edgeGlowValues.current[index]}

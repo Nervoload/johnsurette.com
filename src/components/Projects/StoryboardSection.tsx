@@ -5,6 +5,10 @@ import * as THREE from "three";
 import CanvasErrorBoundary from "../CanvasErrorBoundary";
 import SceneBloom from "./SceneBloom";
 import { ResolvedThemeMode } from "../theme/themeMode";
+import {
+  removeRuntimeContextEntry,
+  upsertRuntimeContextEntry,
+} from "../../devtools/codexContext/runtimeRegistry";
 
 interface StoryboardSectionProps {
   progress: MotionValue<number>;
@@ -66,6 +70,34 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
   const fogColor = useMemo(() => {
     return themeMode === "dark" ? "#0b1326" : "#eef4fb";
   }, [themeMode]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+
+    const pagePath = window.location.pathname || "/";
+    const contextId = "projects:storyboard-shell";
+
+    upsertRuntimeContextEntry({
+      pagePath,
+      id: contextId,
+      componentName: "StoryboardSection",
+      componentPath: ["ProjectsPage", "ProjectStoryboard", "StoryboardSection"],
+      filePath: "/src/components/Projects/StoryboardSection.tsx",
+      role: "sticky-canvas-shell",
+      metadata: {
+        renderHeightVh: renderHeight,
+        lowPowerMode: effectiveLowPowerMode,
+        mobileViewport,
+        themeMode,
+        hasHazeLayers: true,
+        canvasMode: "sticky-fullscreen",
+      },
+    });
+
+    return () => {
+      removeRuntimeContextEntry(pagePath, contextId);
+    };
+  }, [effectiveLowPowerMode, mobileViewport, renderHeight, themeMode]);
 
   return (
     <section style={{ height: `${renderHeight}vh` }} className="relative">
