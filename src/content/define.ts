@@ -3,8 +3,14 @@ import {
   BlogPageContent,
   BlogPostEntry,
   ContactPageContent,
+  LandingAspirationSectionContent,
+  LandingBiologySectionContent,
   LandingConclusionContent,
+  LandingComputationalSectionContent,
+  LandingHeroIdentityContent,
   LandingOriginLabContent,
+  LandingPersonalIntroductionContent,
+  LandingSectionLink,
   LandingStoryEntry,
   NavigationItem,
   PageVisualConfig,
@@ -170,6 +176,76 @@ export const defineOriginLabContent = (input: LandingOriginLabContent): LandingO
   isVisible: input.isVisible ?? true,
 });
 
+export const defineLandingHeroIdentity = (input: LandingHeroIdentityContent): LandingHeroIdentityContent => ({
+  ...input,
+  kicker: trim(input.kicker),
+  firstName: trim(input.firstName),
+  lastName: trim(input.lastName),
+  domainSuffix: trim(input.domainSuffix),
+});
+
+export const defineLandingSectionLink = (input: LandingSectionLink): LandingSectionLink => ({
+  ...input,
+  label: trim(input.label),
+  path: trim(input.path),
+});
+
+export const defineLandingPersonalIntroduction = (
+  input: LandingPersonalIntroductionContent,
+): LandingPersonalIntroductionContent => ({
+  ...input,
+  title: trim(input.title),
+  subtitle: trim(input.subtitle),
+  body: normalizeStringArray(input.body),
+  photos: (input.photos ?? []).map((photo) => ({
+    ...photo,
+    id: trim(photo.id),
+    alt: trim(photo.alt),
+    caption: trim(photo.caption),
+    palette: photo.palette,
+  })),
+});
+
+export const defineLandingComputationalSection = (
+  input: LandingComputationalSectionContent,
+): LandingComputationalSectionContent => ({
+  ...input,
+  title: trim(input.title),
+  quote: trim(input.quote),
+  body: trim(input.body),
+  cta: defineLandingSectionLink(input.cta),
+});
+
+export const defineLandingBiologySection = (
+  input: LandingBiologySectionContent,
+): LandingBiologySectionContent => ({
+  ...input,
+  overlayTitle: trim(input.overlayTitle),
+  overlayBody: trim(input.overlayBody),
+  body: trim(input.body),
+  cta: defineLandingSectionLink(input.cta),
+});
+
+export const defineLandingAspirationSection = (
+  input: LandingAspirationSectionContent,
+): LandingAspirationSectionContent => ({
+  ...input,
+  title: trim(input.title),
+  body: trim(input.body),
+  footerTitle: trim(input.footerTitle),
+  footerBody: trim(input.footerBody),
+  nodes: (input.nodes ?? []).map((node) => ({
+    ...node,
+    id: trim(node.id),
+    label: trim(node.label),
+  })),
+  edges: (input.edges ?? []).map((edge) => ({
+    ...edge,
+    from: trim(edge.from),
+    to: trim(edge.to),
+  })),
+});
+
 export const defineLandingConclusion = (input: LandingConclusionContent): LandingConclusionContent => ({
   ...input,
   eyebrow: trim(input.eyebrow),
@@ -186,6 +262,7 @@ export const defineContactPage = (input: ContactPageContent): ContactPageContent
   title: trim(input.title),
   summary: trim(input.summary),
   contactLabel: trim(input.contactLabel),
+  phoneNumber: trim(input.phoneNumber),
   copyButtonLabel: trim(input.copyButtonLabel),
   copySuccessLabel: trim(input.copySuccessLabel),
   copyErrorLabel: trim(input.copyErrorLabel),

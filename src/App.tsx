@@ -212,7 +212,7 @@ function App() {
     }
 
     if (path === "/projects") {
-      return <ProjectsPage themeMode={resolvedMode} />;
+      return <ProjectsPage themeMode={resolvedMode} navInteractionTick={navInteractionTick} />;
     }
 
     if (path === "/about") {

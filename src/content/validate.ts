@@ -3,8 +3,13 @@ import { centerpieceRegistry } from "../components/LandingComponents/centerpiece
 import {
   BlogPostEntry,
   ContactPageContent,
+  LandingAspirationSectionContent,
+  LandingBiologySectionContent,
   LandingConclusionContent,
+  LandingComputationalSectionContent,
+  LandingHeroIdentityContent,
   LandingOriginLabContent,
+  LandingPersonalIntroductionContent,
   LandingStoryEntry,
   NavigationItem,
   PageVisuals,
@@ -46,6 +51,11 @@ export interface ValidateContentInput {
   projects: ProjectEntry[];
   blogPosts: BlogPostEntry[];
   landingStory: LandingStoryEntry[];
+  landingPersonalIntroductionContent: LandingPersonalIntroductionContent;
+  landingComputationalSectionContent: LandingComputationalSectionContent;
+  landingBiologySectionContent: LandingBiologySectionContent;
+  landingAspirationSectionContent: LandingAspirationSectionContent;
+  landingHeroIdentityContent: LandingHeroIdentityContent;
   landingOriginLabContent: LandingOriginLabContent;
   landingConclusionContent: LandingConclusionContent;
   timelineEntries: TimelineEntry[];
@@ -59,6 +69,11 @@ export const validateContent = ({
   projects,
   blogPosts,
   landingStory,
+  landingPersonalIntroductionContent,
+  landingComputationalSectionContent,
+  landingBiologySectionContent,
+  landingAspirationSectionContent,
+  landingHeroIdentityContent,
   landingOriginLabContent,
   landingConclusionContent,
   timelineEntries,
@@ -106,6 +121,37 @@ export const validateContent = ({
     assert(section.focusAreas.length > 0, `landing.${section.id} must include at least one focus area.`);
   });
 
+  assertNonEmpty("landingPersonalIntroductionContent.title", landingPersonalIntroductionContent.title);
+  assertNonEmpty("landingPersonalIntroductionContent.subtitle", landingPersonalIntroductionContent.subtitle);
+  assert(landingPersonalIntroductionContent.body.length >= 2, "landingPersonalIntroductionContent.body should include two paragraphs.");
+  assertUnique(landingPersonalIntroductionContent.photos, (item) => item.id, "landing photo id");
+
+  assertNonEmpty("landingComputationalSectionContent.title", landingComputationalSectionContent.title);
+  assertInternalPath(
+    landingComputationalSectionContent.cta.path,
+    validInternalPaths,
+    "landingComputationalSectionContent.cta.path",
+  );
+
+  assertNonEmpty("landingBiologySectionContent.overlayTitle", landingBiologySectionContent.overlayTitle);
+  assertInternalPath(
+    landingBiologySectionContent.cta.path,
+    validInternalPaths,
+    "landingBiologySectionContent.cta.path",
+  );
+
+  assertNonEmpty("landingAspirationSectionContent.footerTitle", landingAspirationSectionContent.footerTitle);
+  assertUnique(landingAspirationSectionContent.nodes, (item) => item.id, "landing aspiration node id");
+  const aspirationNodeIds = new Set(landingAspirationSectionContent.nodes.map((node) => node.id));
+  landingAspirationSectionContent.edges.forEach((edge, index) => {
+    assert(aspirationNodeIds.has(edge.from), `landing aspiration edge ${index} references unknown from node ${edge.from}`);
+    assert(aspirationNodeIds.has(edge.to), `landing aspiration edge ${index} references unknown to node ${edge.to}`);
+  });
+
+  assertNonEmpty("landingHeroIdentityContent.kicker", landingHeroIdentityContent.kicker);
+  assertNonEmpty("landingHeroIdentityContent.firstName", landingHeroIdentityContent.firstName);
+  assertNonEmpty("landingHeroIdentityContent.lastName", landingHeroIdentityContent.lastName);
+  assertNonEmpty("landingHeroIdentityContent.domainSuffix", landingHeroIdentityContent.domainSuffix);
   assertNonEmpty("landingOriginLabContent.ctaPath", landingOriginLabContent.ctaPath);
   assertInternalPath(landingOriginLabContent.ctaPath, validInternalPaths, "landingOriginLabContent.ctaPath");
   assertNonEmpty("landingConclusionContent.title", landingConclusionContent.title);

@@ -80,11 +80,10 @@ export interface ProjectsPageContent {
 }
 
 export type StorySectionId =
-  | "cellular-dawn"
-  | "repair-stack"
-  | "neural-atlas"
-  | "human-machine"
-  | "future-protocol";
+  | "personal-introduction"
+  | "computational-systems"
+  | "biology-intelligence"
+  | "aspiration-journey";
 
 export type StoryTransitionKind =
   | "cell-split"
@@ -110,6 +109,72 @@ export interface LandingOriginLabContent {
   ctaLabel: string;
   ctaPath: string;
   isVisible?: boolean;
+}
+
+export interface LandingHeroIdentityContent {
+  kicker: string;
+  firstName: string;
+  lastName: string;
+  domainSuffix: string;
+}
+
+export interface LandingSectionLink {
+  label: string;
+  path: string;
+}
+
+export interface LandingPhotoPlaceholder {
+  id: string;
+  alt: string;
+  caption: string;
+  palette: [string, string, string];
+}
+
+export interface LandingPersonalIntroductionContent {
+  title: string;
+  subtitle: string;
+  body: string[];
+  photos: LandingPhotoPlaceholder[];
+}
+
+export interface LandingComputationalSectionContent {
+  title: string;
+  quote: string;
+  body: string;
+  cta: LandingSectionLink;
+}
+
+export interface LandingBiologySectionContent {
+  overlayTitle: string;
+  overlayBody: string;
+  body: string;
+  cta: LandingSectionLink;
+}
+
+export type LandingAspirationLane = "left" | "center" | "right";
+export type LandingAspirationEdgeWeight = "trunk" | "branch" | "thread";
+
+export interface LandingAspirationNode {
+  id: string;
+  label: string;
+  stage: number;
+  lane: LandingAspirationLane;
+}
+
+export interface LandingAspirationEdge {
+  from: string;
+  to: string;
+  weight: LandingAspirationEdgeWeight;
+  faded?: boolean;
+}
+
+export interface LandingAspirationSectionContent {
+  title: string;
+  body: string;
+  footerTitle: string;
+  footerBody: string;
+  nodes: LandingAspirationNode[];
+  edges: LandingAspirationEdge[];
 }
 
 export interface LandingConclusionContent {
@@ -196,6 +261,7 @@ export interface ContactPageContent {
   title: string;
   summary: string;
   contactLabel: string;
+  phoneNumber: string;
   copyButtonLabel: string;
   copySuccessLabel: string;
   copyErrorLabel: string;

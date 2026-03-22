@@ -1,18 +1,21 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { pageVisuals, projectsPageContent } from "../content";
 import DepthRainBackdrop from "../components/LandingComponents/DepthRainBackdrop";
+import LandingOnboardingOverlay from "../components/LandingComponents/onboarding/LandingOnboardingOverlay";
 import ProjectStoryboard from "../components/Projects/ProjectStoryboard";
 import ProjectExpandOverlay from "../components/Projects/ProjectExpandOverlay";
 import { ProjectItem, projectItems } from "../components/Projects/projectData";
 import PageScaffold from "../components/layout/PageScaffold";
 import { ResolvedThemeMode } from "../components/theme/themeMode";
 import { createCodexProbeAttributes } from "../devtools/codexContext/probe";
+import { useIsTouch } from "../hooks/usePointerDevice";
 
 export interface ProjectsPageProps {
   themeMode: ResolvedThemeMode;
+  navInteractionTick?: number;
 }
 
-const ProjectsPage: React.FC<ProjectsPageProps> = ({ themeMode }) => {
+const ProjectsPage: React.FC<ProjectsPageProps> = ({ themeMode, navInteractionTick }) => {
   const projectsPageProbe = createCodexProbeAttributes({
     componentName: "ProjectsPage",
     filePath: "/src/pages/ProjectsPage.tsx",
@@ -24,6 +27,7 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({ themeMode }) => {
   const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
   const [originPos, setOriginPos] = useState<{ x: number; y: number } | null>(null);
   const projectVisuals = pageVisuals.projects;
+  const isTouch = useIsTouch();
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -68,6 +72,15 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({ themeMode }) => {
               ) : null}
             </div>
           </div>
+
+          <LandingOnboardingOverlay
+            scrollContainerRef={scrollRef}
+            navInteractionTick={navInteractionTick}
+            isTouch={isTouch}
+            navInteractionLockMs={2000}
+            dismissAllThresholdPx={typeof window === "undefined" ? undefined : window.innerHeight}
+            visitStorageKey="projects-onboarding-hints-seen"
+          />
 
           <div className="relative z-10">
             <header className="theme-text-primary relative z-20 mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 pt-24">

@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useCallback, useEffect, useId, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { SiteRoute } from "../sections";
 import { WipeOptions } from "../Transitions/TransitionWipe";
 import { useIsTouch } from "../../hooks/usePointerDevice";
@@ -26,30 +26,66 @@ const compactLabel = (label: string): string => {
   return label;
 };
 
+const SunGlyph: React.FC = () => {
+  return (
+    <svg viewBox="0 0 20 20" className="theme-nav-glyph-svg" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <circle cx="10" cy="10" r="3.2" className="theme-nav-fab-line" />
+      <path className="theme-nav-fab-line" d="M10 2V4.5" />
+      <path className="theme-nav-fab-line" d="M10 15.5V18" />
+      <path className="theme-nav-fab-line" d="M2 10H4.5" />
+      <path className="theme-nav-fab-line" d="M15.5 10H18" />
+      <path className="theme-nav-fab-line" d="M4.4 4.4L6.1 6.1" />
+      <path className="theme-nav-fab-line" d="M13.9 13.9L15.6 15.6" />
+      <path className="theme-nav-fab-line" d="M13.9 6.1L15.6 4.4" />
+      <path className="theme-nav-fab-line" d="M4.4 15.6L6.1 13.9" />
+    </svg>
+  );
+};
+
+const MoonGlyph: React.FC = () => {
+  const maskId = useId();
+
+  return (
+    <svg viewBox="0 0 20 20" className="theme-nav-glyph-svg" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <defs>
+        <mask id={maskId}>
+          <rect width="20" height="20" fill="black" />
+          <circle cx="10" cy="10" r="6.25" fill="white" />
+          <circle cx="13.4" cy="7.15" r="6.45" fill="black" />
+        </mask>
+      </defs>
+      <circle cx="10" cy="10" r="6.25" className="theme-nav-fab-fill" mask={`url(#${maskId})`} />
+    </svg>
+  );
+};
+
 const ThemeGlyph: React.FC<{ mode: ResolvedThemeMode }> = ({ mode }) => {
-  if (mode === "dark") {
-    return (
-      <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-        <circle cx="10" cy="10" r="3.2" className="theme-nav-fab-line" />
-        <path className="theme-nav-fab-line" d="M10 2V4.5" />
-        <path className="theme-nav-fab-line" d="M10 15.5V18" />
-        <path className="theme-nav-fab-line" d="M2 10H4.5" />
-        <path className="theme-nav-fab-line" d="M15.5 10H18" />
-        <path className="theme-nav-fab-line" d="M4.4 4.4L6.1 6.1" />
-        <path className="theme-nav-fab-line" d="M13.9 13.9L15.6 15.6" />
-        <path className="theme-nav-fab-line" d="M13.9 6.1L15.6 4.4" />
-        <path className="theme-nav-fab-line" d="M4.4 15.6L6.1 13.9" />
-      </svg>
-    );
+  const prefersReducedMotion = useReducedMotion();
+  const icon = mode === "dark" ? <MoonGlyph /> : <SunGlyph />;
+
+  if (prefersReducedMotion) {
+    return <span className="theme-nav-glyph-shell">{icon}</span>;
   }
 
   return (
-    <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-      <path
-        className="theme-nav-fab-line"
-        d="M13.9 2.7C11.2 3.2 9.1 5.6 9.1 8.5C9.1 11.8 11.8 14.5 15.1 14.5C16.2 14.5 17.2 14.2 18 13.7C17.2 16.2 14.8 18 12 18C8.5 18 5.6 15.1 5.6 11.6C5.6 7.9 8.8 5 12.6 5C13.1 5 13.5 5 13.9 5.1"
-      />
-    </svg>
+    <span className="theme-nav-glyph-shell" aria-hidden>
+      <AnimatePresence initial={false} mode="sync">
+        <motion.span
+          key={mode}
+          className="theme-nav-glyph-orbit"
+          initial={{ opacity: 0, x: -28, y: 10, scale: 0.92 }}
+          animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+          exit={{ opacity: 0, x: 28, y: 10, scale: 0.92 }}
+          transition={{
+            duration: 0.7,
+            ease: [0.33, 0.78, 0.12, 1],
+            opacity: { duration: 0.35, ease: "linear" },
+          }}
+        >
+          {icon}
+        </motion.span>
+      </AnimatePresence>
+    </span>
   );
 };
 

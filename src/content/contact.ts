@@ -8,6 +8,7 @@ export const contactPageContent: ContactPageContent = defineContactPage({
   summary:
     "For research, engineering, or collaboration inquiries, reach out by email.",
   contactLabel: "Contact Me",
+  phoneNumber: "+1 (613) 720-6629",
   copyButtonLabel: "Copy email",
   copySuccessLabel: "Copied",
   copyErrorLabel: "Copy failed",

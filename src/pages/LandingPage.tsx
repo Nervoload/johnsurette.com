@@ -1,15 +1,17 @@
 import React, { RefObject, useEffect, useRef } from "react";
 import {
+  landingHeroIdentityContent,
   landingOriginLabContent,
   pageVisuals,
 } from "../content";
 import CenterpieceStage from "../components/LandingComponents/CenterpieceStage";
 import DepthRainBackdrop from "../components/LandingComponents/DepthRainBackdrop";
+import LandingHeroIdentity from "../components/LandingComponents/LandingHeroIdentity";
 import LandingOnboardingOverlay from "../components/LandingComponents/onboarding/LandingOnboardingOverlay";
 import {
   centerpieceRegistry,
 } from "../components/LandingComponents/centerpieces/centerpieceRegistry";
-import LandingConclusionSection from "../components/LandingStory/LandingConclusionSection";
+import LandingStoryboard from "../components/LandingStory/LandingStoryboard";
 import { WipeOptions } from "../components/Transitions/TransitionWipe";
 import { useIsTouch } from "../hooks/usePointerDevice";
 import PageScaffold from "../components/layout/PageScaffold";
@@ -58,7 +60,8 @@ const LandingContent: React.FC<LandingContentProps> = ({
   const ActiveCenterpiece = activeCenterpieceEntry.component;
   const shadowAssetId = activeCenterpieceEntry.shadowAssetId;
   const isTouch = useIsTouch();
-  const conclusionSectionRef = useRef<HTMLDivElement>(null);
+  const heroSectionRef = useRef<HTMLElement>(null);
+  const storySectionRef = useRef<HTMLDivElement>(null);
   const lastEntryNonceRef = useRef<number>(-1);
 
   useEffect(() => {
@@ -69,7 +72,7 @@ const LandingContent: React.FC<LandingContentProps> = ({
     lastEntryNonceRef.current = entryNonce;
 
     const scrollToConclusion = (): void => {
-      const target = conclusionSectionRef.current;
+      const target = storySectionRef.current;
       const fallback = Math.max(0, container.clientHeight * 1.52);
       const targetTop = target?.offsetTop ?? fallback;
       const minimumConclusionTop = container.clientHeight * 1.35;
@@ -130,10 +133,18 @@ const LandingContent: React.FC<LandingContentProps> = ({
         scrollContainerRef={scrollContainerRef}
         navInteractionTick={navInteractionTick}
         isTouch={isTouch}
+        navInteractionLockMs={2000}
+        visitStorageKey="landing-onboarding-hints-seen"
+      />
+
+      <LandingHeroIdentity
+        scrollContainerRef={scrollContainerRef}
+        heroSectionRef={heroSectionRef}
+        content={landingHeroIdentityContent}
       />
 
       <div className="relative z-10">
-        <section className="relative flex min-h-[100dvh] items-center justify-center">
+        <section ref={heroSectionRef} className="relative flex min-h-[100dvh] items-center justify-center">
           <div className="relative z-10 px-4 sm:px-6">
             <CenterpieceStage
               activeSection={null}
@@ -165,8 +176,8 @@ const LandingContent: React.FC<LandingContentProps> = ({
           </section>
         )}
 
-        <div ref={conclusionSectionRef}>
-          <LandingConclusionSection onNavigate={onNavigate} />
+        <div ref={storySectionRef}>
+          <LandingStoryboard onNavigate={onNavigate} />
         </div>
       </div>
     </div>

@@ -7,6 +7,11 @@ export interface LandingOnboardingOverlayProps {
   scrollContainerRef: RefObject<HTMLDivElement>;
   navInteractionTick?: number;
   isTouch: boolean;
+  dismissAllThresholdPx?: number;
+  navInteractionLockMs?: number;
+  visitStorageKey?: string;
+  scrollLabel?: string;
+  navLabel?: string;
 }
 
 const cueMotion = {
@@ -33,8 +38,7 @@ const ArrowShape: React.FC<{ direction: "up" | "down" }> = ({ direction }) => {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <path className="onboarding-shape-line" d="M18 28V10" />
-      <path className="onboarding-shape-line" d="M11 16L18 9L25 16" />
+      <path className="onboarding-shape-line" d="M10 21L18 13L26 21" />
     </svg>
   );
 };
@@ -83,10 +87,18 @@ const LandingOnboardingOverlay: React.FC<LandingOnboardingOverlayProps> = ({
   scrollContainerRef,
   navInteractionTick,
   isTouch,
+  dismissAllThresholdPx,
+  navInteractionLockMs,
+  visitStorageKey,
+  scrollLabel = "Scroll",
+  navLabel,
 }) => {
   const hints = useLandingOnboardingHints({
     scrollContainerRef,
     navInteractionTick,
+    dismissAllThresholdPx,
+    navInteractionLockMs,
+    visitStorageKey,
   });
 
   if (!hints.scroll && !hints.nav) return null;
@@ -97,14 +109,14 @@ const LandingOnboardingOverlay: React.FC<LandingOnboardingOverlayProps> = ({
         <Cue
           state={hints.navState}
           anchorClassName="absolute inset-x-0 top-0 flex justify-center pt-[max(0.85rem,env(safe-area-inset-top))]"
-          label={isTouch ? "Tap or drag up" : "Hover for more"}
+          label={navLabel ?? (isTouch ? "Tap or drag up" : "Hover for more")}
           direction="up"
         />
 
         <Cue
           state={hints.scrollState}
           anchorClassName="absolute inset-x-0 bottom-0 flex justify-center pb-[max(0.85rem,env(safe-area-inset-bottom))]"
-          label="Scroll"
+          label={scrollLabel}
           direction="down"
         />
       </div>

@@ -78,7 +78,7 @@ interface DefaultPostCardProps {
 
 const DefaultPostCard: React.FC<DefaultPostCardProps> = ({ post }) => {
   return (
-    <article className="theme-border-subtle h-full border-t py-5">
+    <article className="h-full py-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <span className="theme-text-muted inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em]">
           <span className={`h-2 w-2 rounded-full ${post.accentClassName}`} aria-hidden />
@@ -129,7 +129,7 @@ const GithubPostCard: React.FC<GithubPostCardProps> = ({ post }) => {
   }, [github.username]);
 
   return (
-    <article className="theme-border-subtle h-full border-t py-5">
+    <article className="h-full py-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <span className="theme-text-muted inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.14em]">
           <span className={`h-2 w-2 rounded-full ${post.accentClassName}`} aria-hidden />
@@ -326,8 +326,7 @@ const SocialPostCarousel: React.FC<SocialPostCarouselProps> = ({ posts, autoAdva
       onBlurCapture={() => setIsPaused(false)}
       {...swipeHandlers}
     >
-      <div className="mb-4 flex items-center justify-between">
-        <p className="theme-text-subtle text-xs uppercase tracking-[0.24em]">Profiles &amp; Activity</p>
+      <div className="mb-4 flex items-center justify-end">
         <p className="theme-text-subtle text-[11px] uppercase tracking-[0.12em]">{activeCardLabel}</p>
       </div>
 

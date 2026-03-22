@@ -5,10 +5,16 @@ export const SCROLL_PROGRESS_THRESHOLD_PX = 72;
 
 const ENTER_MS = 260;
 const EXIT_MS = 360;
+const DEFAULT_NAV_INTERACTION_LOCK_MS = 0;
+const seenVisitHintKeys = new Set<string>();
 
 interface UseLandingOnboardingHintsOptions {
   scrollContainerRef: RefObject<HTMLDivElement>;
   navInteractionTick?: number;
+  scrollCompletionThresholdPx?: number;
+  dismissAllThresholdPx?: number;
+  navInteractionLockMs?: number;
+  visitStorageKey?: string;
 }
 
 interface UseLandingOnboardingHintsResult {
@@ -32,6 +38,10 @@ const createRuntimeState = (): OnboardingRuntimeState => ({
 export const useLandingOnboardingHints = ({
   scrollContainerRef,
   navInteractionTick,
+  scrollCompletionThresholdPx = SCROLL_PROGRESS_THRESHOLD_PX,
+  dismissAllThresholdPx,
+  navInteractionLockMs = DEFAULT_NAV_INTERACTION_LOCK_MS,
+  visitStorageKey,
 }: UseLandingOnboardingHintsOptions): UseLandingOnboardingHintsResult => {
   const [state, setState] = useState<HintVisibilityState>(hiddenState);
   const stateRef = useRef<HintVisibilityState>(hiddenState);
@@ -42,6 +52,9 @@ export const useLandingOnboardingHints = ({
     nav: null,
   });
   const navTickRef = useRef<number>(navInteractionTick ?? 0);
+  const navLockUntilRef = useRef(0);
+  const deferredNavHideTimerRef = useRef<number | null>(null);
+  const visitSeenCommitTimerRef = useRef<number | null>(null);
 
   const patchState = (id: HintId, next: HintLifecycleState): void => {
     if (stateRef.current[id] === next) return;
@@ -82,17 +95,67 @@ export const useLandingOnboardingHints = ({
     }, EXIT_MS);
   };
 
+  const clearDeferredNavHideTimer = (): void => {
+    if (deferredNavHideTimerRef.current === null) return;
+    window.clearTimeout(deferredNavHideTimerRef.current);
+    deferredNavHideTimerRef.current = null;
+  };
+
+  const clearVisitSeenCommitTimer = (): void => {
+    if (visitSeenCommitTimerRef.current === null) return;
+    window.clearTimeout(visitSeenCommitTimerRef.current);
+    visitSeenCommitTimerRef.current = null;
+  };
+
+  const completeNavHint = (forceImmediate = false): void => {
+    if (forceImmediate) {
+      runtimeRef.current.navCompleted = true;
+      clearDeferredNavHideTimer();
+      hideHint("nav");
+      return;
+    }
+
+    if (runtimeRef.current.navCompleted) return;
+    runtimeRef.current.navCompleted = true;
+
+    const remainingLockMs = Math.max(0, navLockUntilRef.current - Date.now());
+    if (remainingLockMs === 0) {
+      hideHint("nav");
+      return;
+    }
+
+    clearDeferredNavHideTimer();
+    deferredNavHideTimerRef.current = window.setTimeout(() => {
+      deferredNavHideTimerRef.current = null;
+      hideHint("nav");
+    }, remainingLockMs);
+  };
+
   useEffect(() => {
+    navLockUntilRef.current = Date.now() + navInteractionLockMs;
+
+    if (visitStorageKey) {
+      const hasSeenHints = seenVisitHintKeys.has(visitStorageKey);
+      if (hasSeenHints) return undefined;
+      // Defer the visit mark so React dev double-mount doesn't suppress the real first render.
+      visitSeenCommitTimerRef.current = window.setTimeout(() => {
+        visitSeenCommitTimerRef.current = null;
+        seenVisitHintKeys.add(visitStorageKey);
+      }, 0);
+    }
+
     showHint("scroll");
     showHint("nav");
 
     return () => {
       clearTimer("scroll");
       clearTimer("nav");
+      clearDeferredNavHideTimer();
+      clearVisitSeenCommitTimer();
       runtimeRef.current = createRuntimeState();
       stateRef.current = hiddenState;
     };
-    // Intentionally run once per landing mount.
+    // Intentionally run once per page overlay mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -104,8 +167,17 @@ export const useLandingOnboardingHints = ({
       const nextScrollTop = container.scrollTop;
       runtimeRef.current.scrollTop = nextScrollTop;
 
+      if (typeof dismissAllThresholdPx === "number" && nextScrollTop >= dismissAllThresholdPx) {
+        if (!runtimeRef.current.scrollCompleted) {
+          runtimeRef.current.scrollCompleted = true;
+          hideHint("scroll");
+        }
+        completeNavHint(true);
+        return;
+      }
+
       if (runtimeRef.current.scrollCompleted) return;
-      if (nextScrollTop < SCROLL_PROGRESS_THRESHOLD_PX) return;
+      if (nextScrollTop < scrollCompletionThresholdPx) return;
 
       runtimeRef.current.scrollCompleted = true;
       hideHint("scroll");
@@ -122,9 +194,7 @@ export const useLandingOnboardingHints = ({
     if (currentTick === navTickRef.current) return;
     navTickRef.current = currentTick;
 
-    if (runtimeRef.current.navCompleted) return;
-    runtimeRef.current.navCompleted = true;
-    hideHint("nav");
+    completeNavHint();
   }, [navInteractionTick]);
 
   return {

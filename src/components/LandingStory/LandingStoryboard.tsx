@@ -1,12 +1,16 @@
 import React from "react";
 import { WipeOptions } from "../Transitions/TransitionWipe";
-import StoryTransition from "./StoryTransition";
-import { StorySectionData, storySections, storyTransitions } from "./storySections";
-import CellularDawnSection from "./sections/CellularDawnSection";
-import RepairStackSection from "./sections/RepairStackSection";
-import NeuralAtlasSection from "./sections/NeuralAtlasSection";
-import HumanMachineSection from "./sections/HumanMachineSection";
-import FutureProtocolSection from "./sections/FutureProtocolSection";
+import { StorySectionData, storySections } from "./storySections";
+import {
+  landingAspirationSectionContent,
+  landingBiologySectionContent,
+  landingComputationalSectionContent,
+  landingPersonalIntroductionContent,
+} from "../../content";
+import PersonalIntroductionSection from "./sections/PersonalIntroductionSection";
+import ComputationalSystemsSection from "./sections/ComputationalSystemsSection";
+import BiologyIntelligenceSection from "./sections/BiologyIntelligenceSection";
+import AspirationJourneySection from "./sections/AspirationJourneySection";
 
 export interface LandingStoryboardProps {
   onNavigate: (path: string, opts?: WipeOptions) => void;
@@ -18,35 +22,38 @@ interface StorySectionRendererProps {
 }
 
 const StorySectionRenderer: React.FC<StorySectionRendererProps> = ({ section, onNavigate }) => {
-  if (section.id === "cellular-dawn") {
-    return <CellularDawnSection section={section} />;
+  if (section.id === "personal-introduction") {
+    return <PersonalIntroductionSection section={section} content={landingPersonalIntroductionContent} />;
   }
 
-  if (section.id === "repair-stack") {
-    return <RepairStackSection section={section} />;
+  if (section.id === "computational-systems") {
+    return (
+      <ComputationalSystemsSection
+        section={section}
+        content={landingComputationalSectionContent}
+        onNavigate={onNavigate}
+      />
+    );
   }
 
-  if (section.id === "neural-atlas") {
-    return <NeuralAtlasSection section={section} />;
+  if (section.id === "biology-intelligence") {
+    return (
+      <BiologyIntelligenceSection
+        section={section}
+        content={landingBiologySectionContent}
+        onNavigate={onNavigate}
+      />
+    );
   }
 
-  if (section.id === "human-machine") {
-    return <HumanMachineSection section={section} />;
-  }
-
-  return <FutureProtocolSection section={section} onNavigate={onNavigate} />;
+  return <AspirationJourneySection section={section} content={landingAspirationSectionContent} />;
 };
 
 const LandingStoryboard: React.FC<LandingStoryboardProps> = ({ onNavigate }) => {
   return (
-    <section className="relative z-10">
-      {storySections.map((section, index) => (
-        <div key={section.id} className={`relative ${index === 0 ? "" : "-mt-24"}`}>
-          {index > 0 ? (
-            <div className="pointer-events-none absolute inset-x-0 top-[-7rem] z-30">
-              <StoryTransition kind={storyTransitions[index - 1]} />
-            </div>
-          ) : null}
+    <section className="relative z-10 overflow-x-clip">
+      {storySections.map((section) => (
+        <div key={section.id} className="relative">
           <StorySectionRenderer section={section} onNavigate={onNavigate} />
         </div>
       ))}
