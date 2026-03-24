@@ -1,56 +1,77 @@
-import React, { useMemo, useRef } from "react";
-import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "framer-motion";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { motion, MotionValue, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { LandingAspirationEdge, LandingAspirationNode } from "../../../content";
+import { useSectionActivity } from "../runtime/LandingStoryRuntime";
+import {
+  aspirationThreadStyles,
+  buildThreadPath,
+  computeAspirationLayout,
+  LayoutEdge,
+  LayoutNode,
+  ROOT_POINT,
+  VIEWBOX_HEIGHT,
+  VIEWBOX_WIDTH,
+} from "./aspiration/aspirationLayout";
+import { useLandingStoryRuntime } from "../runtime/LandingStoryRuntime";
 
 interface AspirationTreePlaceholderProps {
   nodes: LandingAspirationNode[];
   edges: LandingAspirationEdge[];
   footerTitle: string;
   footerBody: string;
+  eyebrow: string;
+  summary: string;
 }
 
-interface Point {
-  x: number;
-  y: number;
+const ARTBOARD_HEIGHT_MULTIPLIER = 2.08;
+
+const TIMELINE_VIEWPORT_LENGTHS = {
+  intro: 0.74,
+  stageOne: 1.02,
+  stageTwo: 1.18,
+  stageThree: 1.04,
+  stageFour: 1.16,
+  leaf: 1.06,
+} as const;
+
+type TimelineKey = keyof typeof TIMELINE_VIEWPORT_LENGTHS;
+
+interface TimelineSegment {
+  end: number;
+  length: number;
+  mid: number;
+  start: number;
 }
 
-interface LabelGeometry {
-  align: "left" | "right" | "center";
-  height: number;
-  left: number;
-  lineEndX: number;
-  lineEndY: number;
-  top: number;
-  width: number;
+interface StageBounds {
+  centerY: number;
+  maxY: number;
+  minY: number;
 }
 
-interface LayoutNode extends LandingAspirationNode {
-  labelBox: LabelGeometry;
-  point: Point;
-}
+const timelineEntries = Object.entries(TIMELINE_VIEWPORT_LENGTHS) as Array<[TimelineKey, number]>;
 
-interface LayoutEdge extends Omit<LandingAspirationEdge, "weight"> {
-  fromPoint: Point;
-  id: string;
-  stage: number;
-  toPoint: Point;
-  weight: LandingAspirationEdge["weight"] | "leaf";
-}
+const RUNWAY_VIEWPORTS = timelineEntries.reduce((sum, [, length]) => sum + length, 0);
+const SECTION_VIEWPORTS = RUNWAY_VIEWPORTS + 1;
 
-const VIEWBOX_WIDTH = 1000;
-const VIEWBOX_HEIGHT = 1480;
-const ROOT_POINT: Point = { x: 500, y: 122 };
-
-const STAGE_Y: Record<number, number> = {
-  0: 122,
-  1: 332,
-  2: 590,
-  3: 830,
-  4: 1090,
-  5: 1364,
-};
-
-const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+const TIMELINE = (() => {
+  let cursor = 0;
+  return timelineEntries.reduce(
+    (segments, [key, length]) => {
+      const start = cursor;
+      const end = start + length;
+      segments[key] = {
+        end,
+        length,
+        mid: start + length / 2,
+        start,
+      };
+      cursor = end;
+      return segments;
+    },
+    {} as Record<TimelineKey, TimelineSegment>
+  );
+})();
 
 const wrapLabel = (label: string) => {
   const words = label.split(" ");
@@ -62,220 +83,170 @@ const wrapLabel = (label: string) => {
   return [words.slice(0, midpoint).join(" "), words.slice(midpoint).join(" ")];
 };
 
-const createLabel = (
-  point: Point,
-  label: string,
-  align: "left" | "right" | "center",
-  verticalPlacement: "middle" | "above" | "below" = "middle",
-): LabelGeometry => {
-  const lines = wrapLabel(label);
-  const width = clamp(label.length * 8.2 + 56, 188, 280);
-  const height = lines.length > 1 ? 76 : 58;
+const createBounds = (values: number[], padTop = 0, padBottom = 0): StageBounds => {
+  const safeValues = values.length > 0 ? values : [VIEWBOX_HEIGHT / 2];
+  const minY = Math.min(...safeValues) - padTop;
+  const maxY = Math.max(...safeValues) + padBottom;
 
-  if (align === "center") {
-    const top =
-      verticalPlacement === "above"
-        ? point.y - height - 40
-        : verticalPlacement === "below"
-          ? point.y + 40
-          : point.y - height / 2;
-
-    return {
-      align,
-      height,
-      left: clamp(point.x - width / 2, 20, VIEWBOX_WIDTH - width - 20),
-      lineEndX: point.x,
-      lineEndY: verticalPlacement === "below" ? top : top + height,
-      top,
-      width,
-    };
-  }
-
-  if (align === "left") {
-    const left = clamp(point.x - width - 42, 20, VIEWBOX_WIDTH - width - 20);
-    return {
-      align,
-      height,
-      left,
-      lineEndX: left + width,
-      lineEndY: point.y,
-      top: point.y - height / 2,
-      width,
-    };
-  }
-
-  const left = clamp(point.x + 42, 20, VIEWBOX_WIDTH - width - 20);
   return {
-    align,
-    height,
-    left,
-    lineEndX: left,
-    lineEndY: point.y,
-    top: point.y - height / 2,
-    width,
+    centerY: (minY + maxY) / 2,
+    maxY,
+    minY,
   };
 };
 
-const getNodePoint = (node: LandingAspirationNode): Point => {
-  if (node.stage === 1) {
-    return node.lane === "left" ? { x: 282, y: STAGE_Y[1] } : { x: 718, y: STAGE_Y[1] };
-  }
+const edgeYValues = (edge: LayoutEdge) => [edge.fromPoint.y, edge.toPoint.y];
 
-  if (node.stage === 2) {
-    if (node.id === "science-student-association") return { x: 214, y: 568 };
-    if (node.id === "computational-neuroscience") return { x: 394, y: 544 };
-    if (node.id === "ai-research") return { x: 606, y: 544 };
-    return { x: 786, y: 568 };
-  }
+const nodeYValues = (node: LayoutNode) => [
+  node.point.y,
+  node.labelBox.top - 18,
+  node.labelBox.top + node.labelBox.height + 18,
+];
 
-  if (node.stage === 3) {
-    return { x: 500, y: STAGE_Y[3] };
-  }
-
-  if (node.stage === 4) {
-    if (node.lane === "left") return { x: 266, y: STAGE_Y[4] };
-    if (node.lane === "center") return { x: 500, y: STAGE_Y[4] - 8 };
-    return { x: 734, y: STAGE_Y[4] };
-  }
-
-  return ROOT_POINT;
-};
-
-const getNodeLabel = (node: LandingAspirationNode, point: Point): LabelGeometry => {
-  if (node.stage === 1) {
-    return node.lane === "left"
-      ? createLabel(point, node.label, "left")
-      : createLabel(point, node.label, "right");
-  }
-
-  if (node.stage === 2) {
-    if (node.id === "science-student-association") return createLabel(point, node.label, "left");
-    if (node.id === "computational-neuroscience") return createLabel(point, node.label, "center", "below");
-    if (node.id === "ai-research") return createLabel(point, node.label, "center", "below");
-    return createLabel(point, node.label, "right");
-  }
-
-  if (node.stage === 3) {
-    return createLabel(point, node.label, "center", "above");
-  }
-
-  if (node.stage === 4) {
-    if (node.lane === "left") return createLabel(point, node.label, "left");
-    if (node.lane === "center") return createLabel(point, node.label, "center", "below");
-    return createLabel(point, node.label, "right");
-  }
-
-  return createLabel(point, node.label, "center");
-};
-
-const buildThreadPath = (
-  from: Point,
-  to: Point,
-  threadIndex: number,
-  bundleCount: number,
-  curvature: number,
-) => {
-  const centerOffset = threadIndex - (bundleCount - 1) / 2;
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
-  const distance = Math.hypot(dx, dy) || 1;
-  const normalX = -dy / distance;
-  const normalY = dx / distance;
-  const offsetDistance = centerOffset * curvature;
-  const wave = centerOffset * 6;
-  const c1x = from.x + dx * 0.22 + normalX * offsetDistance;
-  const c1y = from.y + dy * 0.28 + normalY * (offsetDistance * 0.6 + wave);
-  const c2x = from.x + dx * 0.78 + normalX * offsetDistance;
-  const c2y = from.y + dy * 0.72 - normalY * (offsetDistance * 0.6 - wave);
-
-  return `M ${from.x} ${from.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${to.x} ${to.y}`;
-};
-
-const getBundleCount = (weight: LayoutEdge["weight"], faded?: boolean) => {
-  if (faded) return 1;
-  if (weight === "trunk") return 5;
-  if (weight === "branch") return 3;
-  return 1;
-};
-
-const getBaseOpacity = (weight: LayoutEdge["weight"], faded?: boolean) => {
-  if (faded) return 0.14;
-  if (weight === "trunk") return 0.48;
-  if (weight === "branch") return 0.34;
-  return 0.22;
-};
-
-const getThreadWidth = (weight: LayoutEdge["weight"], faded?: boolean) => {
-  if (faded) return 1.2;
-  if (weight === "trunk") return 2.1;
-  if (weight === "branch") return 1.6;
-  return 1.2;
-};
-
-const getGlowWidth = (weight: LayoutEdge["weight"], faded?: boolean) => {
-  if (faded) return 4.5;
-  if (weight === "trunk") return 12;
-  if (weight === "branch") return 8;
-  return 5;
-};
-
-const EdgeBundle: React.FC<{ edge: LayoutEdge }> = ({ edge }) => {
-  const bundleCount = getBundleCount(edge.weight, edge.faded);
-  const curvature = edge.weight === "trunk" ? 6.6 : edge.weight === "branch" ? 4.8 : 3.2;
+const GhostEdgeBundle: React.FC<{ edge: LayoutEdge }> = ({ edge }) => {
+  const bundleCount = Math.max(
+    1,
+    aspirationThreadStyles.getBundleCount(edge.weight, edge.faded) - (edge.weight === "trunk" ? 2 : 1)
+  );
+  const curvature = edge.weight === "trunk" ? 6.2 : edge.weight === "branch" ? 4.4 : 2.8;
+  const softWidth = aspirationThreadStyles.getGlowWidth(edge.weight, edge.faded) * 0.62;
 
   return (
-    <g>
+    <g opacity={edge.faded ? 0.48 : 1}>
       <path
         d={buildThreadPath(edge.fromPoint, edge.toPoint, 0, 1, 0)}
         fill="none"
-        stroke={edge.faded ? "rgba(125,211,252,0.12)" : "rgba(34,211,238,0.18)"}
+        stroke={edge.faded ? "rgba(125,211,252,0.05)" : "rgba(34,211,238,0.08)"}
         strokeLinecap="round"
-        strokeWidth={getGlowWidth(edge.weight, edge.faded)}
+        strokeWidth={softWidth}
       />
       {Array.from({ length: bundleCount }, (_, threadIndex) => (
         <path
-          key={`${edge.id}-thread-${threadIndex}`}
           d={buildThreadPath(edge.fromPoint, edge.toPoint, threadIndex, bundleCount, curvature)}
           fill="none"
-          stroke={edge.faded ? "rgba(224,242,254,0.42)" : "rgba(224,242,254,0.86)"}
+          key={`${edge.id}-ghost-${threadIndex}`}
+          stroke="rgba(226,232,240,0.16)"
           strokeLinecap="round"
-          strokeOpacity={getBaseOpacity(edge.weight, edge.faded)}
-          strokeWidth={getThreadWidth(edge.weight, edge.faded)}
+          strokeWidth={Math.max(0.9, aspirationThreadStyles.getThreadWidth(edge.weight, edge.faded) * 0.78)}
         />
       ))}
     </g>
   );
 };
 
-const NodeGlyph: React.FC<{ node: LayoutNode }> = ({ node }) => {
-  const haloRadius = node.stage === 3 ? 24 : 18;
-  const nodeRadius = node.stage === 3 ? 10 : 8;
+const GhostNodeGlyph: React.FC<{ node: LayoutNode }> = ({ node }) => {
+  const haloRadius = node.stage === 3 ? 22 : node.stage === 4 ? 20 : 16;
+  const nodeRadius = node.stage === 3 ? 8.5 : node.stage === 4 ? 8 : 7;
+
+  return (
+    <g opacity={0.52}>
+      <circle cx={node.point.x} cy={node.point.y} fill="rgba(34,211,238,0.08)" r={haloRadius} />
+      <circle cx={node.point.x} cy={node.point.y} fill="rgba(226,232,240,0.26)" r={nodeRadius} />
+    </g>
+  );
+};
+
+const EdgeBundle: React.FC<{
+  edge: LayoutEdge;
+  reveal: MotionValue<number>;
+}> = ({ edge, reveal }) => {
+  const bundleCount = aspirationThreadStyles.getBundleCount(edge.weight, edge.faded);
+  const curvature = edge.weight === "trunk" ? 7.2 : edge.weight === "branch" ? 5.2 : 3.2;
+  const dashOffset = useTransform(reveal, (value) => 1 - value);
 
   return (
     <g>
-      <circle cx={node.point.x} cy={node.point.y} fill="rgba(34,211,238,0.18)" r={haloRadius} />
+      <path
+        d={buildThreadPath(edge.fromPoint, edge.toPoint, 0, 1, 0)}
+        fill="none"
+        stroke={edge.faded ? "rgba(125,211,252,0.12)" : "url(#aspiration-thread-glow)"}
+        strokeLinecap="round"
+        strokeWidth={aspirationThreadStyles.getGlowWidth(edge.weight, edge.faded)}
+      />
+      {Array.from({ length: bundleCount }, (_, threadIndex) => (
+        <motion.path
+          d={buildThreadPath(edge.fromPoint, edge.toPoint, threadIndex, bundleCount, curvature)}
+          fill="none"
+          key={`${edge.id}-thread-${threadIndex}`}
+          pathLength={1}
+          stroke={edge.faded ? "rgba(226,232,240,0.54)" : "url(#aspiration-thread)"}
+          strokeLinecap="round"
+          strokeOpacity={aspirationThreadStyles.getBaseOpacity(edge.weight, edge.faded)}
+          strokeWidth={aspirationThreadStyles.getThreadWidth(edge.weight, edge.faded)}
+          style={{ strokeDasharray: "1", strokeDashoffset: dashOffset }}
+        />
+      ))}
+    </g>
+  );
+};
+
+const RootAnchor: React.FC<{ opacity: MotionValue<number> }> = ({ opacity }) => {
+  return (
+    <motion.g style={{ opacity }}>
+      <circle cx={ROOT_POINT.x} cy={ROOT_POINT.y} fill="rgba(34,211,238,0.14)" r={34} />
+      <circle cx={ROOT_POINT.x} cy={ROOT_POINT.y} fill="rgba(103,232,249,0.18)" r={18} />
+      <circle
+        cx={ROOT_POINT.x}
+        cy={ROOT_POINT.y}
+        fill="rgba(241,245,249,0.98)"
+        r={8.8}
+        stroke="rgba(34,211,238,0.92)"
+        strokeWidth="2.4"
+      />
+      <circle
+        cx={ROOT_POINT.x}
+        cy={ROOT_POINT.y}
+        fill="none"
+        opacity="0.36"
+        r={52}
+        stroke="rgba(103,232,249,0.28)"
+        strokeDasharray="8 11"
+        strokeWidth="1.4"
+      />
+    </motion.g>
+  );
+};
+
+const NodeGlyph: React.FC<{ node: LayoutNode }> = ({ node }) => {
+  const haloRadius = node.stage === 3 ? 26 : node.stage === 4 ? 23 : 19;
+  const nodeRadius = node.stage === 3 ? 10.5 : node.stage === 4 ? 9.3 : 8.3;
+
+  return (
+    <g>
+      <circle cx={node.point.x} cy={node.point.y} fill="rgba(34,211,238,0.15)" r={haloRadius} />
+      <circle cx={node.point.x} cy={node.point.y} fill="rgba(168,85,247,0.12)" r={haloRadius + 8} />
       <circle
         cx={node.point.x}
         cy={node.point.y}
         fill="rgba(241,245,249,0.98)"
         r={nodeRadius}
         stroke="rgba(103,232,249,0.98)"
-        strokeWidth="2.4"
+        strokeWidth="2.5"
+      />
+      <circle
+        cx={node.point.x}
+        cy={node.point.y}
+        fill="none"
+        opacity="0.34"
+        r={haloRadius + 15}
+        stroke="rgba(103,232,249,0.38)"
+        strokeDasharray="6 10"
+        strokeWidth="1.4"
       />
     </g>
   );
 };
 
-const NodeLabel: React.FC<{ node: LayoutNode }> = ({ node }) => {
+const NodeLabel: React.FC<{ node: LayoutNode; reveal: MotionValue<number> }> = ({ node, reveal }) => {
   const lines = wrapLabel(node.label);
   const { align, height, left, lineEndX, lineEndY, top, width } = node.labelBox;
   const textAnchor = align === "left" ? "end" : align === "right" ? "start" : "middle";
   const textX = align === "left" ? left + width - 18 : align === "right" ? left + 18 : left + width / 2;
 
   return (
-    <g>
+    <motion.g style={{ opacity: reveal }}>
       <line
-        stroke="rgba(125,211,252,0.46)"
+        stroke="rgba(125,211,252,0.44)"
         strokeDasharray="4 8"
         strokeLinecap="round"
         strokeWidth="1.6"
@@ -285,33 +256,34 @@ const NodeLabel: React.FC<{ node: LayoutNode }> = ({ node }) => {
         y2={lineEndY}
       />
       <rect
-        fill="rgba(2,6,23,0.76)"
+        fill="rgba(2,6,23,0.8)"
         height={height}
-        rx={18}
+        rx={20}
         stroke="rgba(186,230,253,0.12)"
         width={width}
         x={left}
         y={top}
       />
+      <rect fill="rgba(34,211,238,0.22)" height="1.6" rx="1.6" width={Math.max(46, width - 36)} x={left + 18} y={top + 12} />
       <text
         fill="rgba(186,230,253,0.48)"
-        fontSize="9.5"
+        fontSize="9.2"
         fontWeight="700"
-        letterSpacing="3.2"
+        letterSpacing="2.9"
         textAnchor={textAnchor}
         x={textX}
-        y={top + 18}
+        y={top + 20}
       >
         ASPIRATION
       </text>
       <text
-        fill="rgba(241,245,249,0.96)"
-        fontSize={lines.length > 1 ? "14" : "15"}
+        fill="rgba(241,245,249,0.98)"
+        fontSize={lines.length > 1 ? "14" : "15.2"}
         fontWeight="700"
         letterSpacing="-0.2"
         textAnchor={textAnchor}
         x={textX}
-        y={top + 40}
+        y={top + 43}
       >
         {lines.map((line, index) => (
           <tspan dy={index === 0 ? 0 : 16} key={`${node.id}-line-${index}`} x={textX}>
@@ -319,7 +291,28 @@ const NodeLabel: React.FC<{ node: LayoutNode }> = ({ node }) => {
           </tspan>
         ))}
       </text>
-    </g>
+    </motion.g>
+  );
+};
+
+const NodeStage: React.FC<{
+  edges: LayoutEdge[];
+  nodes: LayoutNode[];
+  opacity: MotionValue<number> | number;
+  reveal: MotionValue<number>;
+}> = ({ edges, nodes, opacity, reveal }) => {
+  return (
+    <motion.g style={{ opacity }}>
+      {edges.map((edge) => (
+        <EdgeBundle edge={edge} key={edge.id} reveal={reveal} />
+      ))}
+      {nodes.map((node) => (
+        <g key={node.id}>
+          <NodeGlyph node={node} />
+          <NodeLabel node={node} reveal={reveal} />
+        </g>
+      ))}
+    </motion.g>
   );
 };
 
@@ -328,197 +321,355 @@ const AspirationTreePlaceholder: React.FC<AspirationTreePlaceholderProps> = ({
   edges,
   footerTitle,
   footerBody,
+  eyebrow,
+  summary,
 }) => {
-  const sectionRef = useRef<HTMLDivElement | null>(null);
-  const reduceMotion = useReducedMotion();
+  const { sectionRef, qualityTier } = useSectionActivity<HTMLDivElement>({
+    nearAmount: 0.08,
+    nearMargin: "28% 0px 28% 0px",
+    primaryAmount: 0.38,
+    primaryMargin: "-14% 0px -14% 0px",
+  });
+  const { scrollContainerRef } = useLandingStoryRuntime();
+  const prefersReducedMotion = Boolean(useReducedMotion()) || qualityTier === "static";
+  const stickyViewportRef = useRef<HTMLDivElement>(null);
+  const [stickyHeight, setStickyHeight] = useState(0);
   const { scrollYProgress } = useScroll({
+    container: scrollContainerRef,
     target: sectionRef,
     offset: ["start start", "end end"],
   });
-  const progress = useSpring(scrollYProgress, {
-    stiffness: reduceMotion ? 60 : 90,
-    damping: reduceMotion ? 28 : 22,
-    mass: 1,
-  });
+  const progressUnits = useTransform(scrollYProgress, [0, 1], [0, RUNWAY_VIEWPORTS]);
 
-  const stageOneOpacity = useTransform(progress, [0.02, 0.12, 0.24], [0.16, 1, 1]);
-  const stageTwoOpacity = useTransform(progress, [0.18, 0.34, 0.52], [0.12, 1, 1]);
-  const stageThreeOpacity = useTransform(progress, [0.42, 0.56, 0.7], [0.1, 1, 1]);
-  const stageFourOpacity = useTransform(progress, [0.58, 0.74, 0.9], [0.08, 1, 1]);
-  const leafOpacity = useTransform(progress, [0.78, 0.92, 1], [0, 0.68, 0.84]);
-  const shellOpacity = useTransform(progress, [0, 0.04, 1], [0.55, 1, 1]);
-  const shellScale = useTransform(progress, [0, 0.72, 1], [0.985, 1, 1.01]);
-  const footerOpacity = useTransform(progress, [0.82, 0.94, 1], [0, 1, 1]);
-  const footerTranslate = useTransform(progress, [0.82, 1], [30, 0]);
+  const layout = useMemo(() => computeAspirationLayout(nodes, edges), [edges, nodes]);
 
-  const layout = useMemo(() => {
-    const layoutNodes = nodes.map((node) => {
-      const point = getNodePoint(node);
-      return {
-        ...node,
-        labelBox: getNodeLabel(node, point),
-        point,
-      };
-    });
+  const ghostEdges = useMemo(
+    () => [
+      ...layout.edgesByStage[1],
+      ...layout.edgesByStage[2],
+      ...layout.edgesByStage[3],
+      ...layout.edgesByStage[4],
+      ...layout.edgesByStage[5],
+    ],
+    [layout]
+  );
 
-    const nodeMap = new Map(layoutNodes.map((node) => [node.id, node]));
-    const stageOneNodes = layoutNodes.filter((node) => node.stage === 1);
-    const stageFourNodes = layoutNodes.filter((node) => node.stage === 4);
+  const ghostNodes = useMemo(
+    () => [
+      ...layout.nodesByStage[1],
+      ...layout.nodesByStage[2],
+      ...layout.nodesByStage[3],
+      ...layout.nodesByStage[4],
+    ],
+    [layout]
+  );
 
-    const rootEdges: LayoutEdge[] = stageOneNodes.map((node) => ({
-      from: "aspiration-root",
-      fromPoint: ROOT_POINT,
-      id: `root-${node.id}`,
-      stage: 1,
-      to: node.id,
-      toPoint: node.point,
-      weight: "trunk",
-    }));
-
-    const contentEdges: LayoutEdge[] = edges.flatMap((edge) => {
-      const fromNode = nodeMap.get(edge.from);
-      const toNode = nodeMap.get(edge.to);
-
-      if (!fromNode || !toNode) {
-        return [];
-      }
-
-      return [
-        {
-          ...edge,
-          fromPoint: fromNode.point,
-          id: `${edge.from}-${edge.to}`,
-          stage: Math.max(fromNode.stage, toNode.stage),
-          toPoint: toNode.point,
-        },
-      ];
-    });
-
-    const leafEdges: LayoutEdge[] = stageFourNodes.flatMap((node) => {
-      const spread = node.lane === "center" ? [-78, 0, 78] : node.lane === "left" ? [-88, 0, 62] : [-62, 0, 88];
-
-      return spread.map((offset, index) => ({
-        faded: true,
-        from: node.id,
-        fromPoint: node.point,
-        id: `${node.id}-leaf-${index}`,
-        stage: 5,
-        to: `${node.id}-leaf-end-${index}`,
-        toPoint: {
-          x: node.point.x + offset,
-          y: STAGE_Y[5] + Math.abs(offset) * 0.12 + index * 10,
-        },
-        weight: "leaf" as const,
-      }));
-    });
+  const stageBounds = useMemo(() => {
+    const stageOneValues = [
+      ROOT_POINT.y,
+      ...layout.edgesByStage[1].flatMap(edgeYValues),
+      ...layout.nodesByStage[1].flatMap(nodeYValues),
+    ];
+    const stageTwoValues = [
+      ...layout.edgesByStage[2].flatMap(edgeYValues),
+      ...layout.nodesByStage[2].flatMap(nodeYValues),
+    ];
+    const stageThreeValues = [
+      ...layout.edgesByStage[3].flatMap(edgeYValues),
+      ...layout.nodesByStage[3].flatMap(nodeYValues),
+    ];
+    const stageFourValues = [
+      ...layout.edgesByStage[4].flatMap(edgeYValues),
+      ...layout.nodesByStage[4].flatMap(nodeYValues),
+    ];
+    const leafValues = [
+      ...layout.edgesByStage[5].flatMap(edgeYValues),
+      ...layout.nodesByStage[4].flatMap(nodeYValues),
+    ];
 
     return {
-      edgesByStage: {
-        1: rootEdges,
-        2: contentEdges.filter((edge) => edge.stage === 2),
-        3: contentEdges.filter((edge) => edge.stage === 3),
-        4: contentEdges.filter((edge) => edge.stage === 4),
-        5: leafEdges,
-      },
-      nodesByStage: {
-        1: layoutNodes.filter((node) => node.stage === 1),
-        2: layoutNodes.filter((node) => node.stage === 2),
-        3: layoutNodes.filter((node) => node.stage === 3),
-        4: layoutNodes.filter((node) => node.stage === 4),
-      },
+      intro: createBounds([ROOT_POINT.y - 84, ...stageOneValues], 36, 92),
+      leaf: createBounds(leafValues, 62, 104),
+      stageFour: createBounds(stageFourValues, 56, 96),
+      stageOne: createBounds(stageOneValues, 44, 88),
+      stageThree: createBounds(stageThreeValues, 58, 92),
+      stageTwo: createBounds(stageTwoValues, 58, 94),
     };
-  }, [edges, nodes]);
+  }, [layout]);
+
+  useEffect(() => {
+    const element = stickyViewportRef.current;
+    if (!element || typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      const nextHeight = entries[0]?.contentRect.height ?? 0;
+      setStickyHeight((current) => (Math.abs(current - nextHeight) < 1 ? current : nextHeight));
+    });
+
+    observer.observe(element);
+    setStickyHeight(element.getBoundingClientRect().height);
+
+    return () => observer.disconnect();
+  }, []);
+
+  const getCenterTranslate = (bounds: StageBounds) => {
+    if (prefersReducedMotion || stickyHeight <= 0) {
+      return 0;
+    }
+
+    const scale = (stickyHeight * ARTBOARD_HEIGHT_MULTIPLIER) / VIEWBOX_HEIGHT;
+    return scale * (VIEWBOX_HEIGHT / 2 - bounds.centerY);
+  };
+
+  const cameraTranslations = useMemo(
+    () => ({
+      intro: getCenterTranslate(stageBounds.intro),
+      leaf: getCenterTranslate(stageBounds.leaf),
+      stageFour: getCenterTranslate(stageBounds.stageFour),
+      stageOne: getCenterTranslate(stageBounds.stageOne),
+      stageThree: getCenterTranslate(stageBounds.stageThree),
+      stageTwo: getCenterTranslate(stageBounds.stageTwo),
+    }),
+    [prefersReducedMotion, stageBounds, stickyHeight]
+  );
+
+  const shellOpacity = useTransform(progressUnits, [0, 0.22, RUNWAY_VIEWPORTS], [0.74, 1, 1]);
+  const shellScale = useTransform(progressUnits, [0, TIMELINE.stageFour.end, RUNWAY_VIEWPORTS], [0.992, 1, 1.012]);
+  const focusGlowOpacity = useTransform(progressUnits, [0, TIMELINE.stageTwo.mid, RUNWAY_VIEWPORTS], [0.18, 0.34, 0.24]);
+  const focusGlowScale = useTransform(progressUnits, [0, TIMELINE.stageThree.mid, RUNWAY_VIEWPORTS], [0.78, 1.02, 1.1]);
+  const focusGlowY = useTransform(progressUnits, [0, RUNWAY_VIEWPORTS], [18, -18]);
+  const introOpacity = useTransform(
+    progressUnits,
+    [0.06, 0.24, TIMELINE.intro.end * 0.76, TIMELINE.stageOne.start + 0.36],
+    [0, 1, 1, 0]
+  );
+  const rootOpacity = useTransform(progressUnits, [0, 0.16, 0.44], [0.3, 1, 1]);
+  const stageOneOpacity = useTransform(
+    progressUnits,
+    [TIMELINE.stageOne.start - 0.18, TIMELINE.stageOne.start + 0.28, TIMELINE.stageOne.end],
+    [0, 1, 0.94]
+  );
+  const stageOneReveal = useTransform(
+    progressUnits,
+    [TIMELINE.stageOne.start - 0.04, TIMELINE.stageOne.start + TIMELINE.stageOne.length * 0.74],
+    [0, 1]
+  );
+  const stageTwoOpacity = useTransform(
+    progressUnits,
+    [TIMELINE.stageTwo.start - 0.18, TIMELINE.stageTwo.start + 0.3, TIMELINE.stageTwo.end],
+    [0, 1, 0.92]
+  );
+  const stageTwoReveal = useTransform(
+    progressUnits,
+    [TIMELINE.stageTwo.start - 0.06, TIMELINE.stageTwo.start + TIMELINE.stageTwo.length * 0.72],
+    [0, 1]
+  );
+  const stageThreeOpacity = useTransform(
+    progressUnits,
+    [TIMELINE.stageThree.start - 0.16, TIMELINE.stageThree.start + 0.28, TIMELINE.stageThree.end],
+    [0, 1, 0.92]
+  );
+  const stageThreeReveal = useTransform(
+    progressUnits,
+    [TIMELINE.stageThree.start - 0.04, TIMELINE.stageThree.start + TIMELINE.stageThree.length * 0.74],
+    [0, 1]
+  );
+  const stageFourOpacity = useTransform(
+    progressUnits,
+    [TIMELINE.stageFour.start - 0.14, TIMELINE.stageFour.start + 0.32, TIMELINE.stageFour.end],
+    [0, 1, 0.94]
+  );
+  const stageFourReveal = useTransform(
+    progressUnits,
+    [TIMELINE.stageFour.start - 0.04, TIMELINE.stageFour.start + TIMELINE.stageFour.length * 0.76],
+    [0, 1]
+  );
+  const leafOpacity = useTransform(
+    progressUnits,
+    [TIMELINE.leaf.start - 0.12, TIMELINE.leaf.start + 0.34, TIMELINE.leaf.end],
+    [0, 0.88, 0.96]
+  );
+  const leafReveal = useTransform(
+    progressUnits,
+    [TIMELINE.leaf.start - 0.02, TIMELINE.leaf.start + TIMELINE.leaf.length * 0.78],
+    [0, 1]
+  );
+  const footerOpacity = useTransform(
+    progressUnits,
+    [TIMELINE.stageFour.end - 0.08, TIMELINE.leaf.start + 0.24, TIMELINE.leaf.end - 0.16],
+    [0, 0.58, 1]
+  );
+  const footerTranslate = useTransform(progressUnits, [TIMELINE.stageFour.end - 0.08, TIMELINE.leaf.end], [34, 0]);
+  const footerScale = useTransform(progressUnits, [TIMELINE.stageFour.end - 0.08, TIMELINE.leaf.end], [0.96, 1]);
+  const assetTranslateY = useTransform(
+    progressUnits,
+    [
+      0,
+      TIMELINE.intro.mid,
+      TIMELINE.stageOne.mid,
+      TIMELINE.stageTwo.mid,
+      TIMELINE.stageThree.mid,
+      TIMELINE.stageFour.mid,
+      TIMELINE.leaf.mid,
+      RUNWAY_VIEWPORTS,
+    ],
+    [
+      cameraTranslations.intro,
+      cameraTranslations.intro,
+      cameraTranslations.stageOne,
+      cameraTranslations.stageTwo,
+      cameraTranslations.stageThree,
+      cameraTranslations.stageFour,
+      cameraTranslations.leaf,
+      cameraTranslations.leaf,
+    ]
+  );
+  const assetScale = useTransform(progressUnits, [0, TIMELINE.stageThree.mid, RUNWAY_VIEWPORTS], [1.014, 1, 1.022]);
+  const assetOpacity = useTransform(progressUnits, [TIMELINE.leaf.start - 0.12, TIMELINE.leaf.end], [1, 0.84]);
 
   return (
-    <div ref={sectionRef} className="relative min-h-[300dvh]">
-      <div className="sticky top-[7vh] flex h-[86vh] items-center justify-center">
+    <div
+      className="relative"
+      ref={sectionRef as React.RefObject<HTMLDivElement>}
+      style={{ height: `${SECTION_VIEWPORTS * 100}dvh` }}
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(34,211,238,0.16),transparent_18%),radial-gradient(circle_at_50%_56%,rgba(168,85,247,0.12),transparent_26%),linear-gradient(180deg,rgba(2,6,23,0.98),rgba(2,6,23,0.95)_36%,rgba(8,15,32,1)_100%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-slate-950 via-slate-950/70 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent" />
+
+      <div ref={stickyViewportRef} className="sticky top-0 flex h-[100dvh] items-center justify-center overflow-hidden">
         <motion.div
-          className="relative mx-auto h-full w-full max-w-6xl overflow-hidden rounded-[2.8rem] border border-cyan-200/8 bg-[linear-gradient(180deg,rgba(2,6,23,0.9),rgba(2,6,23,0.72)),radial-gradient(circle_at_50%_16%,rgba(34,211,238,0.13),transparent_28%),radial-gradient(circle_at_20%_76%,rgba(168,85,247,0.12),transparent_28%),radial-gradient(circle_at_80%_74%,rgba(56,189,248,0.12),transparent_28%)] px-4 py-4 shadow-[0_0_90px_rgba(8,145,178,0.12)] backdrop-blur-sm sm:px-6 sm:py-6"
+          className="relative h-full w-full overflow-hidden px-4 sm:px-6 lg:px-10"
           style={{ opacity: shellOpacity, scale: shellScale }}
         >
-          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
-            <div className="absolute left-1/2 top-[8%] h-40 w-40 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
-            <div className="absolute bottom-[14%] left-[18%] h-36 w-36 rounded-full bg-fuchsia-500/10 blur-3xl" />
-            <div className="absolute bottom-[18%] right-[18%] h-36 w-36 rounded-full bg-sky-500/10 blur-3xl" />
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute left-1/2 top-[10%] h-52 w-52 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
+            <div className="absolute bottom-[16%] left-[16%] h-40 w-40 rounded-full bg-fuchsia-500/10 blur-3xl" />
+            <div className="absolute bottom-[20%] right-[16%] h-40 w-40 rounded-full bg-sky-500/10 blur-3xl" />
+            <motion.div
+              className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.26),rgba(34,211,238,0.08)_44%,transparent_72%)] blur-3xl"
+              style={{ opacity: focusGlowOpacity, scale: focusGlowScale, y: focusGlowY }}
+            />
           </div>
 
-          <svg
-            aria-hidden
-            className="absolute inset-0 h-full w-full"
-            preserveAspectRatio="xMidYMid meet"
-            viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
-          >
-            <motion.g style={{ opacity: stageOneOpacity }}>
-              <circle cx={ROOT_POINT.x} cy={ROOT_POINT.y} fill="rgba(34,211,238,0.2)" r="18" />
-              <circle cx={ROOT_POINT.x} cy={ROOT_POINT.y} fill="rgba(241,245,249,0.98)" r="8" stroke="rgba(103,232,249,0.98)" strokeWidth="2.4" />
-              {layout.edgesByStage[1].map((edge) => (
-                <EdgeBundle edge={edge} key={edge.id} />
-              ))}
-              {layout.nodesByStage[1].map((node) => (
-                <g key={node.id}>
-                  <NodeGlyph node={node} />
-                  <NodeLabel node={node} />
-                </g>
-              ))}
-            </motion.g>
+          <div className="relative z-10 flex h-full flex-col">
+            <motion.div
+              className="pointer-events-none absolute left-4 top-5 z-20 max-w-[28rem] rounded-[1.6rem] border border-white/8 bg-slate-950/38 px-5 py-4 shadow-[0_30px_120px_rgba(2,6,23,0.28)] backdrop-blur-2xl sm:left-6 sm:px-6 sm:py-5 lg:left-10"
+              style={{ opacity: introOpacity }}
+            >
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.42em] text-cyan-100/58">{eyebrow}</p>
+              <p className="mt-3 max-w-lg text-[clamp(0.98rem,1.4vw,1.14rem)] leading-relaxed text-slate-200/82">
+                {summary}
+              </p>
+            </motion.div>
 
-            <motion.g style={{ opacity: stageTwoOpacity }}>
-              {layout.edgesByStage[2].map((edge) => (
-                <EdgeBundle edge={edge} key={edge.id} />
-              ))}
-              {layout.nodesByStage[2].map((node) => (
-                <g key={node.id}>
-                  <NodeGlyph node={node} />
-                  <NodeLabel node={node} />
-                </g>
-              ))}
-            </motion.g>
+            <div className="relative flex flex-1 items-center justify-center">
+              <div className="absolute inset-x-[4%] top-[13%] h-[1px] bg-gradient-to-r from-transparent via-cyan-200/22 to-transparent" />
+              <div className="absolute inset-x-[6%] bottom-[18%] h-[1px] bg-gradient-to-r from-transparent via-fuchsia-200/16 to-transparent" />
 
-            <motion.g style={{ opacity: stageThreeOpacity }}>
-              {layout.edgesByStage[3].map((edge) => (
-                <EdgeBundle edge={edge} key={edge.id} />
-              ))}
-              {layout.nodesByStage[3].map((node) => (
-                <g key={node.id}>
-                  <NodeGlyph node={node} />
-                  <NodeLabel node={node} />
-                </g>
-              ))}
-            </motion.g>
+              <div className="absolute inset-0 overflow-hidden">
+                <div
+                  className="absolute left-1/2 top-1/2 h-[208%] max-w-none -translate-x-1/2 -translate-y-1/2"
+                  style={{ aspectRatio: `${VIEWBOX_WIDTH} / ${VIEWBOX_HEIGHT}` }}
+                >
+                  <motion.div className="h-full w-full" style={{ opacity: assetOpacity, scale: assetScale, y: assetTranslateY }}>
+                    <svg aria-hidden className="h-full w-full" preserveAspectRatio="xMidYMin meet" viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}>
+                      <defs>
+                        <linearGradient id="aspiration-thread" gradientUnits="userSpaceOnUse" x1="96" x2="904" y1="84" y2="1410">
+                          <stop offset="0%" stopColor="#e0fbff" stopOpacity="0.92" />
+                          <stop offset="42%" stopColor="#67e8f9" stopOpacity="0.96" />
+                          <stop offset="72%" stopColor="#7dd3fc" stopOpacity="0.92" />
+                          <stop offset="100%" stopColor="#f5f3ff" stopOpacity="0.88" />
+                        </linearGradient>
+                        <linearGradient id="aspiration-thread-glow" gradientUnits="userSpaceOnUse" x1="120" x2="920" y1="90" y2="1418">
+                          <stop offset="0%" stopColor="#22d3ee" stopOpacity="0" />
+                          <stop offset="46%" stopColor="#22d3ee" stopOpacity="0.36" />
+                          <stop offset="78%" stopColor="#a855f7" stopOpacity="0.24" />
+                          <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
+                        </linearGradient>
+                      </defs>
 
-            <motion.g style={{ opacity: stageFourOpacity }}>
-              {layout.edgesByStage[4].map((edge) => (
-                <EdgeBundle edge={edge} key={edge.id} />
-              ))}
-              {layout.nodesByStage[4].map((node) => (
-                <g key={node.id}>
-                  <NodeGlyph node={node} />
-                  <NodeLabel node={node} />
-                </g>
-              ))}
-            </motion.g>
+                      {ghostEdges.map((edge) => (
+                        <GhostEdgeBundle edge={edge} key={`ghost-${edge.id}`} />
+                      ))}
+                      {ghostNodes.map((node) => (
+                        <GhostNodeGlyph key={`ghost-node-${node.id}`} node={node} />
+                      ))}
 
-            <motion.g style={{ opacity: leafOpacity }}>
-              {layout.edgesByStage[5].map((edge) => (
-                <EdgeBundle edge={edge} key={edge.id} />
-              ))}
-            </motion.g>
-          </svg>
+                      <RootAnchor opacity={rootOpacity} />
 
-          <motion.div
-            className="absolute inset-x-0 bottom-7 z-20 mx-auto max-w-3xl px-4 text-center sm:bottom-10"
-            style={{ opacity: footerOpacity, y: footerTranslate }}
-          >
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.42em] text-cyan-100/54">
-              Beyond Graduation
-            </p>
-            <h3 className="mt-5 text-4xl font-semibold leading-tight text-slate-100 xs:text-[2.85rem] sm:text-[3.5rem]">
-              {footerTitle}
-            </h3>
-            <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-300 sm:text-[1.18rem]">
-              {footerBody}
-            </p>
-          </motion.div>
+                      <NodeStage
+                        edges={layout.edgesByStage[1]}
+                        nodes={layout.nodesByStage[1]}
+                        opacity={stageOneOpacity}
+                        reveal={stageOneReveal}
+                      />
+                      <NodeStage
+                        edges={layout.edgesByStage[2]}
+                        nodes={layout.nodesByStage[2]}
+                        opacity={stageTwoOpacity}
+                        reveal={stageTwoReveal}
+                      />
+                      <NodeStage
+                        edges={layout.edgesByStage[3]}
+                        nodes={layout.nodesByStage[3]}
+                        opacity={stageThreeOpacity}
+                        reveal={stageThreeReveal}
+                      />
+                      <NodeStage
+                        edges={layout.edgesByStage[4]}
+                        nodes={layout.nodesByStage[4]}
+                        opacity={stageFourOpacity}
+                        reveal={stageFourReveal}
+                      />
+
+                      <motion.g style={{ opacity: leafOpacity }}>
+                        {layout.edgesByStage[5].map((edge) => (
+                          <EdgeBundle edge={edge} key={edge.id} reveal={leafReveal} />
+                        ))}
+                      </motion.g>
+
+                      <motion.rect
+                        fill="url(#aspiration-thread)"
+                        height="1.5"
+                        opacity="0.1"
+                        style={{ transformOrigin: "50% 50%" }}
+                        width={VIEWBOX_WIDTH}
+                        x="0"
+                        y="128"
+                      />
+                      <motion.rect
+                        fill="url(#aspiration-thread-glow)"
+                        height="1.5"
+                        opacity="0.12"
+                        style={{ transformOrigin: "50% 50%" }}
+                        width={VIEWBOX_WIDTH}
+                        x="0"
+                        y="1388"
+                      />
+                    </svg>
+                  </motion.div>
+                </div>
+              </div>
+            </div>
+
+            <motion.div
+              className="absolute inset-x-0 bottom-6 z-20 mx-auto max-w-3xl px-4 text-center sm:bottom-8"
+              style={{ opacity: footerOpacity, scale: footerScale, y: footerTranslate }}
+            >
+              <div className="inline-flex flex-col items-center rounded-[2rem] border border-white/8 bg-slate-950/38 px-6 py-5 shadow-[0_25px_90px_rgba(2,6,23,0.34)] backdrop-blur-2xl sm:px-8 sm:py-6">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.42em] text-cyan-100/54">Beyond Graduation</p>
+                <h3 className="mt-4 text-[clamp(2.4rem,4.6vw,4.2rem)] font-semibold leading-[0.95] text-slate-100">
+                  {footerTitle}
+                </h3>
+                <p className="mx-auto mt-5 max-w-2xl text-[clamp(1rem,1.7vw,1.2rem)] leading-relaxed text-slate-300">
+                  {footerBody}
+                </p>
+              </div>
+            </motion.div>
+          </div>
         </motion.div>
       </div>
     </div>

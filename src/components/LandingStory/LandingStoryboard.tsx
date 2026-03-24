@@ -1,4 +1,4 @@
-import React from "react";
+import React, { RefObject } from "react";
 import { WipeOptions } from "../Transitions/TransitionWipe";
 import { StorySectionData, storySections } from "./storySections";
 import {
@@ -11,9 +11,11 @@ import PersonalIntroductionSection from "./sections/PersonalIntroductionSection"
 import ComputationalSystemsSection from "./sections/ComputationalSystemsSection";
 import BiologyIntelligenceSection from "./sections/BiologyIntelligenceSection";
 import AspirationJourneySection from "./sections/AspirationJourneySection";
+import { LandingStoryRuntimeProvider } from "./runtime/LandingStoryRuntime";
 
 export interface LandingStoryboardProps {
   onNavigate: (path: string, opts?: WipeOptions) => void;
+  scrollContainerRef: RefObject<HTMLDivElement>;
 }
 
 interface StorySectionRendererProps {
@@ -49,15 +51,17 @@ const StorySectionRenderer: React.FC<StorySectionRendererProps> = ({ section, on
   return <AspirationJourneySection section={section} content={landingAspirationSectionContent} />;
 };
 
-const LandingStoryboard: React.FC<LandingStoryboardProps> = ({ onNavigate }) => {
+const LandingStoryboard: React.FC<LandingStoryboardProps> = ({ onNavigate, scrollContainerRef }) => {
   return (
-    <section className="relative z-10 overflow-x-clip">
-      {storySections.map((section) => (
-        <div key={section.id} className="relative">
-          <StorySectionRenderer section={section} onNavigate={onNavigate} />
-        </div>
-      ))}
-    </section>
+    <LandingStoryRuntimeProvider scrollContainerRef={scrollContainerRef}>
+      <section className="relative z-10 overflow-x-clip">
+        {storySections.map((section) => (
+          <div key={section.id} className="relative">
+            <StorySectionRenderer section={section} onNavigate={onNavigate} />
+          </div>
+        ))}
+      </section>
+    </LandingStoryRuntimeProvider>
   );
 };
 

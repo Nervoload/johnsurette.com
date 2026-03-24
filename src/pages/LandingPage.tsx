@@ -177,7 +177,7 @@ const LandingContent: React.FC<LandingContentProps> = ({
         )}
 
         <div ref={storySectionRef}>
-          <LandingStoryboard onNavigate={onNavigate} />
+          <LandingStoryboard onNavigate={onNavigate} scrollContainerRef={scrollContainerRef} />
         </div>
       </div>
     </div>
@@ -196,6 +196,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
     <PageScaffold
       backgroundClassName={pageVisuals.landing.backgroundClassName}
       footerBackgroundColor={pageVisuals.landing.footerBackgroundColor}
+      footerRunwayVh={220}
     >
       {(scrollRef) => (
         <LandingContent
