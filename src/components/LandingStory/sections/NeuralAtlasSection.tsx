@@ -37,7 +37,7 @@ const links: Array<[number, number]> = [
 const NeuralAtlasSection: React.FC<NeuralAtlasSectionProps> = ({ section }) => {
   return (
     <section className="relative isolate min-h-[100dvh] overflow-hidden px-4 py-24 xs:px-6 sm:px-10 lg:px-16">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_10%,rgba(20,184,166,0.14),rgba(2,6,23,0)_44%),radial-gradient(circle_at_88%_14%,rgba(236,72,153,0.12),rgba(2,6,23,0)_42%),linear-gradient(170deg,rgba(2,6,23,0.74),rgba(11,17,32,0.7)_60%,rgba(15,23,42,0.74))]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_10%,rgba(20,184,166,0.14),rgba(2,6,23,0)_44%),radial-gradient(circle_at_88%_14%,rgba(236,72,153,0.12),rgba(2,6,23,0)_42%)]" />
 
       <div className="relative mx-auto flex w-full max-w-7xl flex-col gap-10">
         <motion.div
@@ -47,13 +47,13 @@ const NeuralAtlasSection: React.FC<NeuralAtlasSectionProps> = ({ section }) => {
           transition={{ duration: 0.62 }}
           className="max-w-3xl"
         >
-          <p className="text-xs uppercase tracking-[0.28em] text-cyan-100/70">{section.eyebrow}</p>
-          <h2 className="mt-4 text-3xl font-semibold leading-tight text-slate-100 xs:text-4xl sm:text-5xl">{section.title}</h2>
-          <p className="mt-6 text-lg leading-relaxed text-slate-300">{section.summary}</p>
+          <p className="theme-story-contrast-accent text-xs uppercase tracking-[0.28em]">{section.eyebrow}</p>
+          <h2 className="theme-story-contrast-title mt-4 text-3xl font-semibold leading-tight xs:text-4xl sm:text-5xl">{section.title}</h2>
+          <p className="theme-story-contrast-body mt-6 text-lg leading-relaxed">{section.summary}</p>
         </motion.div>
 
         <motion.div
-          className="relative h-[540px] overflow-hidden rounded-[2rem] border border-cyan-200/20 bg-slate-900/45 shadow-[0_25px_90px_-50px_rgba(6,182,212,0.55)]"
+          className="theme-story-contrast-panel relative h-[540px] overflow-hidden rounded-[2rem] border"
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, amount: 0.2 }}
@@ -86,7 +86,7 @@ const NeuralAtlasSection: React.FC<NeuralAtlasSectionProps> = ({ section }) => {
           {nodes.map((node, idx) => (
             <motion.div
               key={node.id}
-              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-xl border border-cyan-200/25 bg-slate-950/72 px-3 py-2 text-[11px] uppercase tracking-[0.12em] text-cyan-100"
+              className="theme-story-contrast-chip absolute -translate-x-1/2 -translate-y-1/2 rounded-xl border px-3 py-2 text-[11px] uppercase tracking-[0.12em]"
               style={{ left: `${node.x}%`, top: `${node.y}%` }}
               whileInView={{
                 boxShadow: [
@@ -102,13 +102,13 @@ const NeuralAtlasSection: React.FC<NeuralAtlasSectionProps> = ({ section }) => {
             </motion.div>
           ))}
 
-          <div className="absolute right-6 top-6 max-w-xs rounded-2xl border border-slate-700/80 bg-slate-900/72 p-4 text-sm text-slate-200 backdrop-blur">
+          <div className="theme-story-contrast-panel-soft theme-story-contrast-body absolute right-6 top-6 max-w-xs rounded-2xl border p-4 text-sm">
             Signal paths represent how perception, memory, and interface design can be mapped as one adaptive network.
           </div>
 
           <div className="absolute bottom-6 left-6 grid gap-2 sm:grid-cols-2">
             {section.focusAreas.map((item) => (
-              <div key={item} className="rounded-xl border border-slate-700/70 bg-slate-900/65 px-3 py-2 text-xs text-slate-200">
+              <div key={item} className="theme-story-contrast-chip rounded-xl border px-3 py-2 text-xs">
                 {item}
               </div>
             ))}

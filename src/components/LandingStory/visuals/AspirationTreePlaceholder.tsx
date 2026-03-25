@@ -17,8 +17,6 @@ import { useLandingStoryRuntime } from "../runtime/LandingStoryRuntime";
 interface AspirationTreePlaceholderProps {
   nodes: LandingAspirationNode[];
   edges: LandingAspirationEdge[];
-  footerTitle: string;
-  footerBody: string;
   eyebrow: string;
   summary: string;
 }
@@ -256,17 +254,17 @@ const NodeLabel: React.FC<{ node: LayoutNode; reveal: MotionValue<number> }> = (
         y2={lineEndY}
       />
       <rect
-        fill="rgba(2,6,23,0.8)"
+        fill="var(--story-label-bg)"
         height={height}
         rx={20}
-        stroke="rgba(186,230,253,0.12)"
+        stroke="var(--story-label-border)"
         width={width}
         x={left}
         y={top}
       />
       <rect fill="rgba(34,211,238,0.22)" height="1.6" rx="1.6" width={Math.max(46, width - 36)} x={left + 18} y={top + 12} />
       <text
-        fill="rgba(186,230,253,0.48)"
+        fill="var(--story-label-kicker)"
         fontSize="9.2"
         fontWeight="700"
         letterSpacing="2.9"
@@ -277,7 +275,7 @@ const NodeLabel: React.FC<{ node: LayoutNode; reveal: MotionValue<number> }> = (
         ASPIRATION
       </text>
       <text
-        fill="rgba(241,245,249,0.98)"
+        fill="var(--story-label-title)"
         fontSize={lines.length > 1 ? "14" : "15.2"}
         fontWeight="700"
         letterSpacing="-0.2"
@@ -319,8 +317,6 @@ const NodeStage: React.FC<{
 const AspirationTreePlaceholder: React.FC<AspirationTreePlaceholderProps> = ({
   nodes,
   edges,
-  footerTitle,
-  footerBody,
   eyebrow,
   summary,
 }) => {
@@ -496,13 +492,6 @@ const AspirationTreePlaceholder: React.FC<AspirationTreePlaceholderProps> = ({
     [TIMELINE.leaf.start - 0.02, TIMELINE.leaf.start + TIMELINE.leaf.length * 0.78],
     [0, 1]
   );
-  const footerOpacity = useTransform(
-    progressUnits,
-    [TIMELINE.stageFour.end - 0.08, TIMELINE.leaf.start + 0.24, TIMELINE.leaf.end - 0.16],
-    [0, 0.58, 1]
-  );
-  const footerTranslate = useTransform(progressUnits, [TIMELINE.stageFour.end - 0.08, TIMELINE.leaf.end], [34, 0]);
-  const footerScale = useTransform(progressUnits, [TIMELINE.stageFour.end - 0.08, TIMELINE.leaf.end], [0.96, 1]);
   const assetTranslateY = useTransform(
     progressUnits,
     [
@@ -531,13 +520,14 @@ const AspirationTreePlaceholder: React.FC<AspirationTreePlaceholderProps> = ({
 
   return (
     <div
-      className="relative"
+      className="theme-story-contrast-label relative"
       ref={sectionRef as React.RefObject<HTMLDivElement>}
       style={{ height: `${SECTION_VIEWPORTS * 100}dvh` }}
     >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(34,211,238,0.16),transparent_18%),radial-gradient(circle_at_50%_56%,rgba(168,85,247,0.12),transparent_26%),linear-gradient(180deg,rgba(2,6,23,0.98),rgba(2,6,23,0.95)_36%,rgba(8,15,32,1)_100%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-slate-950 via-slate-950/70 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent" />
+      <div className="theme-story-contrast-backdrop absolute inset-0" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(34,211,238,0.16),transparent_18%),radial-gradient(circle_at_50%_56%,rgba(168,85,247,0.12),transparent_26%)]" />
+      <div className="theme-story-contrast-top-fade pointer-events-none absolute inset-x-0 top-0 h-28" />
+      <div className="theme-story-contrast-bottom-fade pointer-events-none absolute inset-x-0 bottom-0 h-28" />
 
       <div ref={stickyViewportRef} className="sticky top-0 flex h-[100dvh] items-center justify-center overflow-hidden">
         <motion.div
@@ -556,11 +546,11 @@ const AspirationTreePlaceholder: React.FC<AspirationTreePlaceholderProps> = ({
 
           <div className="relative z-10 flex h-full flex-col">
             <motion.div
-              className="pointer-events-none absolute left-4 top-5 z-20 max-w-[28rem] rounded-[1.6rem] border border-white/8 bg-slate-950/38 px-5 py-4 shadow-[0_30px_120px_rgba(2,6,23,0.28)] backdrop-blur-2xl sm:left-6 sm:px-6 sm:py-5 lg:left-10"
+              className="theme-story-contrast-panel pointer-events-none absolute left-4 top-5 z-20 max-w-[28rem] rounded-[1.6rem] border px-5 py-4 sm:left-6 sm:px-6 sm:py-5 lg:left-10"
               style={{ opacity: introOpacity }}
             >
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.42em] text-cyan-100/58">{eyebrow}</p>
-              <p className="mt-3 max-w-lg text-[clamp(0.98rem,1.4vw,1.14rem)] leading-relaxed text-slate-200/82">
+              <p className="theme-story-contrast-accent text-[0.7rem] font-semibold uppercase tracking-[0.42em]">{eyebrow}</p>
+              <p className="theme-story-contrast-body mt-3 max-w-lg text-[clamp(0.98rem,1.4vw,1.14rem)] leading-relaxed">
                 {summary}
               </p>
             </motion.div>
@@ -655,20 +645,6 @@ const AspirationTreePlaceholder: React.FC<AspirationTreePlaceholderProps> = ({
               </div>
             </div>
 
-            <motion.div
-              className="absolute inset-x-0 bottom-6 z-20 mx-auto max-w-3xl px-4 text-center sm:bottom-8"
-              style={{ opacity: footerOpacity, scale: footerScale, y: footerTranslate }}
-            >
-              <div className="inline-flex flex-col items-center rounded-[2rem] border border-white/8 bg-slate-950/38 px-6 py-5 shadow-[0_25px_90px_rgba(2,6,23,0.34)] backdrop-blur-2xl sm:px-8 sm:py-6">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.42em] text-cyan-100/54">Beyond Graduation</p>
-                <h3 className="mt-4 text-[clamp(2.4rem,4.6vw,4.2rem)] font-semibold leading-[0.95] text-slate-100">
-                  {footerTitle}
-                </h3>
-                <p className="mx-auto mt-5 max-w-2xl text-[clamp(1rem,1.7vw,1.2rem)] leading-relaxed text-slate-300">
-                  {footerBody}
-                </p>
-              </div>
-            </motion.div>
           </div>
         </motion.div>
       </div>

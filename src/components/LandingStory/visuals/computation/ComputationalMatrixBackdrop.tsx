@@ -39,13 +39,13 @@ const ComputationalMatrixBackdrop: React.FC<ComputationalMatrixBackdropProps> = 
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(148,163,184,0.05)_1px,transparent_1px),linear-gradient(rgba(148,163,184,0.04)_1px,transparent_1px)] [background-size:36px_36px] opacity-25" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_22%,rgba(34,211,238,0.12),transparent_26%),radial-gradient(circle_at_86%_14%,rgba(129,140,248,0.11),transparent_22%),radial-gradient(circle_at_20%_72%,rgba(16,185,129,0.08),transparent_24%)]" />
 
-      <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-slate-950 via-slate-950/66 to-transparent" />
-      <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-slate-950 via-slate-950/66 to-transparent" />
+      <div className="theme-story-contrast-side-fade-left absolute inset-y-0 left-0 w-32" />
+      <div className="theme-story-contrast-side-fade-right absolute inset-y-0 right-0 w-32" />
 
       {columns.map((column, index) => (
         <motion.pre
           key={`computational-rain-${index}`}
-          className="absolute top-[-12%] select-none whitespace-pre text-[10px] font-semibold leading-[1.6] tracking-[0.36em] text-cyan-100/18 [mask-image:linear-gradient(180deg,transparent,black_18%,black_82%,transparent)]"
+          className="theme-story-contrast-rain absolute top-[-12%] select-none whitespace-pre text-[10px] font-semibold leading-[1.6] tracking-[0.36em] [mask-image:linear-gradient(180deg,transparent,black_18%,black_82%,transparent)]"
           initial={{ opacity: 0, y: "-18%" }}
           animate={
             !active

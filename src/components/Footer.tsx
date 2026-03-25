@@ -25,7 +25,8 @@ const Footer: React.FC<FooterProps> = ({
 }) => {
   const [isScrollable, setIsScrollable] = useState(false);
   const [footerProgress, setFooterProgress] = useState(0);
-  const footerVisible = isScrollable && footerProgress > 0.03;
+  const panelProgress = clamp01((footerProgress - 0.32) / 0.68);
+  const footerVisible = isScrollable && panelProgress > 0.01;
 
   useEffect(() => {
     const container = scrollContainerRef?.current;
@@ -83,9 +84,6 @@ const Footer: React.FC<FooterProps> = ({
       return;
     }
 
-    const peekProgress = clamp01(footerProgress / 0.35);
-    const panelProgress = clamp01((footerProgress - 0.32) / 0.68);
-
     upsertRuntimeContextEntry({
       pagePath,
       id: contextId,
@@ -96,7 +94,6 @@ const Footer: React.FC<FooterProps> = ({
       metadata: {
         isScrollable,
         footerProgress: Number(footerProgress.toFixed(4)),
-        peekProgress: Number(peekProgress.toFixed(4)),
         panelProgress: Number(panelProgress.toFixed(4)),
         runwayVh,
       },
@@ -111,75 +108,55 @@ const Footer: React.FC<FooterProps> = ({
     return null;
   }
 
-  const peekProgress = clamp01(footerProgress / 0.35);
-  const panelProgress = clamp01((footerProgress - 0.32) / 0.68);
-  const footerBarBackground = backgroundColor === "var(--theme-footer-panel-bg)" ? "var(--theme-footer-bar-bg)" : backgroundColor;
-
-  const barOpacity = 0.4 + peekProgress * 0.6;
   const panelOpacity = panelProgress;
   const panelHeightVh = 28 + panelProgress * 72;
 
   return (
-    <>
+    <motion.div
+      className="theme-footer-panel pointer-events-none fixed bottom-0 left-0 right-0 z-50 overflow-hidden"
+      style={{
+        height: `${panelHeightVh}vh`,
+        opacity: panelOpacity,
+        backgroundColor,
+        backdropFilter: "blur(16px)",
+      }}
+    >
       <motion.div
-        className="theme-footer-bar theme-border-subtle pointer-events-none fixed bottom-0 left-0 right-0 z-40 border-t backdrop-blur-xl"
-        style={{
-          backgroundColor: footerBarBackground,
-          opacity: barOpacity,
-          transform: `translateY(${(1 - peekProgress) * 14}px)`,
-        }}
+        className="absolute -left-16 top-8 h-56 w-56 rounded-full blur-3xl"
+        style={{ background: "var(--theme-accent-soft)" }}
+        animate={{ x: [0, 50, -12, 0], y: [0, -16, 22, 0] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       >
-        <div className="theme-text-primary mx-auto flex h-14 max-w-6xl items-center justify-between px-5 pb-[env(safe-area-inset-bottom,0px)] text-sm">
-          <p className="font-medium tracking-wide">{ownerName}</p>
-          <p className="theme-text-muted">{ownerEmail}</p>
-        </div>
       </motion.div>
-
       <motion.div
-        className="theme-footer-panel theme-border-subtle pointer-events-none fixed bottom-0 left-0 right-0 z-50 overflow-hidden border-t"
-        style={{
-          height: `${panelHeightVh}vh`,
-          opacity: panelOpacity,
-          backgroundColor,
-          backdropFilter: "blur(16px)",
-        }}
-      >
-        <motion.div
-          className="absolute -left-16 top-8 h-56 w-56 rounded-full blur-3xl"
-          style={{ background: "var(--theme-accent-soft)" }}
-          animate={{ x: [0, 50, -12, 0], y: [0, -16, 22, 0] }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute -right-16 bottom-8 h-64 w-64 rounded-full blur-3xl"
-          style={{ background: "var(--theme-accent-soft)" }}
-          animate={{ x: [0, -56, 16, 0], y: [0, 24, -26, 0] }}
-          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-        />
+        className="absolute -right-16 bottom-8 h-64 w-64 rounded-full blur-3xl"
+        style={{ background: "var(--theme-accent-soft)" }}
+        animate={{ x: [0, -56, 16, 0], y: [0, 24, -26, 0] }}
+        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+      />
 
-        <div className="theme-text-primary relative mx-auto flex h-full max-w-3xl flex-col items-center justify-center gap-4 px-6 text-center">
-          <h2 className="text-3xl font-medium tracking-tight sm:text-4xl" style={{ opacity: 0.45 + panelProgress * 0.55 }}>
-            {ownerName}
-          </h2>
-          <p className="theme-text-muted max-w-xl" style={{ opacity: 0.25 + panelProgress * 0.75 }}>
-            {siteMeta.footerTagline}
-          </p>
-          <div className="theme-text-muted flex items-center gap-5 text-sm" style={{ opacity: 0.2 + panelProgress * 0.8 }}>
-            {siteMeta.socialLinks.map((link) => (
-              <a
-                key={link.label}
-                className="theme-link pointer-events-auto underline underline-offset-4"
-                href={link.href}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
+      <div className="theme-text-primary relative mx-auto flex h-full max-w-3xl flex-col items-center justify-center gap-4 px-6 text-center">
+        <h2 className="text-3xl font-medium tracking-tight sm:text-4xl" style={{ opacity: 0.45 + panelProgress * 0.55 }}>
+          {ownerName}
+        </h2>
+        <p className="theme-text-muted max-w-xl" style={{ opacity: 0.25 + panelProgress * 0.75 }}>
+          {siteMeta.footerTagline}
+        </p>
+        <div className="theme-text-muted flex items-center gap-5 text-sm" style={{ opacity: 0.2 + panelProgress * 0.8 }}>
+          {siteMeta.socialLinks.map((link) => (
+            <a
+              key={link.label}
+              className="theme-link pointer-events-auto underline underline-offset-4"
+              href={link.href}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {link.label}
+            </a>
+          ))}
         </div>
-      </motion.div>
-    </>
+      </div>
+    </motion.div>
   );
 };
 

@@ -94,6 +94,7 @@ export const validateContent = ({
   const validInternalPaths = new Set([
     ...navigationItems.map((item) => canonicalizeRoutePath(item.path)),
     ...internalNavigationPaths.map((path) => canonicalizeRoutePath(path)),
+    ...blogPosts.map((post) => canonicalizeRoutePath(`/blog/${post.slug}`)),
   ]);
 
   assertUnique(projects, (item) => item.id, "project id");
@@ -114,6 +115,17 @@ export const validateContent = ({
   blogPosts.forEach((post) => {
     assert(slugPattern.test(post.slug), `blog.${post.id}.slug must be URL-safe.`);
     assertNonEmpty(`blog.${post.id}.title`, post.title);
+    assertNonEmpty(`blog.${post.id}.hook`, post.hook);
+    assert(post.intro.length > 0, `blog.${post.id}.intro must include at least one paragraph.`);
+    assert(post.articleSections.length > 0, `blog.${post.id}.articleSections must include at least one section.`);
+    post.articleSections.forEach((section, index) => {
+      assertNonEmpty(`blog.${post.id}.articleSections[${index}].id`, section.id);
+      assertNonEmpty(`blog.${post.id}.articleSections[${index}].title`, section.title);
+      assert(
+        section.paragraphs.length > 0,
+        `blog.${post.id}.articleSections[${index}] must include at least one paragraph.`,
+      );
+    });
   });
 
   assertUnique(landingStory, (item) => item.id, "landing story id");

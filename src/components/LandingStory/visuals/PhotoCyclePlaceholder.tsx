@@ -39,7 +39,7 @@ const PhotoCyclePlaceholder: React.FC<PhotoCyclePlaceholderProps> = ({ photos })
       <div className="absolute inset-y-[18%] right-[2%] w-[22%] rounded-full bg-indigo-400/20 blur-3xl" />
 
       <div className="relative h-full">
-        <div className="absolute inset-x-[8%] top-[5%] bottom-[14%] rounded-[44%_56%_48%_52%/46%_44%_56%_54%] bg-white/42 shadow-[0_30px_120px_rgba(15,23,42,0.18)] backdrop-blur-[1px]" />
+        <div className="theme-story-contrast-panel-soft absolute inset-x-[8%] top-[5%] bottom-[14%] rounded-[44%_56%_48%_52%/46%_44%_56%_54%]" />
         <div className="absolute inset-x-[13%] top-[10%] bottom-[19%] rounded-[42%_58%_52%_48%/52%_40%_60%_48%] bg-slate-950/88 shadow-[0_24px_80px_rgba(2,6,23,0.48)]" />
 
         <div className="absolute left-[8%] top-[12%] z-10 flex flex-col gap-3">
@@ -53,14 +53,22 @@ const PhotoCyclePlaceholder: React.FC<PhotoCyclePlaceholderProps> = ({ photos })
               onClick={() => setActiveIndex(index)}
             >
               <span
-                className={`block h-px transition-all duration-500 ${
-                  index === activeIndex ? "w-12 bg-slate-950/80" : "w-6 bg-slate-950/20 group-hover:w-10"
-                }`}
+                className={`block h-px transition-all duration-500 ${index === activeIndex ? "w-12" : "w-6 group-hover:w-10"}`}
+                style={{
+                  backgroundColor:
+                    index === activeIndex
+                      ? "color-mix(in srgb, var(--theme-text-primary) 82%, transparent)"
+                      : "color-mix(in srgb, var(--theme-text-primary) 22%, transparent)",
+                }}
               />
               <span
-                className={`text-[0.65rem] uppercase tracking-[0.3em] transition-colors duration-500 ${
-                  index === activeIndex ? "text-slate-950/80" : "text-slate-950/35 group-hover:text-slate-950/55"
-                }`}
+                className="text-[0.65rem] uppercase tracking-[0.3em] transition-colors duration-500"
+                style={{
+                  color:
+                    index === activeIndex
+                      ? "color-mix(in srgb, var(--theme-text-primary) 82%, transparent)"
+                      : "color-mix(in srgb, var(--theme-text-primary) 40%, transparent)",
+                }}
               >
                 {String(index + 1).padStart(2, "0")}
               </span>
@@ -139,13 +147,13 @@ const PhotoCyclePlaceholder: React.FC<PhotoCyclePlaceholderProps> = ({ photos })
         </AnimatePresence>
 
         <motion.div
-          className="absolute bottom-[11%] right-[6%] z-10 max-w-[18rem] rounded-[1.75rem] bg-white/72 px-5 py-4 text-slate-950 shadow-[0_16px_40px_rgba(15,23,42,0.12)] backdrop-blur-xl"
+          className="theme-story-contrast-panel absolute bottom-[11%] right-[6%] z-10 max-w-[18rem] rounded-[1.75rem] border px-5 py-4 backdrop-blur-xl"
           initial={{ opacity: 0, y: 22 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.45 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.18 }}
         >
-          <p className="text-[0.65rem] uppercase tracking-[0.34em] text-slate-950/55">Portrait Studies</p>
+          <p className="theme-story-contrast-accent text-[0.65rem] uppercase tracking-[0.34em]">Portrait Studies</p>
           <AnimatePresence mode="wait">
             <motion.div
               key={`caption-${activePhoto?.id ?? "empty"}`}
@@ -154,10 +162,10 @@ const PhotoCyclePlaceholder: React.FC<PhotoCyclePlaceholderProps> = ({ photos })
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: prefersReducedMotion ? 0.2 : 0.5 }}
             >
-              <p className="mt-2 text-xl font-semibold tracking-[-0.03em] text-slate-950">
+              <p className="theme-story-contrast-title mt-2 text-xl font-semibold tracking-[-0.03em]">
                 {activePhoto?.caption ?? "Add portrait asset"}
               </p>
-              <p className="mt-2 text-sm leading-relaxed text-slate-950/62">
+              <p className="theme-story-contrast-body mt-2 text-sm leading-relaxed">
                 Placeholder portrait composition ready to swap for photography.
               </p>
             </motion.div>
@@ -168,11 +176,12 @@ const PhotoCyclePlaceholder: React.FC<PhotoCyclePlaceholderProps> = ({ photos })
           {photos.map((photo, index) => (
             <motion.span
               key={photo.id}
-              className="h-1.5 rounded-full bg-slate-950/75"
+              className="h-1.5 rounded-full"
               animate={{
                 width: index === activeIndex ? 40 : 12,
                 opacity: index === activeIndex ? 0.95 : 0.28,
               }}
+              style={{ backgroundColor: "color-mix(in srgb, var(--theme-text-primary) 78%, transparent)" }}
               transition={{ duration: prefersReducedMotion ? 0.15 : 0.55, ease: [0.22, 1, 0.36, 1] }}
             />
           ))}

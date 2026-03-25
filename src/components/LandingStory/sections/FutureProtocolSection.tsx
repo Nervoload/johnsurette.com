@@ -12,7 +12,7 @@ interface FutureProtocolSectionProps {
 const FutureProtocolSection: React.FC<FutureProtocolSectionProps> = ({ section, onNavigate }) => {
   return (
     <section className="relative isolate min-h-[100dvh] overflow-hidden px-4 pb-28 pt-24 xs:px-6 sm:px-10 lg:px-16">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.15),rgba(2,6,23,0)_45%),radial-gradient(circle_at_70%_80%,rgba(168,85,247,0.13),rgba(2,6,23,0)_45%),linear-gradient(180deg,rgba(2,6,23,0.76),rgba(15,23,42,0.68)_52%,rgba(248,250,252,0.8)_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.15),rgba(2,6,23,0)_45%),radial-gradient(circle_at_70%_80%,rgba(168,85,247,0.13),rgba(2,6,23,0)_45%)]" />
 
       <div className="relative mx-auto flex w-full max-w-5xl flex-col items-center text-center">
         <motion.div
@@ -22,13 +22,13 @@ const FutureProtocolSection: React.FC<FutureProtocolSectionProps> = ({ section, 
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.65 }}
         >
-          <p className="text-xs uppercase tracking-[0.28em] text-cyan-100/70">{section.eyebrow}</p>
-          <h2 className="mt-4 text-3xl font-semibold leading-tight text-slate-100 xs:text-4xl sm:text-5xl">{section.title}</h2>
-          <p className="mt-6 text-lg leading-relaxed text-slate-300">{section.summary}</p>
+          <p className="theme-story-contrast-accent text-xs uppercase tracking-[0.28em]">{section.eyebrow}</p>
+          <h2 className="theme-story-contrast-title mt-4 text-3xl font-semibold leading-tight xs:text-4xl sm:text-5xl">{section.title}</h2>
+          <p className="theme-story-contrast-body mt-6 text-lg leading-relaxed">{section.summary}</p>
         </motion.div>
 
         <motion.div
-          className="relative mt-12 w-full overflow-hidden rounded-[2rem] border border-cyan-200/30 bg-slate-950/70 p-8 shadow-[0_30px_90px_-50px_rgba(34,211,238,0.65)]"
+          className="theme-story-contrast-panel relative mt-12 w-full overflow-hidden rounded-[2rem] border p-8"
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, amount: 0.2 }}
@@ -38,7 +38,7 @@ const FutureProtocolSection: React.FC<FutureProtocolSectionProps> = ({ section, 
 
           <div className="relative z-10 grid gap-3 sm:grid-cols-2">
             {section.focusAreas.map((item) => (
-              <div key={item} className="rounded-xl border border-cyan-200/20 bg-slate-900/66 px-4 py-3 text-left text-sm text-cyan-50/95">
+              <div key={item} className="theme-story-contrast-chip rounded-xl border px-4 py-3 text-left text-sm">
                 {item}
               </div>
             ))}
@@ -49,11 +49,10 @@ const FutureProtocolSection: React.FC<FutureProtocolSectionProps> = ({ section, 
               <button
                 key={item.path}
                 type="button"
-                className="rounded-full border px-4 py-2 text-sm font-medium transition hover:scale-[1.02]"
+                className="theme-story-contrast-chip rounded-full border px-4 py-2 text-sm font-medium transition hover:scale-[1.02]"
                 style={{
                   borderColor: `${item.color}88`,
                   color: item.color,
-                  backgroundColor: "rgba(15, 23, 42, 0.55)",
                 }}
                 onClick={() =>
                   onNavigate(item.path, {

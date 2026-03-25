@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Sparkles } from "@react-three/drei";
 import * as THREE from "three";
@@ -28,17 +28,123 @@ interface OrbitalGlowMote {
 interface WaveOrbParticlesProps {
   introProgress: number;
   hovering: boolean;
+  darkMode: boolean;
   loadProfile: WaveOrbLoadProfile;
   dynamicColors: WaveOrbDynamicColors;
 }
 
+interface ParticleTextureOptions {
+  size?: number;
+  coreScale?: number;
+  haloScale?: number;
+  coreAlpha?: number;
+  haloAlpha?: number;
+}
+
+interface ParticleToneOptions {
+  accentMixDark: number;
+  accentMixLight: number;
+  deepMixLight: number;
+  hueShiftDark: number;
+  hueShiftLight: number;
+  saturationBoostDark: number;
+  saturationBoostLight: number;
+  lightnessShiftDark: number;
+  lightnessShiftLight: number;
+}
+
+const createSquareGlowTexture = ({
+  size = 128,
+  coreScale = 0.16,
+  haloScale = 0.48,
+  coreAlpha = 1,
+  haloAlpha = 0.92,
+}: ParticleTextureOptions = {}): THREE.CanvasTexture => {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    const fallback = new THREE.CanvasTexture(canvas);
+    fallback.needsUpdate = true;
+    return fallback;
+  }
+
+  const center = size / 2;
+  const haloRadius = size * haloScale;
+  const coreSize = size * coreScale;
+
+  ctx.clearRect(0, 0, size, size);
+
+  const glow = ctx.createRadialGradient(center, center, 0, center, center, haloRadius);
+  glow.addColorStop(0, `rgba(255, 255, 255, ${haloAlpha})`);
+  glow.addColorStop(0.36, `rgba(255, 255, 255, ${haloAlpha * 0.72})`);
+  glow.addColorStop(0.78, `rgba(255, 255, 255, ${haloAlpha * 0.2})`);
+  glow.addColorStop(1, "rgba(255, 255, 255, 0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, size, size);
+
+  ctx.fillStyle = `rgba(255, 255, 255, ${coreAlpha})`;
+  ctx.fillRect(center - coreSize / 2, center - coreSize / 2, coreSize, coreSize);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+  texture.needsUpdate = true;
+  return texture;
+};
+
+const resolveParticleBlending = (darkMode: boolean) =>
+  darkMode ? THREE.AdditiveBlending : THREE.NormalBlending;
+
+const tintParticleForTheme = (
+  target: THREE.Color,
+  seedColor: THREE.Color,
+  dynamicColors: WaveOrbDynamicColors,
+  darkMode: boolean,
+  options: ParticleToneOptions
+) => {
+  target.copy(seedColor);
+  target.lerp(
+    dynamicColors.shellPalette.accentColor,
+    darkMode ? options.accentMixDark : options.accentMixLight
+  );
+
+  if (!darkMode && options.deepMixLight > 0) {
+    target.lerp(dynamicColors.shellPalette.deepColor, options.deepMixLight);
+  }
+
+  const hsl = { h: 0, s: 0, l: 0 };
+  target.getHSL(hsl);
+  target.setHSL(
+    (hsl.h + (darkMode ? options.hueShiftDark : options.hueShiftLight) + 1) % 1,
+    clamp01(hsl.s + (darkMode ? options.saturationBoostDark : options.saturationBoostLight)),
+    clamp01(hsl.l + (darkMode ? options.lightnessShiftDark : options.lightnessShiftLight))
+  );
+};
+
 const FormationSwarm: React.FC<WaveOrbParticlesProps> = ({
   introProgress,
+  darkMode,
   loadProfile,
   dynamicColors,
 }) => {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.PointsMaterial>(null);
+  const colorRef = useRef(new THREE.Color());
+  const texture = useMemo(
+    () =>
+      createSquareGlowTexture({
+        size: 164,
+        coreScale: 0.18,
+        haloScale: 0.66,
+        coreAlpha: 1,
+        haloAlpha: 1,
+      }),
+    []
+  );
 
   const data = useMemo(() => {
     const count = loadProfile.particles.formationCount;
@@ -75,6 +181,12 @@ const FormationSwarm: React.FC<WaveOrbParticlesProps> = ({
     };
   }, [loadProfile]);
 
+  useEffect(() => {
+    return () => {
+      texture.dispose();
+    };
+  }, [texture]);
+
   useFrame(({ clock }) => {
     const points = pointsRef.current;
     if (!points) return;
@@ -101,9 +213,23 @@ const FormationSwarm: React.FC<WaveOrbParticlesProps> = ({
     positions.needsUpdate = true;
 
     if (materialRef.current) {
-      materialRef.current.opacity = Math.max(0, 0.9 - t * 1.18);
-      materialRef.current.size = 0.028 + (1 - t) * 0.028;
-      materialRef.current.color.copy(t < 0.55 ? dynamicColors.shellPalette.accentColor : dynamicColors.shellPalette.glowColor);
+      const seedColor = t < 0.55 ? dynamicColors.shellPalette.accentColor : dynamicColors.shellPalette.glowColor;
+      tintParticleForTheme(colorRef.current, seedColor, dynamicColors, darkMode, {
+        accentMixDark: 0.08,
+        accentMixLight: 0.18,
+        deepMixLight: 0.14,
+        hueShiftDark: 0.035,
+        hueShiftLight: 0.05,
+        saturationBoostDark: 0.08,
+        saturationBoostLight: 0.2,
+        lightnessShiftDark: 0.08,
+        lightnessShiftLight: -0.05,
+      });
+
+      materialRef.current.opacity = Math.max(0, 1.08 - t * 1.24) * (darkMode ? 1 : 0.96);
+      materialRef.current.size = 0.104 + (1 - t) * 0.068;
+      materialRef.current.blending = resolveParticleBlending(darkMode);
+      materialRef.current.color.copy(colorRef.current);
     }
   });
 
@@ -115,12 +241,15 @@ const FormationSwarm: React.FC<WaveOrbParticlesProps> = ({
       <pointsMaterial
         ref={materialRef}
         color={dynamicColors.shellPalette.accentHex}
-        size={0.048}
+        map={texture}
+        alphaMap={texture}
+        size={0.112}
         transparent
-        opacity={0.95}
+        opacity={1}
         sizeAttenuation
-        blending={THREE.AdditiveBlending}
+        blending={resolveParticleBlending(darkMode)}
         depthWrite={false}
+        toneMapped={false}
       />
     </points>
   );
@@ -129,11 +258,13 @@ const FormationSwarm: React.FC<WaveOrbParticlesProps> = ({
 const OrbitalGlowMotes: React.FC<WaveOrbParticlesProps> = ({
   introProgress,
   hovering,
+  darkMode,
   loadProfile,
   dynamicColors,
 }) => {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.PointsMaterial>(null);
+  const colorRef = useRef(new THREE.Color());
 
   const data = useMemo(() => {
     const count = Math.max(28, Math.round(loadProfile.particles.sparkleCount * 0.34));
@@ -189,9 +320,31 @@ const OrbitalGlowMotes: React.FC<WaveOrbParticlesProps> = ({
     positions.needsUpdate = true;
 
     if (materialRef.current) {
-      materialRef.current.opacity = (0.22 + intro * 0.42) * (hovering ? 1.15 : 1) * (0.9 + interaction * 0.18);
-      materialRef.current.size = 0.034 + interaction * 0.006;
-      materialRef.current.color.copy(dynamicColors.highlightTone).lerp(dynamicColors.shellPalette.glowColor, 0.42);
+      tintParticleForTheme(
+        colorRef.current,
+        dynamicColors.highlightTone.clone().lerp(dynamicColors.shellPalette.glowColor, 0.42),
+        dynamicColors,
+        darkMode,
+        {
+          accentMixDark: 0.02,
+          accentMixLight: 0.08,
+          deepMixLight: 0.08,
+          hueShiftDark: 0.04,
+          hueShiftLight: 0.06,
+          saturationBoostDark: 0.08,
+          saturationBoostLight: 0.16,
+          lightnessShiftDark: 0.12,
+          lightnessShiftLight: -0.02,
+        }
+      );
+
+      materialRef.current.opacity = Math.min(
+        0.98,
+        (0.32 + intro * 0.58) * (hovering ? 1.22 : 1.08) * (0.98 + interaction * 0.22)
+      );
+      materialRef.current.size = 0.068 + interaction * 0.012;
+      materialRef.current.blending = resolveParticleBlending(darkMode);
+      materialRef.current.color.copy(colorRef.current);
     }
   });
 
@@ -203,12 +356,13 @@ const OrbitalGlowMotes: React.FC<WaveOrbParticlesProps> = ({
       <pointsMaterial
         ref={materialRef}
         color={dynamicColors.shellPalette.glowHex}
-        size={0.034}
+        size={0.068}
         transparent
-        opacity={0.42}
+        opacity={0.72}
         sizeAttenuation
-        blending={THREE.AdditiveBlending}
+        blending={resolveParticleBlending(darkMode)}
         depthWrite={false}
+        toneMapped={false}
       />
     </points>
   );
@@ -217,14 +371,27 @@ const OrbitalGlowMotes: React.FC<WaveOrbParticlesProps> = ({
 const CoronaDust: React.FC<WaveOrbParticlesProps> = ({
   introProgress,
   hovering,
+  darkMode,
   loadProfile,
   dynamicColors,
 }) => {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.PointsMaterial>(null);
+  const colorRef = useRef(new THREE.Color());
+  const texture = useMemo(
+    () =>
+      createSquareGlowTexture({
+        size: 156,
+        coreScale: 0.17,
+        haloScale: 0.68,
+        coreAlpha: 1,
+        haloAlpha: 1,
+      }),
+    []
+  );
 
   const data = useMemo(() => {
-    const count = loadProfile.particles.coronaCount;
+    const count = Math.max(1, Math.round(loadProfile.particles.coronaCount * 0.8));
     const random = createSeededRandom(loadProfile.seed ^ 0x26bf13);
     const directions = new Float32Array(count * 3);
     const bases = new Float32Array(count);
@@ -251,6 +418,12 @@ const CoronaDust: React.FC<WaveOrbParticlesProps> = ({
     return { directions, bases, seeds, initial, count };
   }, [loadProfile]);
 
+  useEffect(() => {
+    return () => {
+      texture.dispose();
+    };
+  }, [texture]);
+
   useFrame(({ clock }) => {
     const points = pointsRef.current;
     if (!points) return;
@@ -275,9 +448,23 @@ const CoronaDust: React.FC<WaveOrbParticlesProps> = ({
     positions.needsUpdate = true;
 
     if (materialRef.current) {
-      materialRef.current.opacity = (hovering ? 0.7 : 0.56) * (0.5 + introProgress * 0.5);
-      materialRef.current.size = hovering ? 0.03 : 0.024;
-      materialRef.current.color.copy(dynamicColors.shellPalette.glowColor);
+      tintParticleForTheme(colorRef.current, dynamicColors.shellPalette.glowColor, dynamicColors, darkMode, {
+        accentMixDark: 0.06,
+        accentMixLight: 0.16,
+        deepMixLight: 0.18,
+        hueShiftDark: 0.03,
+        hueShiftLight: 0.045,
+        saturationBoostDark: 0.08,
+        saturationBoostLight: 0.18,
+        lightnessShiftDark: 0.1,
+        lightnessShiftLight: -0.04,
+      });
+
+      materialRef.current.opacity =
+        (hovering ? 0.94 : 0.82) * (0.56 + introProgress * 0.56) * (darkMode ? 1 : 0.98);
+      materialRef.current.size = hovering ? 0.088 : 0.074;
+      materialRef.current.blending = resolveParticleBlending(darkMode);
+      materialRef.current.color.copy(colorRef.current);
     }
   });
 
@@ -289,12 +476,15 @@ const CoronaDust: React.FC<WaveOrbParticlesProps> = ({
       <pointsMaterial
         ref={materialRef}
         color={dynamicColors.shellPalette.glowHex}
-        size={0.024}
+        map={texture}
+        alphaMap={texture}
+        size={0.078}
         transparent
-        opacity={0.6}
+        opacity={0.84}
         sizeAttenuation
-        blending={THREE.AdditiveBlending}
+        blending={resolveParticleBlending(darkMode)}
         depthWrite={false}
+        toneMapped={false}
       />
     </points>
   );
@@ -303,11 +493,24 @@ const CoronaDust: React.FC<WaveOrbParticlesProps> = ({
 const PlasmaStreams: React.FC<WaveOrbParticlesProps> = ({
   introProgress,
   hovering,
+  darkMode,
   loadProfile,
   dynamicColors,
 }) => {
   const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.PointsMaterial>(null);
+  const colorRef = useRef(new THREE.Color());
+  const texture = useMemo(
+    () =>
+      createSquareGlowTexture({
+        size: 136,
+        coreScale: 0.15,
+        haloScale: 0.52,
+        coreAlpha: 0.96,
+        haloAlpha: 0.78,
+      }),
+    []
+  );
 
   const data = useMemo(() => {
     const streamCount = loadProfile.particles.streamCount;
@@ -340,6 +543,12 @@ const PlasmaStreams: React.FC<WaveOrbParticlesProps> = ({
       count: streamCount * trailLength,
     };
   }, [loadProfile]);
+
+  useEffect(() => {
+    return () => {
+      texture.dispose();
+    };
+  }, [texture]);
 
   useFrame(({ clock }) => {
     const points = pointsRef.current;
@@ -377,9 +586,24 @@ const PlasmaStreams: React.FC<WaveOrbParticlesProps> = ({
     positions.needsUpdate = true;
 
     if (materialRef.current) {
-      materialRef.current.opacity = (hovering ? 0.92 : 0.72) * Math.max(0.2, introProgress);
-      materialRef.current.size = hovering ? 0.04 : 0.032;
-      materialRef.current.color.copy(hovering ? dynamicColors.shellPalette.accentColor : dynamicColors.shellPalette.baseColor);
+      const seedColor = hovering ? dynamicColors.shellPalette.accentColor : dynamicColors.shellPalette.baseColor;
+      tintParticleForTheme(colorRef.current, seedColor, dynamicColors, darkMode, {
+        accentMixDark: 0.04,
+        accentMixLight: 0.12,
+        deepMixLight: 0.14,
+        hueShiftDark: 0,
+        hueShiftLight: 0,
+        saturationBoostDark: 0.06,
+        saturationBoostLight: 0.14,
+        lightnessShiftDark: 0.06,
+        lightnessShiftLight: -0.05,
+      });
+
+      materialRef.current.opacity =
+        (hovering ? 0.98 : 0.84) * Math.max(0.24, introProgress) * (darkMode ? 1 : 0.96);
+      materialRef.current.size = hovering ? 0.1 : 0.084;
+      materialRef.current.blending = resolveParticleBlending(darkMode);
+      materialRef.current.color.copy(colorRef.current);
     }
   });
 
@@ -391,12 +615,15 @@ const PlasmaStreams: React.FC<WaveOrbParticlesProps> = ({
       <pointsMaterial
         ref={materialRef}
         color={dynamicColors.shellPalette.baseHex}
-        size={0.032}
+        map={texture}
+        alphaMap={texture}
+        size={0.084}
         transparent
-        opacity={0.74}
+        opacity={0.86}
         sizeAttenuation
-        blending={THREE.AdditiveBlending}
+        blending={resolveParticleBlending(darkMode)}
         depthWrite={false}
+        toneMapped={false}
       />
     </points>
   );

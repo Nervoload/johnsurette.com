@@ -3,7 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import NavBar from "./components/NavBar/NavBar";
 import TransitionWipe, { TransitionHandle, WipeOptions } from "./components/Transitions/TransitionWipe";
 import { SiteRoute, normalizeRoute, siteRoutes } from "./components/sections";
-import { canonicalizeRoutePath, isRouteEnabled } from "./content";
+import { canonicalizeRoutePath, getBlogPostSlugFromPath, getNavigationMatchPath, isRouteEnabled } from "./content";
 import { useThemeMode } from "./components/theme/useThemeMode";
 import CodexContextInspector from "./devtools/codexContext/CodexContextInspector";
 
@@ -12,6 +12,7 @@ const OriginStoryPage = lazy(() => import("./pages/OriginStoryPage"));
 const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const BlogPage = lazy(() => import("./pages/BlogPage"));
+const BlogArticlePage = lazy(() => import("./pages/BlogArticlePage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 
 const ROUTE_TRANSITION_FULL_MS = 760;
@@ -40,15 +41,17 @@ const buildTransitionOptions = (
   toPath: string,
   opts?: WipeOptions,
 ): Required<WipeOptions> => {
-  const fromIndex = routeIndexMap.get(fromPath) ?? 0;
-  const toIndex = routeIndexMap.get(toPath) ?? fromIndex;
+  const fromKey = getNavigationMatchPath(fromPath);
+  const toKey = getNavigationMatchPath(toPath);
+  const fromIndex = routeIndexMap.get(fromKey) ?? 0;
+  const toIndex = routeIndexMap.get(toKey) ?? fromIndex;
 
   const inferredDirection: Required<WipeOptions>["direction"] = toIndex >= fromIndex ? "right" : "left";
-  const enteringHeavyRoute = HEAVY_TRANSITION_ROUTES.has(toPath);
+  const enteringHeavyRoute = HEAVY_TRANSITION_ROUTES.has(toKey);
 
   return {
     direction: opts?.direction ?? inferredDirection,
-    color: opts?.color ?? routeColorMap.get(toPath) ?? "#e2e8f0",
+    color: opts?.color ?? routeColorMap.get(toKey) ?? "#e2e8f0",
     duration: opts?.duration ?? (enteringHeavyRoute ? ROUTE_TRANSITION_LITE_MS : ROUTE_TRANSITION_FULL_MS),
     intensity: opts?.intensity ?? (enteringHeavyRoute ? "lite" : "full"),
   };
@@ -76,6 +79,7 @@ function App() {
   const pathRef = useRef<string>(initialPath);
   const navigationLockRef = useRef(false);
   const wipeRef = useRef<TransitionHandle>(null);
+  const navCurrentPath = useMemo(() => getNavigationMatchPath(path), [path]);
 
   const navRoutes = useMemo<SiteRoute[]>(
     () => (import.meta.env.DEV && originRouteEnabled ? [...siteRoutes, ORIGIN_DEV_ROUTE] : siteRoutes),
@@ -223,8 +227,14 @@ function App() {
       return <ContactPage themeMode={resolvedMode} />;
     }
 
+    const blogSlug = getBlogPostSlugFromPath(path);
+
     if (path === "/blog") {
-      return <BlogPage />;
+      return <BlogPage onNavigate={navigate} />;
+    }
+
+    if (blogSlug) {
+      return <BlogArticlePage slug={blogSlug} onNavigate={navigate} />;
     }
 
     return (
@@ -249,7 +259,7 @@ function App() {
     resolvedMode,
   ]);
 
-  const isHeavyRoute = HEAVY_TRANSITION_ROUTES.has(path);
+  const isHeavyRoute = HEAVY_TRANSITION_ROUTES.has(navCurrentPath);
   const pageInitialMotion = prefersReducedMotion
     ? { opacity: 1 }
     : isHeavyRoute
@@ -266,7 +276,7 @@ function App() {
       <TransitionWipe ref={wipeRef} />
       <NavBar
         routes={navRoutes}
-        currentPath={path}
+        currentPath={navCurrentPath}
         onNavigate={navigate}
         resolvedThemeMode={resolvedMode}
         onToggleTheme={toggleTheme}

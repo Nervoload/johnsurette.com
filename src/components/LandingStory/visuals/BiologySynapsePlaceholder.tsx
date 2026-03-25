@@ -13,7 +13,7 @@ const BiologySynapsePlaceholder: React.FC<BiologySynapsePlaceholderProps> = ({ a
       className="relative mx-auto aspect-[1.08] w-[min(92vw,46rem)] max-w-none overflow-visible rounded-[2.5rem] sm:w-[min(88vw,52rem)] lg:w-[min(60vw,56rem)] xl:w-[min(54vw,60rem)]"
       aria-hidden="true"
     >
-      <div className="pointer-events-none absolute inset-0 rounded-[2.5rem] bg-[radial-gradient(circle_at_50%_36%,rgba(56,189,248,0.18),transparent_34%),radial-gradient(circle_at_50%_68%,rgba(45,212,191,0.14),transparent_28%),linear-gradient(180deg,rgba(2,6,23,0.22),rgba(2,6,23,0.04))] blur-[2px]" />
+      <div className="theme-story-contrast-canvas pointer-events-none absolute inset-0 rounded-[2.5rem] blur-[2px]" />
       <StorySceneCanvas
         activity={activity}
         className="absolute inset-0 h-full w-full"

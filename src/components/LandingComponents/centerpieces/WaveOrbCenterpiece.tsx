@@ -408,6 +408,7 @@ const OrbScene: React.FC<CoreSceneProps> = ({
         <WaveOrbParticles
           introProgress={introProgress}
           hovering={hovering}
+          darkMode={shadowMode === "dark"}
           loadProfile={loadProfile}
           dynamicColors={dynamicColors}
         />

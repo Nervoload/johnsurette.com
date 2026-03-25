@@ -9,10 +9,10 @@ export interface ComputationalCanvasPlaceholderProps {
 }
 
 const IdlePoster = () => (
-  <div className="absolute inset-0 overflow-hidden rounded-[2.4rem] bg-[radial-gradient(circle_at_24%_26%,rgba(34,211,238,0.12),transparent_30%),radial-gradient(circle_at_72%_30%,rgba(129,140,248,0.1),transparent_24%),linear-gradient(180deg,rgba(8,15,32,0.98),rgba(2,6,23,0.9)_52%,rgba(2,6,23,0.98))]">
+  <div className="theme-story-contrast-canvas absolute inset-0 overflow-hidden rounded-[2.4rem]">
     <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(148,163,184,0.035)_1px,transparent_1px),linear-gradient(rgba(148,163,184,0.035)_1px,transparent_1px)] [background-size:28px_28px] opacity-30" />
-    <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-950/72 to-transparent" />
-    <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-slate-950/82 to-transparent" />
+    <div className="theme-story-contrast-top-fade absolute inset-x-0 top-0 h-24" />
+    <div className="theme-story-contrast-bottom-fade absolute inset-x-0 bottom-0 h-24" />
     <div className="pointer-events-none absolute left-[7%] top-[12%] h-[24%] w-[42%] rounded-full bg-cyan-300/8 blur-3xl" />
     <div className="pointer-events-none absolute right-[10%] top-[20%] h-[22%] w-[28%] rounded-full bg-indigo-400/10 blur-3xl" />
     <div className="pointer-events-none absolute bottom-[10%] left-[18%] h-[16%] w-[36%] rounded-full bg-emerald-300/8 blur-3xl" />
@@ -21,7 +21,7 @@ const IdlePoster = () => (
       {["small network", "large model", "brain-like dynamics"].map((label) => (
         <span
           key={label}
-          className="rounded-full border border-cyan-300/20 bg-slate-950/45 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-100/72 backdrop-blur-sm"
+          className="theme-story-contrast-chip rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] backdrop-blur-sm"
         >
           {label}
         </span>

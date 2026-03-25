@@ -11,7 +11,7 @@ const RepairStackSection: React.FC<RepairStackSectionProps> = ({ section }) => {
 
   return (
     <section className="relative isolate min-h-[100dvh] overflow-hidden px-4 py-24 xs:px-6 sm:px-10 lg:px-16">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_36%,rgba(56,189,248,0.18),rgba(15,23,42,0)_46%),radial-gradient(circle_at_30%_86%,rgba(167,139,250,0.14),rgba(15,23,42,0)_40%),linear-gradient(180deg,rgba(2,6,23,0.72),rgba(15,23,42,0.68)_65%,rgba(17,24,39,0.74))]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_36%,rgba(56,189,248,0.18),rgba(15,23,42,0)_46%),radial-gradient(circle_at_30%_86%,rgba(167,139,250,0.14),rgba(15,23,42,0)_40%)]" />
       <div className="absolute inset-0 story-flow-lines opacity-35" />
 
       <div className="relative mx-auto grid w-full max-w-7xl gap-12 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
@@ -21,14 +21,14 @@ const RepairStackSection: React.FC<RepairStackSectionProps> = ({ section }) => {
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.7 }}
         >
-          <p className="text-xs uppercase tracking-[0.28em] text-cyan-100/70">{section.eyebrow}</p>
-          <h2 className="mt-4 text-3xl font-semibold leading-tight text-slate-100 xs:text-4xl sm:text-5xl">{section.title}</h2>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-300">{section.summary}</p>
+          <p className="theme-story-contrast-accent text-xs uppercase tracking-[0.28em]">{section.eyebrow}</p>
+          <h2 className="theme-story-contrast-title mt-4 text-3xl font-semibold leading-tight xs:text-4xl sm:text-5xl">{section.title}</h2>
+          <p className="theme-story-contrast-body mt-6 max-w-xl text-lg leading-relaxed">{section.summary}</p>
 
           <div className="mt-8 space-y-3">
             {nodes.map((node, idx) => (
-              <div key={node} className="flex items-center gap-3 rounded-xl border border-slate-700/70 bg-slate-900/55 px-4 py-3 text-sm text-slate-200">
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-cyan-300/20 text-xs text-cyan-100">
+              <div key={node} className="theme-story-contrast-panel-soft theme-story-contrast-body flex items-center gap-3 rounded-xl border px-4 py-3 text-sm">
+                <span className="theme-story-contrast-chip inline-flex h-6 w-6 items-center justify-center rounded-full border text-xs">
                   {idx + 1}
                 </span>
                 <span>{node}</span>
@@ -47,10 +47,10 @@ const RepairStackSection: React.FC<RepairStackSectionProps> = ({ section }) => {
           <div className="absolute inset-0 rounded-full border border-cyan-300/18 story-rotate-slow" />
           <div className="absolute inset-[10%] rounded-full border border-violet-300/22 story-rotate-reverse" />
           <div className="absolute inset-[18%] rounded-full border border-cyan-200/15" />
-          <div className="absolute inset-[32%] rounded-full border border-cyan-200/25 bg-slate-900/72 backdrop-blur-sm" />
-          <div className="absolute inset-[36%] flex items-center justify-center rounded-full border border-cyan-100/30 bg-cyan-300/8 text-center text-slate-100">
+          <div className="theme-story-contrast-panel-soft absolute inset-[32%] rounded-full border" />
+          <div className="theme-story-contrast-panel-soft theme-story-contrast-title absolute inset-[36%] flex items-center justify-center rounded-full border text-center">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/70">Core Loop</p>
+              <p className="theme-story-contrast-accent text-xs uppercase tracking-[0.2em]">Core Loop</p>
               <p className="mt-2 text-sm">Sense → Model → Repair → Adapt</p>
             </div>
           </div>
@@ -64,7 +64,7 @@ const RepairStackSection: React.FC<RepairStackSectionProps> = ({ section }) => {
             return (
               <motion.div
                 key={node}
-                className="absolute -translate-x-1/2 -translate-y-1/2 rounded-xl border border-cyan-200/30 bg-slate-900/78 px-3 py-2 text-xs text-cyan-100 shadow-[0_0_24px_rgba(34,211,238,0.15)]"
+                className="theme-story-contrast-chip absolute -translate-x-1/2 -translate-y-1/2 rounded-xl border px-3 py-2 text-xs shadow-[0_0_24px_rgba(34,211,238,0.15)]"
                 style={{ left: `${x}%`, top: `${y}%` }}
                 whileInView={{ y: [0, -8, 0] }}
                 viewport={{ once: false, amount: 0.1 }}

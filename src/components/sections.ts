@@ -2,6 +2,7 @@ import {
   canonicalizeRoutePath,
   enabledInternalNavigationPaths,
   enabledNavigationItems,
+  isRouteEnabled,
   visibleNavigationItems,
 } from "../content";
 
@@ -34,12 +35,9 @@ export const siteRoutes: SiteRoute[] = visibleNavigationItems.map((item) => ({
 
 export const internalRoutes = [...enabledInternalNavigationPaths] as const;
 
-export const routeSet = new Set(enabledNavigationItems.map((route) => canonicalizeRoutePath(route.path)));
-const internalRouteSet = new Set(internalRoutes.map((route) => canonicalizeRoutePath(route)));
-
 export const normalizeRoute = (path: string): string => {
   const normalized = canonicalizeRoutePath(path);
-  if (routeSet.has(normalized) || internalRouteSet.has(normalized)) {
+  if (isRouteEnabled(normalized)) {
     return normalized;
   }
   return "/";

@@ -1,5 +1,5 @@
 import { aboutPageContent, timelineEntries } from "./about";
-import { allBlogPosts, blogPageContent, blogPosts } from "./blog";
+import { allBlogPosts, blogPageContent, blogPosts, getBlogPostBySlug } from "./blog";
 import { contactPageContent } from "./contact";
 import {
   landingAspirationSectionContent,
@@ -16,7 +16,11 @@ import {
   canonicalizeRoutePath,
   enabledInternalNavigationPaths,
   enabledNavigationItems,
+  getBlogPostPath,
+  getBlogPostSlugFromPath,
+  getNavigationMatchPath,
   internalNavigationPaths,
+  isBlogArticlePath,
   isRouteEnabled,
   navigationItems,
   visibleNavigationItems,
@@ -53,7 +57,12 @@ export {
   enabledInternalNavigationPaths,
   enabledNavigationItems,
   contactPageContent,
+  getBlogPostBySlug,
+  getBlogPostPath,
+  getBlogPostSlugFromPath,
+  getNavigationMatchPath,
   internalNavigationPaths,
+  isBlogArticlePath,
   isRouteEnabled,
   landingAspirationSectionContent,
   landingBiologySectionContent,

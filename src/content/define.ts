@@ -101,6 +101,9 @@ export const defineBlogPost = (input: BlogPostEntry): BlogPostEntry => {
   assertNonEmpty(`blog.${input.id}.title`, input.title);
   assertNonEmpty(`blog.${input.id}.tag`, input.tag);
   assertNonEmpty(`blog.${input.id}.summary`, input.summary);
+  assertNonEmpty(`blog.${input.id}.hook`, input.hook);
+  assertNonEmpty(`blog.${input.id}.coverImage.src`, input.coverImage.src);
+  assertNonEmpty(`blog.${input.id}.coverImage.alt`, input.coverImage.alt);
   assertNonEmpty(`blog.${input.id}.dateLabel`, input.dateLabel);
   assertNonEmpty(`blog.${input.id}.publishedAt`, input.publishedAt);
 
@@ -111,6 +114,19 @@ export const defineBlogPost = (input: BlogPostEntry): BlogPostEntry => {
     title: trim(input.title),
     tag: trim(input.tag),
     summary: trim(input.summary),
+    hook: trim(input.hook),
+    coverImage: {
+      src: trim(input.coverImage.src),
+      alt: trim(input.coverImage.alt),
+    },
+    intro: normalizeStringArray(input.intro),
+    articleSections: (input.articleSections ?? []).map((section) => ({
+      ...section,
+      id: trim(section.id),
+      eyebrow: section.eyebrow?.trim(),
+      title: trim(section.title),
+      paragraphs: normalizeStringArray(section.paragraphs),
+    })),
     dateLabel: trim(input.dateLabel),
     publishedAt: trim(input.publishedAt),
     featured: input.featured ?? false,

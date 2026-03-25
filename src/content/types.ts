@@ -220,12 +220,28 @@ export interface AboutPageContent {
 
 export type BlogPostStatus = "draft" | "published";
 
+export interface BlogPostCoverImage {
+  src: string;
+  alt: string;
+}
+
+export interface BlogArticleSection {
+  id: string;
+  eyebrow?: string;
+  title: string;
+  paragraphs: string[];
+}
+
 export interface BlogPostEntry {
   id: string;
   slug: string;
   title: string;
   tag: string;
   summary: string;
+  hook: string;
+  coverImage: BlogPostCoverImage;
+  intro: string[];
+  articleSections: BlogArticleSection[];
   dateLabel: string;
   publishedAt: string;
   status: BlogPostStatus;

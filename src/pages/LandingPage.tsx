@@ -102,20 +102,6 @@ const LandingContent: React.FC<LandingContentProps> = ({
     };
   }, [entryNonce, entryTarget, scrollContainerRef]);
 
-  const handleOpenOriginLab = (): void => {
-    if (onEnterOriginExperience) {
-      const accepted = onEnterOriginExperience();
-      if (accepted !== false) return;
-    }
-
-    onNavigate(landingOriginLabContent.ctaPath, {
-      color: "#22d3ee",
-      direction: "down",
-      intensity: "lite",
-      duration: 640,
-    });
-  };
-
   return (
     <div {...landingContentProbe} className="relative isolate">
       <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
@@ -155,28 +141,7 @@ const LandingContent: React.FC<LandingContentProps> = ({
           </div>
         </section>
 
-        {landingOriginLabContent.isVisible !== false && (
-          <section className="relative flex min-h-[72dvh] items-center justify-center px-5 text-center">
-            <div className="theme-surface-elevated max-w-3xl rounded-[2rem] px-8 py-10 backdrop-blur-xl">
-              <p className="theme-text-subtle text-xs uppercase tracking-[0.24em]">{landingOriginLabContent.eyebrow}</p>
-              <h2 className="theme-text-primary mt-4 text-2xl font-semibold sm:text-4xl">
-                {landingOriginLabContent.title}
-              </h2>
-              <p className="theme-text-muted mt-4 text-base leading-relaxed">{landingOriginLabContent.summary}</p>
-              <div className="mt-7 flex justify-center">
-                <button
-                  type="button"
-                  onClick={handleOpenOriginLab}
-                  className="theme-cta-button rounded-full px-6 py-3 text-sm font-medium uppercase tracking-[0.12em] transition hover:scale-[1.02]"
-                >
-                  {landingOriginLabContent.ctaLabel}
-                </button>
-              </div>
-            </div>
-          </section>
-        )}
-
-        <div ref={storySectionRef}>
+        <div ref={storySectionRef} className="relative">
           <LandingStoryboard onNavigate={onNavigate} scrollContainerRef={scrollContainerRef} />
         </div>
       </div>

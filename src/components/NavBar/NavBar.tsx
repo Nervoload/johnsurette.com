@@ -100,10 +100,13 @@ const NavBar: React.FC<NavBarProps> = ({
   const [open, setOpen] = useState(false);
   const [hoveringTop, setHoveringTop] = useState(false);
   const isTouch = useIsTouch();
+  const prefersReducedMotion = useReducedMotion();
+  const isLandingPage = currentPath === "/";
 
   // On touch devices the hover zone does nothing — only hamburger toggles.
   // On desktop the nav appears on hover OR toggle.
   const visible = open || (!isTouch && hoveringTop);
+  const dormantChrome = isLandingPage && !visible;
 
   // Close nav when route changes (important on mobile after tapping a link)
   useEffect(() => {
@@ -164,7 +167,7 @@ const NavBar: React.FC<NavBarProps> = ({
         />
       )}
 
-      <button
+      <motion.button
         type="button"
         aria-label="Toggle navigation"
         aria-expanded={visible}
@@ -173,6 +176,17 @@ const NavBar: React.FC<NavBarProps> = ({
           onHintNavInteraction?.("menu-toggle");
         }}
         className="theme-nav-fab fixed right-3 top-3 z-[72] flex h-[3.3rem] w-[3.3rem] items-center justify-center rounded-full transition duration-300 active:scale-95"
+        initial={false}
+        animate={
+          prefersReducedMotion
+            ? undefined
+            : {
+                opacity: dormantChrome ? 0.72 : 1,
+                scale: dormantChrome ? 0.94 : 1,
+                y: dormantChrome ? 4 : 0,
+              }
+        }
+        transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
       >
         <span className="sr-only">{visible ? "Close navigation" : "Open navigation"}</span>
         <span className="relative block h-[1.48rem] w-[1.48rem]">
@@ -187,16 +201,27 @@ const NavBar: React.FC<NavBarProps> = ({
             }`}
           />
         </span>
-      </button>
+      </motion.button>
 
-      <button
+      <motion.button
         type="button"
         aria-label={resolvedThemeMode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
         onClick={onToggleTheme}
         className="theme-nav-fab fixed right-3 top-[4.83rem] z-[72] flex h-[3.3rem] w-[3.3rem] items-center justify-center rounded-full transition duration-300 active:scale-95"
+        initial={false}
+        animate={
+          prefersReducedMotion
+            ? undefined
+            : {
+                opacity: dormantChrome ? 0.42 : 1,
+                scale: dormantChrome ? 0.9 : 1,
+                y: dormantChrome ? -4 : 0,
+              }
+        }
+        transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
       >
         <ThemeGlyph mode={resolvedThemeMode} />
-      </button>
+      </motion.button>
 
       <div className="pointer-events-none fixed left-1/2 top-3 z-[70] w-[min(92vw,872px)] -translate-x-1/2">
         <motion.nav

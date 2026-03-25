@@ -1,6 +1,9 @@
 import { defineRoute } from "./define";
 import { NavigationItem } from "./types";
 
+const BLOG_ROUTE_BASE = "/blog";
+const blogArticleRoutePattern = /^\/blog\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
 export const canonicalizeRoutePath = (rawPath: string): string => {
   const trimmed = rawPath.trim();
   if (!trimmed) return "/";
@@ -10,6 +13,25 @@ export const canonicalizeRoutePath = (rawPath: string): string => {
 
   if (singleSlashes === "/") return "/";
   return singleSlashes.replace(/\/+$/, "");
+};
+
+export const isBlogArticlePath = (path: string): boolean => blogArticleRoutePattern.test(canonicalizeRoutePath(path));
+
+export const getBlogPostSlugFromPath = (path: string): string | null => {
+  const normalized = canonicalizeRoutePath(path);
+  if (!isBlogArticlePath(normalized)) return null;
+  return normalized.slice(`${BLOG_ROUTE_BASE}/`.length);
+};
+
+export const getBlogPostPath = (slug: string): string => canonicalizeRoutePath(`${BLOG_ROUTE_BASE}/${slug}`);
+
+export const getNavigationMatchPath = (path: string): string => {
+  const normalized = canonicalizeRoutePath(path);
+  if (isBlogArticlePath(normalized)) {
+    return BLOG_ROUTE_BASE;
+  }
+
+  return normalized;
 };
 
 export const internalNavigationPaths = ["/origin"] as const;
@@ -69,4 +91,15 @@ const enabledRouteSet = new Set([
   ...enabledInternalNavigationPaths.map((path) => canonicalizeRoutePath(path)),
 ]);
 
-export const isRouteEnabled = (path: string): boolean => enabledRouteSet.has(canonicalizeRoutePath(path));
+export const isRouteEnabled = (path: string): boolean => {
+  const normalized = canonicalizeRoutePath(path);
+  if (enabledRouteSet.has(normalized)) {
+    return true;
+  }
+
+  if (isBlogArticlePath(normalized)) {
+    return enabledRouteSet.has(BLOG_ROUTE_BASE);
+  }
+
+  return false;
+};
