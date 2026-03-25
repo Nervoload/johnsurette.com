@@ -232,6 +232,36 @@ export interface BlogArticleSection {
   paragraphs: string[];
 }
 
+export type BlogVisualMaterial = "glass" | "mist" | "satin";
+export type BlogVisualGrain = "none" | "soft" | "paper";
+export type BlogArticleTheme = "essay" | "lab" | "field-notes";
+export type BlogSceneId = "signalGrid" | "orbitalField" | "neuralBloom";
+
+export interface BlogVisualPalette {
+  background: string;
+  surface: string;
+  accent: string;
+  highlight: string;
+  text: string;
+}
+
+export interface BlogAccentLight {
+  color: string;
+  x: number;
+  y: number;
+  blur: number;
+  opacity: number;
+}
+
+export interface BlogVisualIdentity {
+  palette: BlogVisualPalette;
+  material: BlogVisualMaterial;
+  grain: BlogVisualGrain;
+  accentLight: BlogAccentLight;
+  articleTheme: BlogArticleTheme;
+  sceneId?: BlogSceneId;
+}
+
 export interface BlogPostEntry {
   id: string;
   slug: string;
@@ -246,6 +276,7 @@ export interface BlogPostEntry {
   publishedAt: string;
   status: BlogPostStatus;
   featured?: boolean;
+  visualIdentity: BlogVisualIdentity;
 }
 
 export interface BlogPageContent {

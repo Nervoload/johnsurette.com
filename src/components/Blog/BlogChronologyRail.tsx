@@ -224,7 +224,7 @@ const BlogChronologyRail: React.FC<BlogChronologyRailProps> = ({
               <motion.button
                 key={post.id}
                 type="button"
-                layout
+                layout="position"
                 ref={(node) => {
                   itemRefs.current[post.id] = node;
                 }}

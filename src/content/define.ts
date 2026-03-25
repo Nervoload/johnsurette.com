@@ -1,7 +1,9 @@
 import {
   AboutPageContent,
+  BlogAccentLight,
   BlogPageContent,
   BlogPostEntry,
+  BlogVisualIdentity,
   ContactPageContent,
   LandingAspirationSectionContent,
   LandingBiologySectionContent,
@@ -106,6 +108,12 @@ export const defineBlogPost = (input: BlogPostEntry): BlogPostEntry => {
   assertNonEmpty(`blog.${input.id}.coverImage.alt`, input.coverImage.alt);
   assertNonEmpty(`blog.${input.id}.dateLabel`, input.dateLabel);
   assertNonEmpty(`blog.${input.id}.publishedAt`, input.publishedAt);
+  assertNonEmpty(`blog.${input.id}.visualIdentity.palette.background`, input.visualIdentity.palette.background);
+  assertNonEmpty(`blog.${input.id}.visualIdentity.palette.surface`, input.visualIdentity.palette.surface);
+  assertNonEmpty(`blog.${input.id}.visualIdentity.palette.accent`, input.visualIdentity.palette.accent);
+  assertNonEmpty(`blog.${input.id}.visualIdentity.palette.highlight`, input.visualIdentity.palette.highlight);
+  assertNonEmpty(`blog.${input.id}.visualIdentity.palette.text`, input.visualIdentity.palette.text);
+  assertNonEmpty(`blog.${input.id}.visualIdentity.accentLight.color`, input.visualIdentity.accentLight.color);
 
   return {
     ...input,
@@ -130,8 +138,30 @@ export const defineBlogPost = (input: BlogPostEntry): BlogPostEntry => {
     dateLabel: trim(input.dateLabel),
     publishedAt: trim(input.publishedAt),
     featured: input.featured ?? false,
+    visualIdentity: defineBlogVisualIdentity(input.visualIdentity),
   };
 };
+
+export const defineBlogAccentLight = (input: BlogAccentLight): BlogAccentLight => ({
+  ...input,
+  color: trim(input.color),
+});
+
+export const defineBlogVisualIdentity = (input: BlogVisualIdentity): BlogVisualIdentity => ({
+  ...input,
+  palette: {
+    background: trim(input.palette.background),
+    surface: trim(input.palette.surface),
+    accent: trim(input.palette.accent),
+    highlight: trim(input.palette.highlight),
+    text: trim(input.palette.text),
+  },
+  material: input.material,
+  grain: input.grain,
+  accentLight: defineBlogAccentLight(input.accentLight),
+  articleTheme: input.articleTheme,
+  sceneId: input.sceneId,
+});
 
 export const defineStorySection = (input: LandingStoryEntry): LandingStoryEntry => {
   assertNonEmpty(`landing.${input.id}.eyebrow`, input.eyebrow);

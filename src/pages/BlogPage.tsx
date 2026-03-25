@@ -1,16 +1,17 @@
 import React from "react";
 import { blogPageContent, pageVisuals } from "../content";
 import { blogPosts } from "../components/Blog/blogPosts";
-import BlogCollage from "../components/Blog/BlogCollage";
+import ResearchBlogExperience from "../components/Blog/ResearchBlogExperience";
 import PageScaffold from "../components/layout/PageScaffold";
 import { WipeOptions } from "../components/Transitions/TransitionWipe";
 import { createCodexProbeAttributes } from "../devtools/codexContext/probe";
 
 interface BlogPageProps {
   onNavigate: (path: string, opts?: WipeOptions) => void;
+  articleSlug?: string;
 }
 
-const BlogPage: React.FC<BlogPageProps> = ({ onNavigate }) => {
+const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, articleSlug }) => {
   const blogPageProbe = createCodexProbeAttributes({
     componentName: "BlogPage",
     filePath: "/src/pages/BlogPage.tsx",
@@ -26,7 +27,13 @@ const BlogPage: React.FC<BlogPageProps> = ({ onNavigate }) => {
     >
       {(scrollRef) => (
         <div {...blogPageProbe}>
-          <BlogCollage posts={blogPosts} pageContent={blogPageContent} scrollRef={scrollRef} onNavigate={onNavigate} />
+          <ResearchBlogExperience
+            posts={blogPosts}
+            pageContent={blogPageContent}
+            articleSlug={articleSlug}
+            scrollRef={scrollRef}
+            onNavigate={onNavigate}
+          />
         </div>
       )}
     </PageScaffold>

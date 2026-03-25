@@ -12,7 +12,6 @@ const OriginStoryPage = lazy(() => import("./pages/OriginStoryPage"));
 const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const BlogPage = lazy(() => import("./pages/BlogPage"));
-const BlogArticlePage = lazy(() => import("./pages/BlogArticlePage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 
 const ROUTE_TRANSITION_FULL_MS = 760;
@@ -48,12 +47,13 @@ const buildTransitionOptions = (
 
   const inferredDirection: Required<WipeOptions>["direction"] = toIndex >= fromIndex ? "right" : "left";
   const enteringHeavyRoute = HEAVY_TRANSITION_ROUTES.has(toKey);
+  const isInBlogFamily = fromKey === "/blog" && toKey === "/blog";
 
   return {
     direction: opts?.direction ?? inferredDirection,
     color: opts?.color ?? routeColorMap.get(toKey) ?? "#e2e8f0",
-    duration: opts?.duration ?? (enteringHeavyRoute ? ROUTE_TRANSITION_LITE_MS : ROUTE_TRANSITION_FULL_MS),
-    intensity: opts?.intensity ?? (enteringHeavyRoute ? "lite" : "full"),
+    duration: opts?.duration ?? (isInBlogFamily ? 420 : enteringHeavyRoute ? ROUTE_TRANSITION_LITE_MS : ROUTE_TRANSITION_FULL_MS),
+    intensity: opts?.intensity ?? (isInBlogFamily || enteringHeavyRoute ? "lite" : "full"),
   };
 };
 
@@ -229,12 +229,8 @@ function App() {
 
     const blogSlug = getBlogPostSlugFromPath(path);
 
-    if (path === "/blog") {
-      return <BlogPage onNavigate={navigate} />;
-    }
-
-    if (blogSlug) {
-      return <BlogArticlePage slug={blogSlug} onNavigate={navigate} />;
+    if (path === "/blog" || blogSlug) {
+      return <BlogPage onNavigate={navigate} articleSlug={blogSlug ?? undefined} />;
     }
 
     return (
@@ -260,6 +256,7 @@ function App() {
   ]);
 
   const isHeavyRoute = HEAVY_TRANSITION_ROUTES.has(navCurrentPath);
+  const pageMotionKey = navCurrentPath === "/blog" ? "/blog" : path;
   const pageInitialMotion = prefersReducedMotion
     ? { opacity: 1 }
     : isHeavyRoute
@@ -284,7 +281,7 @@ function App() {
       />
       <Suspense fallback={<PageFallback />}>
         <motion.main
-          key={path}
+          key={pageMotionKey}
           className="h-full w-full"
           initial={pageInitialMotion}
           animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, y: 0, filter: "blur(0px)", scale: 1 }}

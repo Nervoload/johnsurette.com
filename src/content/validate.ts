@@ -116,6 +116,12 @@ export const validateContent = ({
     assert(slugPattern.test(post.slug), `blog.${post.id}.slug must be URL-safe.`);
     assertNonEmpty(`blog.${post.id}.title`, post.title);
     assertNonEmpty(`blog.${post.id}.hook`, post.hook);
+    assertNonEmpty(`blog.${post.id}.visualIdentity.palette.background`, post.visualIdentity.palette.background);
+    assertNonEmpty(`blog.${post.id}.visualIdentity.palette.surface`, post.visualIdentity.palette.surface);
+    assertNonEmpty(`blog.${post.id}.visualIdentity.palette.accent`, post.visualIdentity.palette.accent);
+    assertNonEmpty(`blog.${post.id}.visualIdentity.palette.highlight`, post.visualIdentity.palette.highlight);
+    assertNonEmpty(`blog.${post.id}.visualIdentity.palette.text`, post.visualIdentity.palette.text);
+    assertNonEmpty(`blog.${post.id}.visualIdentity.accentLight.color`, post.visualIdentity.accentLight.color);
     assert(post.intro.length > 0, `blog.${post.id}.intro must include at least one paragraph.`);
     assert(post.articleSections.length > 0, `blog.${post.id}.articleSections must include at least one section.`);
     post.articleSections.forEach((section, index) => {
