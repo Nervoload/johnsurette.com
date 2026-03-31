@@ -12,6 +12,7 @@ export interface ProjectStoryboardProps {
   scrollContainer: RefObject<HTMLDivElement>;
   items: ProjectItem[];
   onCardSelect?: (item: ProjectItem, screenPos: { x: number; y: number }) => void;
+  onActiveProjectChange?: (item: ProjectItem | null) => void;
   forceLowPower?: boolean;
   themeMode: ResolvedThemeMode;
 }
@@ -20,7 +21,7 @@ const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
 
 const getStoryboardHeight = (count: number) => {
   const extraCards = Math.max(0, count - 4);
-  return 560 + extraCards * 110;
+  return 440 + extraCards * 90;
 };
 
 /**
@@ -55,6 +56,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   scrollContainer,
   items,
   onCardSelect,
+  onActiveProjectChange,
   forceLowPower = false,
   themeMode,
 }) => {
@@ -222,6 +224,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
             progress={progress}
             items={items}
             onCardSelect={onCardSelect}
+            onActiveProjectChange={onActiveProjectChange}
             lowPowerMode={context.lowPowerMode}
             mobileViewport={context.mobileViewport}
             themeMode={themeMode}

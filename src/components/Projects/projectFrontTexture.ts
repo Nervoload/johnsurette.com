@@ -16,6 +16,8 @@ interface FamilyTheme {
   chipText: string;
 }
 
+const FONT_STACK = "Manrope, ui-sans-serif, system-ui, -apple-system, sans-serif";
+
 const createFamilyTheme = (
   item: ProjectItem,
   themeMode: ResolvedThemeMode,
@@ -148,20 +150,20 @@ export const makeProjectFrontTexture = (
     <circle cx='512' cy='360' r='108' fill='none' stroke='${item.accent}' stroke-opacity='0.44' stroke-width='4'/>
     <circle cx='512' cy='360' r='68' fill='none' stroke='${theme.trim}' stroke-opacity='0.42' stroke-width='3'/>
 
-    <text x='84' y='122' fill='${theme.text}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='54' font-weight='700'>
+    <text x='84' y='122' fill='${theme.text}' font-family='${FONT_STACK}' font-size='54' font-weight='700'>
       ${tspanLines(titleLines, 84, 60)}
     </text>
 
     <g transform='translate(84 588)'>
       <rect x='0' y='0' width='${dateWidth}' height='44' rx='22' fill='${theme.chip}'/>
-      <text x='18' y='29' fill='${theme.muted}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='18' font-weight='600'>${escapeXml(front.dateLabel)}</text>
+      <text x='18' y='29' fill='${theme.muted}' font-family='${FONT_STACK}' font-size='18' font-weight='600'>${escapeXml(front.dateLabel)}</text>
     </g>
 
     <g transform='translate(938 520)'>
-      <text x='0' y='0' text-anchor='end' fill='${theme.muted}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='29' font-weight='600'>
+      <text x='0' y='0' text-anchor='end' fill='${theme.muted}' font-family='${FONT_STACK}' font-size='29' font-weight='600'>
         ${tspanLines(subtitleLines, 0, 34)}
       </text>
-      <text x='0' y='86' text-anchor='end' fill='${theme.text}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='22' font-weight='500' opacity='0.92'>
+      <text x='0' y='86' text-anchor='end' fill='${theme.text}' font-family='${FONT_STACK}' font-size='22' font-weight='500' opacity='0.92'>
         ${tspanLines(summaryLines, 0, 28)}
       </text>
     </g>
@@ -182,20 +184,20 @@ export const makeProjectFrontTexture = (
     <circle cx='360' cy='512' r='108' fill='none' stroke='${item.accent}' stroke-opacity='0.44' stroke-width='4'/>
     <circle cx='360' cy='512' r='68' fill='none' stroke='${theme.trim}' stroke-opacity='0.42' stroke-width='3'/>
 
-    <text x='84' y='144' fill='${theme.text}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='52' font-weight='700'>
+    <text x='84' y='144' fill='${theme.text}' font-family='${FONT_STACK}' font-size='52' font-weight='700'>
       ${tspanLines(titleLines, 84, 58)}
     </text>
 
     <g transform='translate(84 812)'>
       <rect x='0' y='0' width='${dateWidth}' height='44' rx='22' fill='${theme.chip}'/>
-      <text x='18' y='29' fill='${theme.muted}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='18' font-weight='600'>${escapeXml(front.dateLabel)}</text>
+      <text x='18' y='29' fill='${theme.muted}' font-family='${FONT_STACK}' font-size='18' font-weight='600'>${escapeXml(front.dateLabel)}</text>
     </g>
 
     <g transform='translate(636 702)'>
-      <text x='0' y='0' text-anchor='end' fill='${theme.muted}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='27' font-weight='600'>
+      <text x='0' y='0' text-anchor='end' fill='${theme.muted}' font-family='${FONT_STACK}' font-size='27' font-weight='600'>
         ${tspanLines(subtitleLines, 0, 32)}
       </text>
-      <text x='0' y='80' text-anchor='end' fill='${theme.text}' font-family='ui-sans-serif,system-ui,-apple-system,sans-serif' font-size='21' font-weight='500' opacity='0.92'>
+      <text x='0' y='80' text-anchor='end' fill='${theme.text}' font-family='${FONT_STACK}' font-size='21' font-weight='500' opacity='0.92'>
         ${tspanLines(summaryLines, 0, 27)}
       </text>
     </g>

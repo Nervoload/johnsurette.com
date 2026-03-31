@@ -1,4 +1,4 @@
-import { createProjectMonogramIcon, projects } from "../../content/projects";
+import { createProjectMonogramIcon, getProjectBySlug, projects } from "../../content/projects";
 import type {
   CardPalette,
   ProjectCardFrontSpec,
@@ -48,3 +48,7 @@ export const resolveProjectCardFront = (item: ProjectItem): ResolvedProjectCardF
 };
 
 export const projectItems: ProjectItem[] = projects;
+
+export const getProjectItemBySlug = (slug: string): ProjectItem | null => getProjectBySlug(slug);
+
+export const getProjectItemIndex = (id: string): number => projectItems.findIndex((item) => item.id === id);

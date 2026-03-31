@@ -17,7 +17,7 @@ import {
   SiteMeta,
   TimelineEntry,
 } from "./types";
-import { canonicalizeRoutePath, internalNavigationPaths } from "./navigation";
+import { canonicalizeRoutePath, getProjectPath, internalNavigationPaths } from "./navigation";
 
 const assert = (condition: boolean, message: string) => {
   if (!condition) {
@@ -94,13 +94,33 @@ export const validateContent = ({
   const validInternalPaths = new Set([
     ...navigationItems.map((item) => canonicalizeRoutePath(item.path)),
     ...internalNavigationPaths.map((path) => canonicalizeRoutePath(path)),
+    ...projects.map((project) => canonicalizeRoutePath(getProjectPath(project.slug))),
     ...blogPosts.map((post) => canonicalizeRoutePath(`/blog/${post.slug}`)),
   ]);
 
   assertUnique(projects, (item) => item.id, "project id");
+  assertUnique(projects, (item) => item.slug, "project slug");
   projects.forEach((project) => {
+    assert(slugPattern.test(project.slug), `project.${project.id}.slug must be URL-safe.`);
     assertNonEmpty(`project.${project.id}.title`, project.title);
     assert(project.media.length > 0, `project.${project.id} must include at least one media item.`);
+    assert(project.metrics.length > 0, `project.${project.id} must include at least one metric.`);
+    assert(project.chapters.length > 0, `project.${project.id} must include at least one chapter.`);
+    assert(project.gallery.length > 0, `project.${project.id} must include at least one gallery asset.`);
+    assert(project.captions.length > 0, `project.${project.id} must include at least one caption.`);
+    assert(project.outcomes.length > 0, `project.${project.id} must include at least one outcome.`);
+    assert(project.credits.length > 0, `project.${project.id} must include at least one credit.`);
+    assertUnique(project.gallery, (asset) => asset.id, `project.${project.id} gallery asset id`);
+    assertUnique(project.captions, (caption) => caption.assetId, `project.${project.id} caption asset id`);
+
+    const galleryAssetIds = new Set(project.gallery.map((asset) => asset.id));
+    project.captions.forEach((caption, index) => {
+      assert(
+        galleryAssetIds.has(caption.assetId),
+        `project.${project.id}.captions[${index}] references unknown gallery asset ${caption.assetId}`,
+      );
+    });
+
     project.links.forEach((link, index) => {
       assertNonEmpty(`project.${project.id}.links[${index}].label`, link.label);
       assertNonEmpty(`project.${project.id}.links[${index}].href`, link.href);
@@ -108,6 +128,19 @@ export const validateContent = ({
         assertInternalPath(link.href, validInternalPaths, `project.${project.id}.links[${index}]`);
       }
     });
+  });
+
+  const projectSlugSet = new Set(projects.map((project) => project.slug));
+  projects.forEach((project) => {
+    if (!project.nextProject) return;
+    assert(
+      project.nextProject !== project.slug,
+      `project.${project.id}.nextProject must reference a different project slug.`,
+    );
+    assert(
+      projectSlugSet.has(project.nextProject),
+      `project.${project.id}.nextProject references unknown project slug ${project.nextProject}`,
+    );
   });
 
   assertUnique(blogPosts, (item) => item.id, "blog id");

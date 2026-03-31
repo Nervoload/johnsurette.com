@@ -32,6 +32,52 @@ export interface ProjectLink {
   href: string;
 }
 
+export interface ProjectMetric {
+  label: string;
+  value: string;
+  detail: string;
+}
+
+export interface ProjectHeroContent {
+  eyebrow: string;
+  thesis: string;
+  summary: string;
+  artifactLabel: string;
+  surfaceLabel: string;
+  media: string;
+}
+
+export interface ProjectChapter {
+  id: string;
+  eyebrow: string;
+  title: string;
+  body: string[];
+  aside?: string;
+}
+
+export interface ProjectGalleryAsset {
+  id: string;
+  src: string;
+  alt: string;
+}
+
+export interface ProjectCaption {
+  assetId: string;
+  title: string;
+  body: string;
+}
+
+export interface ProjectOutcome {
+  label: string;
+  value: string;
+  detail: string;
+}
+
+export interface ProjectCredit {
+  label: string;
+  value: string;
+}
+
 export interface CardPalette {
   deep: string;
   mid: string;
@@ -61,16 +107,27 @@ export interface ProjectCardFrontSpec {
 
 export interface ProjectEntry {
   id: string;
+  slug: string;
   title: string;
   subtitle: string;
   summary: string;
   details: string;
+  role: string;
+  year: string;
   tags: string[];
   accent: string;
   palette: CardPalette;
   media: string[];
   links: ProjectLink[];
   front: ProjectCardFrontSpec;
+  hero: ProjectHeroContent;
+  metrics: ProjectMetric[];
+  chapters: ProjectChapter[];
+  gallery: ProjectGalleryAsset[];
+  captions: ProjectCaption[];
+  outcomes: ProjectOutcome[];
+  credits: ProjectCredit[];
+  nextProject?: string;
 }
 
 export interface ProjectsPageContent {

@@ -22,6 +22,7 @@ interface ProjectIntroSequenceProps {
   progress: MotionValue<number>;
   items: ProjectItem[];
   onCardSelect?: (item: ProjectItem, screenPos: { x: number; y: number }) => void;
+  onActiveProjectChange?: (item: ProjectItem | null) => void;
   lowPowerMode?: boolean;
   mobileViewport?: boolean;
   themeMode: ResolvedThemeMode;
@@ -246,6 +247,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   progress,
   items,
   onCardSelect,
+  onActiveProjectChange,
   lowPowerMode = false,
   mobileViewport = false,
   themeMode,
@@ -254,6 +256,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   const cardGroups = useRef<THREE.Group[]>([]);
   const cardObjectRefs = useRef<Array<THREE.Group | null>>([]);
   const deckRef = useRef<THREE.Group>(null);
+  const activeProjectIdRef = useRef<string | null>(null);
   const flipValues = useRef<MotionValue<number>[]>([]);
   const edgeGlowValues = useRef<MotionValue<number>[]>([]);
   const popoutRevealValues = useRef<MotionValue<number>[]>([]);
@@ -395,7 +398,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
     const dealGlowWindow = clamp01(Math.max(dealGlowIn, browseGlowFloor));
 
     const inDealMode = t > 0.64;
-    clickableRef.current = t > (mobileViewport ? 0.95 : 0.9);
+    clickableRef.current = t > (mobileViewport ? 0.9 : 0.84);
 
     /* ── Deck-level mouse tracking ─────────────────────── */
     const tiltAmount = shuffleT * (1 - spreadT);
@@ -419,7 +422,13 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
       inDealMode && count > 0
         ? THREE.MathUtils.clamp(Math.round(browseShift / Math.max(cardSpacing, 0.0001)), 0, count - 1)
         : null;
-    const estimatedCenteredProject = estimatedCenteredCardIndex !== null ? items[estimatedCenteredCardIndex] : null;
+    const estimatedCenteredProject = estimatedCenteredCardIndex !== null ? items[estimatedCenteredCardIndex] : items[0] ?? null;
+    const nextActiveProjectId = estimatedCenteredProject?.id ?? null;
+
+    if (activeProjectIdRef.current !== nextActiveProjectId) {
+      activeProjectIdRef.current = nextActiveProjectId;
+      onActiveProjectChange?.(estimatedCenteredProject);
+    }
 
     deck.position.x = mx * metrics.browseParallaxX * deckMouseFade;
     deck.position.y = my * metrics.browseParallaxY * deckMouseFade + browseShift;

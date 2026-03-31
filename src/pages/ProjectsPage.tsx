@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { pageVisuals, projectsPageContent } from "../content";
+import { getProjectPath, pageVisuals, projectsPageContent } from "../content";
 import DepthRainBackdrop from "../components/LandingComponents/DepthRainBackdrop";
 import LandingOnboardingOverlay from "../components/LandingComponents/onboarding/LandingOnboardingOverlay";
 import ProjectStoryboard from "../components/Projects/ProjectStoryboard";
-import ProjectExpandOverlay from "../components/Projects/ProjectExpandOverlay";
+import ProjectsCaseStudyIndex from "../components/Projects/ProjectsCaseStudyIndex";
 import { ProjectItem, projectItems } from "../components/Projects/projectData";
 import PageScaffold from "../components/layout/PageScaffold";
+import { WipeOptions } from "../components/Transitions/TransitionWipe";
 import { ResolvedThemeMode } from "../components/theme/themeMode";
 import { createCodexProbeAttributes } from "../devtools/codexContext/probe";
 import { useIsTouch } from "../hooks/usePointerDevice";
@@ -13,9 +14,10 @@ import { useIsTouch } from "../hooks/usePointerDevice";
 export interface ProjectsPageProps {
   themeMode: ResolvedThemeMode;
   navInteractionTick?: number;
+  onNavigate: (path: string, opts?: WipeOptions) => boolean | void;
 }
 
-const ProjectsPage: React.FC<ProjectsPageProps> = ({ themeMode, navInteractionTick }) => {
+const ProjectsPage: React.FC<ProjectsPageProps> = ({ themeMode, navInteractionTick, onNavigate }) => {
   const projectsPageProbe = createCodexProbeAttributes({
     componentName: "ProjectsPage",
     filePath: "/src/pages/ProjectsPage.tsx",
@@ -24,8 +26,6 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({ themeMode, navInteractionTi
   });
 
   const [bootLowPower, setBootLowPower] = useState(true);
-  const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
-  const [originPos, setOriginPos] = useState<{ x: number; y: number } | null>(null);
   const projectVisuals = pageVisuals.projects;
   const isTouch = useIsTouch();
 
@@ -38,17 +38,16 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({ themeMode, navInteractionTi
   }, []);
 
   const handleCardSelect = useCallback(
-    (item: ProjectItem, screenPos: { x: number; y: number }) => {
-      setSelectedProject(item);
-      setOriginPos(screenPos);
+    (item: ProjectItem) => {
+      onNavigate(getProjectPath(item.slug), {
+        color: item.accent,
+        direction: "down",
+        intensity: "lite",
+        duration: 620,
+      });
     },
-    [],
+    [onNavigate],
   );
-
-  const handleOverlayClose = useCallback(() => {
-    setSelectedProject(null);
-    setOriginPos(null);
-  }, []);
 
   return (
     <PageScaffold
@@ -83,13 +82,17 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({ themeMode, navInteractionTi
           />
 
           <div className="relative z-10">
-            <header className="theme-text-primary relative z-20 mx-auto flex w-full max-w-6xl flex-col gap-3 px-6 pt-24">
-              <p className="theme-text-subtle text-sm uppercase tracking-[0.22em]">{projectsPageContent.eyebrow}</p>
-              <h1 className="text-3xl font-medium xs:text-4xl sm:text-5xl">{projectsPageContent.title}</h1>
-              <p className="theme-text-muted max-w-2xl">{projectsPageContent.summary}</p>
+            <header className="theme-text-primary relative z-20 mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 pt-24">
+              <p className="theme-text-subtle text-[0.78rem] uppercase tracking-[0.3em]">{projectsPageContent.eyebrow}</p>
+              <h1 className="max-w-4xl text-4xl font-semibold leading-[0.94] tracking-[-0.05em] xs:text-5xl sm:text-6xl">
+                {projectsPageContent.title}
+              </h1>
+              <p className="theme-text-muted max-w-3xl text-[1rem] leading-relaxed sm:text-[1.06rem]">
+                {projectsPageContent.summary}
+              </p>
             </header>
 
-            <div className="relative mt-8">
+            <div className="relative mt-10">
               <ProjectStoryboard
                 scrollContainer={scrollRef}
                 items={projectItems}
@@ -99,11 +102,10 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({ themeMode, navInteractionTi
               />
             </div>
 
-            <ProjectExpandOverlay
-              item={selectedProject}
-              originPos={originPos}
-              onClose={handleOverlayClose}
+            <ProjectsCaseStudyIndex
+              projects={projectItems}
               themeMode={themeMode}
+              onOpenCaseStudy={handleCardSelect}
             />
           </div>
         </div>

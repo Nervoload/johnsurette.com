@@ -1,7 +1,8 @@
 import React from "react";
 import { blogPageContent, pageVisuals } from "../content";
-import { blogPosts } from "../components/Blog/blogPosts";
+import { blogPosts, getBlogPostBySlug } from "../components/Blog/blogPosts";
 import ResearchBlogExperience from "../components/Blog/ResearchBlogExperience";
+import ResearchSignalBackdrop from "../components/Blog/ResearchSignalBackdrop";
 import PageScaffold from "../components/layout/PageScaffold";
 import { WipeOptions } from "../components/Transitions/TransitionWipe";
 import { createCodexProbeAttributes } from "../devtools/codexContext/probe";
@@ -18,6 +19,8 @@ const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, articleSlug }) => {
     componentPath: ["BlogPage"],
     role: "page",
   });
+  const featuredPost = blogPosts.find((post) => post.featured) ?? blogPosts[0] ?? null;
+  const backgroundPost = (articleSlug ? getBlogPostBySlug(articleSlug) : null) ?? featuredPost;
 
   return (
     <PageScaffold
@@ -26,14 +29,24 @@ const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, articleSlug }) => {
       footerRunwayVh={88}
     >
       {(scrollRef) => (
-        <div {...blogPageProbe}>
-          <ResearchBlogExperience
-            posts={blogPosts}
-            pageContent={blogPageContent}
-            articleSlug={articleSlug}
-            scrollRef={scrollRef}
-            onNavigate={onNavigate}
-          />
+        <div {...blogPageProbe} className="research-page-shell">
+          {backgroundPost ? (
+            <div className="research-page-backdrop-layer" aria-hidden="true">
+              <div className="research-page-backdrop-sticky">
+                <ResearchSignalBackdrop post={backgroundPost} />
+              </div>
+            </div>
+          ) : null}
+
+          <div className="research-page-content">
+            <ResearchBlogExperience
+              posts={blogPosts}
+              pageContent={blogPageContent}
+              articleSlug={articleSlug}
+              scrollRef={scrollRef}
+              onNavigate={onNavigate}
+            />
+          </div>
         </div>
       )}
     </PageScaffold>

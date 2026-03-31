@@ -2,7 +2,9 @@ import { defineRoute } from "./define";
 import { NavigationItem } from "./types";
 
 const BLOG_ROUTE_BASE = "/blog";
+const PROJECT_ROUTE_BASE = "/projects";
 const blogArticleRoutePattern = /^\/blog\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const projectCaseStudyRoutePattern = /^\/projects\/[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export const canonicalizeRoutePath = (rawPath: string): string => {
   const trimmed = rawPath.trim();
@@ -16,6 +18,8 @@ export const canonicalizeRoutePath = (rawPath: string): string => {
 };
 
 export const isBlogArticlePath = (path: string): boolean => blogArticleRoutePattern.test(canonicalizeRoutePath(path));
+export const isProjectCaseStudyPath = (path: string): boolean =>
+  projectCaseStudyRoutePattern.test(canonicalizeRoutePath(path));
 
 export const getBlogPostSlugFromPath = (path: string): string | null => {
   const normalized = canonicalizeRoutePath(path);
@@ -25,10 +29,22 @@ export const getBlogPostSlugFromPath = (path: string): string | null => {
 
 export const getBlogPostPath = (slug: string): string => canonicalizeRoutePath(`${BLOG_ROUTE_BASE}/${slug}`);
 
+export const getProjectSlugFromPath = (path: string): string | null => {
+  const normalized = canonicalizeRoutePath(path);
+  if (!isProjectCaseStudyPath(normalized)) return null;
+  return normalized.slice(`${PROJECT_ROUTE_BASE}/`.length);
+};
+
+export const getProjectPath = (slug: string): string => canonicalizeRoutePath(`${PROJECT_ROUTE_BASE}/${slug}`);
+
 export const getNavigationMatchPath = (path: string): string => {
   const normalized = canonicalizeRoutePath(path);
   if (isBlogArticlePath(normalized)) {
     return BLOG_ROUTE_BASE;
+  }
+
+  if (isProjectCaseStudyPath(normalized)) {
+    return PROJECT_ROUTE_BASE;
   }
 
   return normalized;
@@ -99,6 +115,10 @@ export const isRouteEnabled = (path: string): boolean => {
 
   if (isBlogArticlePath(normalized)) {
     return enabledRouteSet.has(BLOG_ROUTE_BASE);
+  }
+
+  if (isProjectCaseStudyPath(normalized)) {
+    return enabledRouteSet.has(PROJECT_ROUTE_BASE);
   }
 
   return false;

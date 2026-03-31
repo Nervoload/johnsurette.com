@@ -69,19 +69,25 @@ export const defineRoute = (input: NavigationItem): NavigationItem => {
 
 export const defineProject = (input: ProjectEntry): ProjectEntry => {
   assertNonEmpty(`project.${input.id}.id`, input.id);
+  assertNonEmpty(`project.${input.id}.slug`, input.slug);
   assertNonEmpty(`project.${input.id}.title`, input.title);
   assertNonEmpty(`project.${input.id}.subtitle`, input.subtitle);
   assertNonEmpty(`project.${input.id}.summary`, input.summary);
   assertNonEmpty(`project.${input.id}.details`, input.details);
+  assertNonEmpty(`project.${input.id}.role`, input.role);
+  assertNonEmpty(`project.${input.id}.year`, input.year);
   assertNonEmpty(`project.${input.id}.accent`, input.accent);
 
   return {
     ...input,
     id: trim(input.id),
+    slug: trim(input.slug),
     title: trim(input.title),
     subtitle: trim(input.subtitle),
     summary: trim(input.summary),
     details: trim(input.details),
+    role: trim(input.role),
+    year: trim(input.year),
     accent: trim(input.accent),
     tags: normalizeStringArray(input.tags),
     media: normalizeStringArray(input.media),
@@ -94,6 +100,52 @@ export const defineProject = (input: ProjectEntry): ProjectEntry => {
       dateLabel: input.front.dateLabel?.trim(),
       iconSvg: input.front.iconSvg?.trim(),
     },
+    hero: {
+      ...input.hero,
+      eyebrow: trim(input.hero.eyebrow),
+      thesis: trim(input.hero.thesis),
+      summary: trim(input.hero.summary),
+      artifactLabel: trim(input.hero.artifactLabel),
+      surfaceLabel: trim(input.hero.surfaceLabel),
+      media: trim(input.hero.media),
+    },
+    metrics: (input.metrics ?? []).map((metric) => ({
+      label: trim(metric.label),
+      value: trim(metric.value),
+      detail: trim(metric.detail),
+    })),
+    chapters: (input.chapters ?? []).map((chapter) => ({
+      ...chapter,
+      id: trim(chapter.id),
+      eyebrow: trim(chapter.eyebrow),
+      title: trim(chapter.title),
+      body: normalizeStringArray(chapter.body),
+      aside: chapter.aside?.trim(),
+    })),
+    gallery: (input.gallery ?? []).map((asset) => ({
+      ...asset,
+      id: trim(asset.id),
+      src: trim(asset.src),
+      alt: trim(asset.alt),
+    })),
+    captions: (input.captions ?? []).map((caption) => ({
+      ...caption,
+      assetId: trim(caption.assetId),
+      title: trim(caption.title),
+      body: trim(caption.body),
+    })),
+    outcomes: (input.outcomes ?? []).map((outcome) => ({
+      ...outcome,
+      label: trim(outcome.label),
+      value: trim(outcome.value),
+      detail: trim(outcome.detail),
+    })),
+    credits: (input.credits ?? []).map((credit) => ({
+      ...credit,
+      label: trim(credit.label),
+      value: trim(credit.value),
+    })),
+    nextProject: input.nextProject?.trim(),
   };
 };
 

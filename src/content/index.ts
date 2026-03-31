@@ -19,13 +19,16 @@ import {
   getBlogPostPath,
   getBlogPostSlugFromPath,
   getNavigationMatchPath,
+  getProjectPath,
+  getProjectSlugFromPath,
   internalNavigationPaths,
   isBlogArticlePath,
+  isProjectCaseStudyPath,
   isRouteEnabled,
   navigationItems,
   visibleNavigationItems,
 } from "./navigation";
-import { projects, projectsPageContent } from "./projects";
+import { getProjectBySlug, projects, projectsPageContent } from "./projects";
 import { siteMeta } from "./site";
 import { pageVisuals } from "./visuals";
 import { validateContent } from "./validate";
@@ -61,8 +64,12 @@ export {
   getBlogPostPath,
   getBlogPostSlugFromPath,
   getNavigationMatchPath,
+  getProjectBySlug,
+  getProjectPath,
+  getProjectSlugFromPath,
   internalNavigationPaths,
   isBlogArticlePath,
+  isProjectCaseStudyPath,
   isRouteEnabled,
   landingAspirationSectionContent,
   landingBiologySectionContent,

@@ -3,13 +3,20 @@ import { motion, useReducedMotion } from "framer-motion";
 import NavBar from "./components/NavBar/NavBar";
 import TransitionWipe, { TransitionHandle, WipeOptions } from "./components/Transitions/TransitionWipe";
 import { SiteRoute, normalizeRoute, siteRoutes } from "./components/sections";
-import { canonicalizeRoutePath, getBlogPostSlugFromPath, getNavigationMatchPath, isRouteEnabled } from "./content";
+import {
+  canonicalizeRoutePath,
+  getBlogPostSlugFromPath,
+  getNavigationMatchPath,
+  getProjectSlugFromPath,
+  isRouteEnabled,
+} from "./content";
 import { useThemeMode } from "./components/theme/useThemeMode";
 import CodexContextInspector from "./devtools/codexContext/CodexContextInspector";
 
 const LandingPage = lazy(() => import("./pages/LandingPage"));
 const OriginStoryPage = lazy(() => import("./pages/OriginStoryPage"));
 const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
+const ProjectCaseStudyPage = lazy(() => import("./pages/ProjectCaseStudyPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const BlogPage = lazy(() => import("./pages/BlogPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
@@ -215,8 +222,14 @@ function App() {
       );
     }
 
+    const projectSlug = getProjectSlugFromPath(path);
+
     if (path === "/projects") {
-      return <ProjectsPage themeMode={resolvedMode} navInteractionTick={navInteractionTick} />;
+      return <ProjectsPage themeMode={resolvedMode} navInteractionTick={navInteractionTick} onNavigate={navigate} />;
+    }
+
+    if (projectSlug) {
+      return <ProjectCaseStudyPage slug={projectSlug} onNavigate={navigate} themeMode={resolvedMode} />;
     }
 
     if (path === "/about") {
