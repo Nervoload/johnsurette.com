@@ -42,7 +42,7 @@ const ResearchHeroStage: React.FC<ResearchHeroStageProps> = ({
           <div className="research-hero-surface">
             <ResearchAmbientScene post={post} reducedMotion={prefersReducedMotion} />
             <div className="research-hero-grid">
-              <div className="research-hero-copy-column">
+              <div className="research-hero-intro">
                 <motion.p
                   className="research-hero-page-eyebrow"
                   style={prefersReducedMotion ? undefined : { opacity: eyebrowOpacity }}
@@ -57,38 +57,31 @@ const ResearchHeroStage: React.FC<ResearchHeroStageProps> = ({
                   <span aria-hidden="true"> / </span>
                   <span>{String(postCount).padStart(2, "0")} Notes</span>
                 </div>
+              </div>
 
-                <motion.div layoutId={layoutIds.shell} className="research-feature-shell">
-                  <div className="research-feature-copy">
-                    <motion.p layoutId={layoutIds.meta} className="research-feature-meta">
-                      {post.tag}
-                      <span aria-hidden="true"> / </span>
-                      {post.dateLabel}
-                    </motion.p>
-                    <motion.h2 layoutId={layoutIds.title} className="research-feature-title">
-                      {post.title}
-                    </motion.h2>
-                    <motion.p layoutId={layoutIds.hook} className="research-feature-hook">
-                      {post.hook}
-                    </motion.p>
-                    <p className="research-feature-summary">{post.summary}</p>
-                    <button type="button" className="research-feature-cta" onClick={() => onOpenArticle(post)}>
-                      Read Full Article
-                    </button>
-                  </div>
+              <motion.div layoutId={layoutIds.shell} className="research-feature-shell research-hero-feature">
+                <div className="research-feature-copy">
+                  <motion.p layoutId={layoutIds.meta} className="research-feature-meta">
+                    {post.tag}
+                    <span aria-hidden="true"> / </span>
+                    {post.dateLabel}
+                  </motion.p>
+                  <motion.h2 layoutId={layoutIds.title} className="research-feature-title">
+                    {post.title}
+                  </motion.h2>
+                  <motion.p layoutId={layoutIds.hook} className="research-feature-hook">
+                    {post.hook}
+                  </motion.p>
+                  <p className="research-feature-summary">{post.summary}</p>
+                  <button type="button" className="research-feature-cta" onClick={() => onOpenArticle(post)}>
+                    Read Full Article
+                  </button>
+                </div>
 
-                  <motion.div layoutId={layoutIds.media} className="research-feature-media">
-                    <img src={post.coverImage.src} alt={post.coverImage.alt} className="research-feature-media-image" loading="eager" />
-                  </motion.div>
+                <motion.div layoutId={layoutIds.media} className="research-feature-media">
+                  <img src={post.coverImage.src} alt={post.coverImage.alt} className="research-feature-media-image" loading="eager" />
                 </motion.div>
-              </div>
-
-              <div className="research-hero-sidebar-copy">
-                <p className="research-hero-sidebar-label">Current Frame</p>
-                <p className="research-hero-sidebar-body">
-                  A staged reading surface for the newest note. The archive takes over as this frame releases.
-                </p>
-              </div>
+              </motion.div>
             </div>
           </div>
         </motion.div>

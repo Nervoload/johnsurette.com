@@ -4,7 +4,6 @@ import { LandingComputationalSectionContent } from "../../../content";
 import { StorySectionData } from "../storySections";
 import { WipeOptions } from "../../Transitions/TransitionWipe";
 import { useSectionActivity } from "../runtime/LandingStoryRuntime";
-import ComputationalCanvasPlaceholder from "../visuals/ComputationalCanvasPlaceholder";
 import ComputationalMatrixBackdrop from "../visuals/computation/ComputationalMatrixBackdrop";
 
 interface ComputationalSystemsSectionProps {
@@ -41,13 +40,31 @@ const ComputationalSystemsSection: React.FC<ComputationalSystemsSectionProps> = 
           viewport={{ once: true, amount: 0.16 }}
           transition={{ duration: 0.96, ease: [0.22, 1, 0.36, 1] }}
         >
-          <ComputationalCanvasPlaceholder
-            activity={{
-              isNearViewport: activity.isNearViewport,
-              isPrimaryActive: activity.isPrimaryActive,
-              qualityTier: activity.qualityTier,
-            }}
-          />
+          <div className="relative h-[76vh] min-h-[34rem] overflow-hidden rounded-[2.4rem] shadow-[0_0_120px_rgba(15,23,42,0.18)] sm:h-[80vh] lg:h-[86vh]">
+            <div className="theme-story-contrast-canvas absolute inset-0" />
+            <img
+              src={content.poster.src}
+              alt={content.poster.alt}
+              className="absolute inset-0 h-full w-full object-cover"
+              loading="lazy"
+              decoding="async"
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.12),rgba(2,6,23,0.02)_30%,rgba(2,6,23,0.16))]" />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(148,163,184,0.05)_1px,transparent_1px),linear-gradient(rgba(148,163,184,0.04)_1px,transparent_1px)] [background-size:36px_36px] opacity-20" />
+            <div className="theme-story-contrast-top-fade absolute inset-x-0 top-0 h-24" />
+            <div className="theme-story-contrast-bottom-fade absolute inset-x-0 bottom-0 h-24" />
+
+            <div className="absolute inset-x-6 bottom-6 flex flex-wrap gap-2 sm:inset-x-8 sm:bottom-8">
+              {["small network", "large model", "brain-like dynamics"].map((label) => (
+                <span
+                  key={label}
+                  className="theme-story-contrast-chip rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] backdrop-blur-sm"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+          </div>
         </motion.div>
 
         <motion.div

@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { LandingBiologySectionContent } from "../../../content";
 import { StorySectionData } from "../storySections";
 import { WipeOptions } from "../../Transitions/TransitionWipe";
-import BiologySynapsePlaceholder from "../visuals/BiologySynapsePlaceholder";
 import { useSectionActivity } from "../runtime/LandingStoryRuntime";
 
 interface BiologyIntelligenceSectionProps {
@@ -70,7 +69,22 @@ const BiologyIntelligenceSection: React.FC<BiologyIntelligenceSectionProps> = ({
             className="relative order-first lg:order-none lg:justify-self-center"
           >
             <div className="pointer-events-none absolute inset-x-[10%] top-[10%] h-[64%] rounded-full bg-cyan-300/14 blur-3xl" />
-            <BiologySynapsePlaceholder activity={activity} />
+            <div
+              className="relative mx-auto aspect-[1.08] w-[min(92vw,46rem)] max-w-none overflow-hidden rounded-[2.5rem] sm:w-[min(88vw,52rem)] lg:w-[min(60vw,56rem)] xl:w-[min(54vw,60rem)]"
+              aria-hidden="true"
+            >
+              <div className="theme-story-contrast-canvas absolute inset-0" />
+              <img
+                src={content.poster.src}
+                alt={content.poster.alt}
+                className="absolute inset-0 h-full w-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_42%,rgba(125,211,252,0.12),transparent_34%),linear-gradient(180deg,rgba(2,6,23,0.06),rgba(2,6,23,0.18))]" />
+              <div className="theme-story-contrast-top-fade absolute inset-x-0 top-0 h-24" />
+              <div className="theme-story-contrast-bottom-fade absolute inset-x-0 bottom-0 h-24" />
+            </div>
           </motion.div>
 
           <motion.aside

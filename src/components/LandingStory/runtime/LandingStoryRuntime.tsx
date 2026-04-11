@@ -1,4 +1,4 @@
-import React, { ReactNode, RefObject, createContext, useContext, useMemo, useRef } from "react";
+import React, { ReactNode, RefObject, createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useInView, useReducedMotion } from "framer-motion";
 import { usePointerDevice } from "../../../hooks/usePointerDevice";
 
@@ -39,6 +39,54 @@ const DEFAULT_ACTIVITY_OPTIONS: Required<SectionActivityOptions> = {
   primaryMargin: "-12% 0px -12% 0px",
 };
 
+interface StoryViewportMetrics {
+  width: number;
+  height: number;
+  dpr: number;
+}
+
+const getViewportMetrics = (): StoryViewportMetrics => {
+  if (typeof window === "undefined") {
+    return {
+      width: 1280,
+      height: 720,
+      dpr: 1,
+    };
+  }
+
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight,
+    dpr: window.devicePixelRatio || 1,
+  };
+};
+
+const getAdaptiveQualityTier = (
+  prefersReducedMotion: boolean,
+  pointerDevice: ReturnType<typeof usePointerDevice>,
+  viewport: StoryViewportMetrics,
+): StorySceneQualityTier => {
+  if (prefersReducedMotion) {
+    return "static";
+  }
+
+  const nav = typeof navigator !== "undefined" ? (navigator as Navigator & { deviceMemory?: number }) : null;
+  const deviceMemory = nav?.deviceMemory ?? 4;
+  const hardwareConcurrency = nav?.hardwareConcurrency ?? 4;
+  const viewportArea = viewport.width * viewport.height;
+  const compactViewport = viewport.width < 960 || viewport.height < 720;
+
+  let capabilityScore = 0;
+
+  capabilityScore += pointerDevice === "fine" ? 1 : 0;
+  capabilityScore += viewportArea >= 900_000 && !compactViewport ? 1 : 0;
+  capabilityScore += viewport.dpr <= 2.2 ? 1 : 0;
+  capabilityScore += hardwareConcurrency >= 8 ? 1 : hardwareConcurrency <= 4 ? -1 : 0;
+  capabilityScore += deviceMemory >= 8 ? 1 : deviceMemory <= 4 ? -1 : 0;
+
+  return capabilityScore >= 2 ? "high" : "low";
+};
+
 export function LandingStoryRuntimeProvider({
   scrollContainerRef,
   children,
@@ -64,6 +112,7 @@ export function useSectionActivity<T extends HTMLElement = HTMLElement>(
   const { scrollContainerRef } = useLandingStoryRuntime();
   const prefersReducedMotion = Boolean(useReducedMotion());
   const pointerDevice = usePointerDevice();
+  const [viewportMetrics, setViewportMetrics] = useState<StoryViewportMetrics>(() => getViewportMetrics());
 
   const {
     nearAmount = DEFAULT_ACTIVITY_OPTIONS.nearAmount,
@@ -84,11 +133,29 @@ export function useSectionActivity<T extends HTMLElement = HTMLElement>(
     margin: primaryMargin,
   });
 
-  const qualityTier: StorySceneQualityTier = prefersReducedMotion
-    ? "static"
-    : pointerDevice === "coarse"
-      ? "low"
-      : "high";
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const updateViewportMetrics = () => {
+      setViewportMetrics(getViewportMetrics());
+    };
+
+    updateViewportMetrics();
+    window.addEventListener("resize", updateViewportMetrics);
+    window.addEventListener("orientationchange", updateViewportMetrics);
+
+    return () => {
+      window.removeEventListener("resize", updateViewportMetrics);
+      window.removeEventListener("orientationchange", updateViewportMetrics);
+    };
+  }, []);
+
+  const qualityTier = useMemo(
+    () => getAdaptiveQualityTier(prefersReducedMotion, pointerDevice, viewportMetrics),
+    [pointerDevice, prefersReducedMotion, viewportMetrics],
+  );
 
   return {
     sectionRef,

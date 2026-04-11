@@ -180,6 +180,11 @@ export interface LandingSectionLink {
   path: string;
 }
 
+export interface LandingStoryPoster {
+  src: string;
+  alt: string;
+}
+
 export interface LandingPhotoPlaceholder {
   id: string;
   alt: string;
@@ -199,6 +204,7 @@ export interface LandingComputationalSectionContent {
   quote: string;
   body: string;
   cta: LandingSectionLink;
+  poster: LandingStoryPoster;
 }
 
 export interface LandingBiologySectionContent {
@@ -206,6 +212,7 @@ export interface LandingBiologySectionContent {
   overlayBody: string;
   body: string;
   cta: LandingSectionLink;
+  poster: LandingStoryPoster;
 }
 
 export type LandingAspirationLane = "left" | "center" | "right";
@@ -225,11 +232,23 @@ export interface LandingAspirationEdge {
   faded?: boolean;
 }
 
+export type LandingAspirationOverlayBeatId =
+  | "root"
+  | "between-root-and-majors"
+  | "stage-two-experiences"
+  | "graduation";
+
+export interface LandingAspirationOverlayBeat {
+  id: LandingAspirationOverlayBeatId;
+  text: string;
+}
+
 export interface LandingAspirationSectionContent {
   title: string;
   body: string;
   footerTitle: string;
   footerBody: string;
+  overlayBeats: LandingAspirationOverlayBeat[];
   nodes: LandingAspirationNode[];
   edges: LandingAspirationEdge[];
 }
@@ -365,7 +384,6 @@ export interface ContactPageContent {
   title: string;
   summary: string;
   contactLabel: string;
-  phoneNumber: string;
   copyButtonLabel: string;
   copySuccessLabel: string;
   copyErrorLabel: string;

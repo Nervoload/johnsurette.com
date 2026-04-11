@@ -192,6 +192,10 @@ export const validateContent = ({
   );
 
   assertNonEmpty("landingAspirationSectionContent.footerTitle", landingAspirationSectionContent.footerTitle);
+  assertUnique(landingAspirationSectionContent.overlayBeats, (item) => item.id, "landing aspiration overlay beat id");
+  landingAspirationSectionContent.overlayBeats.forEach((beat) => {
+    assertNonEmpty(`landingAspirationSectionContent.overlayBeats.${beat.id}.text`, beat.text);
+  });
   assertUnique(landingAspirationSectionContent.nodes, (item) => item.id, "landing aspiration node id");
   const aspirationNodeIds = new Set(landingAspirationSectionContent.nodes.map((node) => node.id));
   landingAspirationSectionContent.edges.forEach((edge, index) => {

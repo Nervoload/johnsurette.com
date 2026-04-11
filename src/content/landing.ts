@@ -152,6 +152,10 @@ export const landingComputationalSectionContent: LandingComputationalSectionCont
     label: "Check out my projects here",
     path: "/projects",
   },
+  poster: {
+    src: "/images/landing/computational-systems-poster.png",
+    alt: "Static poster of a glowing computational network with layered connections and signal nodes.",
+  },
 });
 
 export const landingBiologySectionContent: LandingBiologySectionContent = defineLandingBiologySection({
@@ -163,6 +167,10 @@ export const landingBiologySectionContent: LandingBiologySectionContent = define
     label: "See my research here",
     path: "/blog",
   },
+  poster: {
+    src: "/images/landing/biology-intelligence-poster.png",
+    alt: "Static poster of branching synaptic forms and cellular glows representing biological computation.",
+  },
 });
 
 export const landingAspirationSectionContent: LandingAspirationSectionContent = defineLandingAspirationSection({
@@ -170,6 +178,21 @@ export const landingAspirationSectionContent: LandingAspirationSectionContent = 
   body: "I hope that you can be a part of it!",
   footerTitle: "My journey has just started.",
   footerBody: "I hope that you can be a part of it!",
+  overlayBeats: [
+    { id: "root", text: "My journey so far..." },
+    {
+      id: "between-root-and-majors",
+      text: "I hoped to learn how information and intelligence emerges from different systems and rules.",
+    },
+    {
+      id: "stage-two-experiences",
+      text: "Exploring my curiosity brought me to these experiences.",
+    },
+    {
+      id: "graduation",
+      text: "Where do I aspire to build in the future?",
+    },
+  ],
   nodes: [
     { id: "life-science-major", label: "Major in Life science", stage: 1, lane: "left" },
     { id: "computer-science-major", label: "Major in computer science", stage: 1, lane: "right" },

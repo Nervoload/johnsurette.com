@@ -18,10 +18,14 @@ export interface ProjectStoryboardProps {
 }
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
+const STORYBOARD_BASE_HEIGHT_VH = 640;
+const STORYBOARD_EXTRA_CARD_VH = 140;
 
 const getStoryboardHeight = (count: number) => {
   const extraCards = Math.max(0, count - 4);
-  return 440 + extraCards * 90;
+  // Give the deal and browse phases enough runway so the scene does not collapse
+  // into the route index after a short scroll flick.
+  return STORYBOARD_BASE_HEIGHT_VH + extraCards * STORYBOARD_EXTRA_CARD_VH;
 };
 
 /**
@@ -202,7 +206,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
     // Keep progression deliberately slower through deal/flip so cards don't snap through.
     const introZone = mappedTarget < 0.68;
     const dealFlipZone = mappedTarget < 0.96;
-    const maxStep = (introZone ? 0.00034 : dealFlipZone ? 0.0005 : 0.0009) * delta;
+    const maxStep = (introZone ? 0.0003 : dealFlipZone ? 0.00044 : 0.00078) * delta;
     const diff = mappedTarget - current;
 
     const step = Math.sign(diff) * Math.min(Math.abs(diff), maxStep);

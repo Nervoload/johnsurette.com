@@ -3,7 +3,6 @@ import { motionValue, MotionValue } from "framer-motion";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import Card3D, { Card3DProps } from "./Card3D";
-import ProjectCardPopoutPresets from "./ProjectCardPopoutPresets";
 import { ProjectItem, resolveProjectCardFront } from "./projectData";
 import { makeProjectFrontTexture } from "./projectFrontTexture";
 import { ResolvedThemeMode } from "../theme/themeMode";
@@ -259,7 +258,6 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   const activeProjectIdRef = useRef<string | null>(null);
   const flipValues = useRef<MotionValue<number>[]>([]);
   const edgeGlowValues = useRef<MotionValue<number>[]>([]);
-  const popoutRevealValues = useRef<MotionValue<number>[]>([]);
   const layoutMetricsRef = useRef<LayoutMetrics>(
     createLayoutMetrics(viewport.width, viewport.height, mobileViewport),
   );
@@ -274,12 +272,6 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   const cardWidth = base * (mobileViewport ? 0.228 : 0.198);
   const cardHeight = cardWidth * 1.46;
   const frontOrientation: OrientationMode = mobileViewport ? "portrait" : "landscape";
-  const popoutAttachmentScale = THREE.MathUtils.clamp(
-    cardWidth * 0.58,
-    mobileViewport ? 0.34 : 0.42,
-    mobileViewport ? 0.56 : 0.72,
-  );
-  const popoutWrapperRotationZ = mobileViewport ? 0 : -Math.PI / 2;
   const count = items.length;
 
   /* ── Build Card3D descriptors from project items ────── */
@@ -315,9 +307,6 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   }
   if (edgeGlowValues.current.length !== count) {
     edgeGlowValues.current = Array.from({ length: count }, () => motionValue(0));
-  }
-  if (popoutRevealValues.current.length !== count) {
-    popoutRevealValues.current = Array.from({ length: count }, () => motionValue(0));
   }
 
   const shuffleProfiles = useMemo<ShuffleProfile[]>(
@@ -490,7 +479,6 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
 
         // Keep cards face-down (back visible) throughout intro.
         flipValues.current[i].set(1);
-        popoutRevealValues.current[i].set(0);
 
         const sc = 1 + 0.1 * spreadT - 0.12 * exitT;
         group.scale.setScalar(sc);
@@ -567,8 +555,6 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
 
         // flipValue 1→0 (back→front)
         flipValues.current[i].set(1 - localFlipT);
-        const popoutReveal = clamp01((localFlipT - 0.08) / 0.92);
-        popoutRevealValues.current[i].set(popoutReveal);
 
         // Gentle idle bob after fully dealt & flipped
         if (localDealT > 0.98 && localFlipT > 0.98) {
@@ -604,7 +590,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
           estimatedCenteredCardIndex,
           estimatedCenteredProjectId: estimatedCenteredProject?.id ?? null,
           estimatedCenteredProjectTitle: estimatedCenteredProject?.title ?? null,
-          popoutReady: !lowPowerMode,
+          popoutEnabled: false,
           popoutOrientation: frontOrientation,
         },
       });
@@ -648,7 +634,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
             timelineProgress: Number(t.toFixed(4)),
             estimatedCentered: estimatedCenteredCardIndex === index,
             popoutPreset: frontSpec.popoutPreset,
-            popoutReveal: Number(popoutRevealValues.current[index].get().toFixed(4)),
+            popoutEnabled: false,
           },
         });
       }
@@ -677,17 +663,23 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
               flip={flipValues.current[index]}
               edgeGlow={edgeGlowValues.current[index]}
               frontAttachment={
-                !lowPowerMode && item && frontSpec ? (
-                  <group rotation={[0, 0, popoutWrapperRotationZ]} scale={popoutAttachmentScale}>
-                    <ProjectCardPopoutPresets
-                      preset={frontSpec.popoutPreset}
-                      accent={item.accent}
-                      palette={item.palette}
-                      reveal={popoutRevealValues.current[index]}
-                      intensity={frontSpec.popoutIntensity * 0.84}
-                    />
-                  </group>
-                ) : undefined
+                undefined
+                /*
+                 * Lean deployment branch:
+                 * keep per-card popout meshes disabled so the front artwork stays unobstructed.
+                 *
+                 * !lowPowerMode && item && frontSpec ? (
+                 *   <group rotation={[0, 0, popoutWrapperRotationZ]} scale={popoutAttachmentScale}>
+                 *     <ProjectCardPopoutPresets
+                 *       preset={frontSpec.popoutPreset}
+                 *       accent={item.accent}
+                 *       palette={item.palette}
+                 *       reveal={popoutRevealValues.current[index]}
+                 *       intensity={frontSpec.popoutIntensity * 0.84}
+                 *     />
+                 *   </group>
+                 * ) : undefined
+                 */
               }
               isClickable={() => clickableRef.current}
               onClick={() => handleCardClick(index)}

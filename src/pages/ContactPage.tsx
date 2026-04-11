@@ -19,8 +19,6 @@ const ContactPage: React.FC<ContactPageProps> = ({ themeMode }) => {
   });
 
   const emailAddress = siteMeta.ownerEmail;
-  const phoneNumber = contactPageContent.phoneNumber;
-  const phoneHref = `tel:${phoneNumber.replace(/[^+\d]/g, "")}`;
   const [copyStatus, setCopyStatus] = useState<"idle" | "success" | "error">("idle");
 
   useEffect(() => {
@@ -89,12 +87,7 @@ const ContactPage: React.FC<ContactPageProps> = ({ themeMode }) => {
                     >
                       {emailAddress}
                     </a>
-                    <a
-                      href={phoneHref}
-                      className="theme-link inline-flex text-3xl font-black tracking-tight underline underline-offset-8 transition xs:text-4xl"
-                    >
-                      {phoneNumber}
-                    </a>
+              
                   </div>
                   <div className="mt-5 flex flex-wrap items-center gap-3">
                     <button

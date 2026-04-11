@@ -4,15 +4,14 @@ import { ContactPageContent } from "./types";
 // EDIT HERE: contact page copy and social feed cards.
 export const contactPageContent: ContactPageContent = defineContactPage({
   eyebrow: "Contact",
-  title: "Let's build something useful",
+  title: "Let's build something together!",
   summary:
-    "For research, engineering, or collaboration inquiries, reach out by email.",
+    "Open to connectinng for research, business opportunities, or just an interesting conversation. Feel free to reach out through any of the channels below.",
   contactLabel: "Contact Me",
-  phoneNumber: "+1 (613) 720-6629",
   copyButtonLabel: "Copy email",
   copySuccessLabel: "Copied",
   copyErrorLabel: "Copy failed",
-  contactDescription: "Email: johnmsurette@gmail.com. Phone: +1 (613) 720-6629.",
+  contactDescription: "Email: johnmsurette@gmail.com.",
   availabilityEyebrow: "Availability",
   availabilityTitle: "Inquiries and opportunities",
   availabilitySummary:

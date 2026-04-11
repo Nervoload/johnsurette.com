@@ -6,12 +6,14 @@ import {
   BlogVisualIdentity,
   ContactPageContent,
   LandingAspirationSectionContent,
+  LandingAspirationOverlayBeat,
   LandingBiologySectionContent,
   LandingConclusionContent,
   LandingComputationalSectionContent,
   LandingHeroIdentityContent,
   LandingOriginLabContent,
   LandingPersonalIntroductionContent,
+  LandingStoryPoster,
   LandingSectionLink,
   LandingStoryEntry,
   NavigationItem,
@@ -288,6 +290,12 @@ export const defineLandingSectionLink = (input: LandingSectionLink): LandingSect
   path: trim(input.path),
 });
 
+export const defineLandingStoryPoster = (input: LandingStoryPoster): LandingStoryPoster => ({
+  ...input,
+  src: trim(input.src),
+  alt: trim(input.alt),
+});
+
 export const defineLandingPersonalIntroduction = (
   input: LandingPersonalIntroductionContent,
 ): LandingPersonalIntroductionContent => ({
@@ -312,6 +320,7 @@ export const defineLandingComputationalSection = (
   quote: trim(input.quote),
   body: trim(input.body),
   cta: defineLandingSectionLink(input.cta),
+  poster: defineLandingStoryPoster(input.poster),
 });
 
 export const defineLandingBiologySection = (
@@ -322,6 +331,7 @@ export const defineLandingBiologySection = (
   overlayBody: trim(input.overlayBody),
   body: trim(input.body),
   cta: defineLandingSectionLink(input.cta),
+  poster: defineLandingStoryPoster(input.poster),
 });
 
 export const defineLandingAspirationSection = (
@@ -332,6 +342,12 @@ export const defineLandingAspirationSection = (
   body: trim(input.body),
   footerTitle: trim(input.footerTitle),
   footerBody: trim(input.footerBody),
+  overlayBeats: (input.overlayBeats ?? []).map(
+    (beat): LandingAspirationOverlayBeat => ({
+      ...beat,
+      text: trim(beat.text),
+    }),
+  ),
   nodes: (input.nodes ?? []).map((node) => ({
     ...node,
     id: trim(node.id),
@@ -360,7 +376,6 @@ export const defineContactPage = (input: ContactPageContent): ContactPageContent
   title: trim(input.title),
   summary: trim(input.summary),
   contactLabel: trim(input.contactLabel),
-  phoneNumber: trim(input.phoneNumber),
   copyButtonLabel: trim(input.copyButtonLabel),
   copySuccessLabel: trim(input.copySuccessLabel),
   copyErrorLabel: trim(input.copyErrorLabel),

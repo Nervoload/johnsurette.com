@@ -37,17 +37,25 @@ export interface AspirationLayout {
 }
 
 export const VIEWBOX_WIDTH = 1000;
-export const VIEWBOX_HEIGHT = 1500;
+const LAYOUT_SPREAD = 1.3;
+const ROOT_Y = 120;
 
-export const ROOT_POINT: Point = { x: 500, y: 120 };
+export const VIEWBOX_HEIGHT = 1920;
+
+export const ROOT_POINT: Point = { x: VIEWBOX_WIDTH / 2, y: ROOT_Y };
+
+const scaleFromCenterX = (value: number, horizontalScale = 1) =>
+  VIEWBOX_WIDTH / 2 + (value - VIEWBOX_WIDTH / 2) * LAYOUT_SPREAD * horizontalScale;
+
+const scaleFromRootY = (value: number) => ROOT_POINT.y + (value - ROOT_POINT.y) * LAYOUT_SPREAD;
 
 const STAGE_Y: Record<number, number> = {
-  0: 120,
-  1: 330,
-  2: 560,
-  3: 820,
-  4: 1075,
-  5: 1380,
+  0: ROOT_POINT.y,
+  1: scaleFromRootY(330),
+  2: scaleFromRootY(560),
+  3: scaleFromRootY(820),
+  4: scaleFromRootY(1075),
+  5: scaleFromRootY(1380),
 };
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
@@ -62,110 +70,97 @@ const wrapLabel = (label: string) => {
   return [words.slice(0, midpoint).join(" "), words.slice(midpoint).join(" ")];
 };
 
+const resolveLabelFrame = (label: string) => {
+  const lines = wrapLabel(label);
+  const longestLineLength = Math.max(...lines.map((line) => line.length));
+
+  return {
+    height: lines.length > 1 ? 96 : 70,
+    lines,
+    width: clamp(longestLineLength * 15.8 + 68, 208, 328),
+  };
+};
+
 const createLabel = (
   point: Point,
   label: string,
-  align: "left" | "right" | "center",
-  verticalPlacement: "middle" | "above" | "below" = "middle",
+  offsetX: number,
+  offsetY: number,
 ): LabelGeometry => {
-  const lines = wrapLabel(label);
-  const width = clamp(label.length * 8.4 + 56, 192, 286);
-  const height = lines.length > 1 ? 78 : 58;
+  const { height, width } = resolveLabelFrame(label);
+  const left = clamp(point.x + offsetX - width / 2, 24, VIEWBOX_WIDTH - width - 24);
+  const top = clamp(point.y + offsetY - height / 2, 24, VIEWBOX_HEIGHT - height - 24);
+  const centerX = left + width / 2;
+  const centerY = top + height / 2;
 
-  if (align === "center") {
-    const top =
-      verticalPlacement === "above"
-        ? point.y - height - 42
-        : verticalPlacement === "below"
-          ? point.y + 42
-          : point.y - height / 2;
+  let align: LabelGeometry["align"] = "center";
+  let lineEndX = point.x;
+  let lineEndY = centerY >= point.y ? top : top + height;
 
-    return {
-      align,
-      height,
-      left: clamp(point.x - width / 2, 20, VIEWBOX_WIDTH - width - 20),
-      lineEndX: point.x,
-      lineEndY: verticalPlacement === "below" ? top : top + height,
-      top,
-      width,
-    };
+  if (centerX < point.x - 48) {
+    align = "left";
+    lineEndX = left + width;
+    lineEndY = clamp(point.y, top + 16, top + height - 16);
+  } else if (centerX > point.x + 48) {
+    align = "right";
+    lineEndX = left;
+    lineEndY = clamp(point.y, top + 16, top + height - 16);
   }
 
-  if (align === "left") {
-    const left = clamp(point.x - width - 44, 20, VIEWBOX_WIDTH - width - 20);
-    return {
-      align,
-      height,
-      left,
-      lineEndX: left + width,
-      lineEndY: point.y,
-      top: point.y - height / 2,
-      width,
-    };
-  }
-
-  const left = clamp(point.x + 44, 20, VIEWBOX_WIDTH - width - 20);
   return {
     align,
     height,
     left,
-    lineEndX: left,
-    lineEndY: point.y,
-    top: point.y - height / 2,
+    lineEndX,
+    lineEndY,
+    top,
     width,
   };
 };
 
-export const getNodePoint = (node: LandingAspirationNode): Point => {
+export const getNodePoint = (node: LandingAspirationNode, horizontalScale = 1): Point => {
   if (node.stage === 1) {
-    return node.lane === "left" ? { x: 286, y: STAGE_Y[1] } : { x: 714, y: STAGE_Y[1] };
+    return node.lane === "left"
+      ? { x: scaleFromCenterX(286, horizontalScale), y: STAGE_Y[1] }
+      : { x: scaleFromCenterX(714, horizontalScale), y: STAGE_Y[1] };
   }
 
   if (node.stage === 2) {
-    if (node.id === "science-student-association") return { x: 210, y: STAGE_Y[2] };
-    if (node.id === "computational-neuroscience") return { x: 392, y: STAGE_Y[2] - 24 };
-    if (node.id === "ai-research") return { x: 608, y: STAGE_Y[2] - 24 };
-    return { x: 790, y: STAGE_Y[2] };
+    if (node.id === "science-student-association") return { x: scaleFromCenterX(210, horizontalScale), y: STAGE_Y[2] };
+    if (node.id === "computational-neuroscience") return { x: scaleFromCenterX(368, horizontalScale), y: STAGE_Y[2] - 24 };
+    if (node.id === "ai-research") return { x: scaleFromCenterX(632, horizontalScale), y: STAGE_Y[2] - 24 };
+    return { x: scaleFromCenterX(790, horizontalScale), y: STAGE_Y[2] };
   }
 
   if (node.stage === 3) {
-    return { x: 500, y: STAGE_Y[3] };
+    return { x: ROOT_POINT.x, y: STAGE_Y[3] };
   }
 
   if (node.stage === 4) {
-    if (node.lane === "left") return { x: 258, y: STAGE_Y[4] };
-    if (node.lane === "center") return { x: 500, y: STAGE_Y[4] - 10 };
-    return { x: 742, y: STAGE_Y[4] };
+    if (node.lane === "left") return { x: scaleFromCenterX(258, horizontalScale), y: STAGE_Y[4] };
+    if (node.lane === "center") return { x: ROOT_POINT.x, y: STAGE_Y[4] - 10 };
+    return { x: scaleFromCenterX(742, horizontalScale), y: STAGE_Y[4] };
   }
 
   return ROOT_POINT;
 };
 
-export const getNodeLabel = (node: LandingAspirationNode, point: Point): LabelGeometry => {
-  if (node.stage === 1) {
-    return node.lane === "left"
-      ? createLabel(point, node.label, "left")
-      : createLabel(point, node.label, "right");
-  }
+export const getNodeLabel = (node: LandingAspirationNode, point: Point, horizontalScale = 1): LabelGeometry => {
+  const labelOffsets: Record<string, { x: number; y: number }> = {
+    "aging-biology": { x: 178, y: 12 },
+    "ai-research": { x: 128, y: 112 },
+    "brain-computer-interface": { x: -184, y: 16 },
+    "computational-neuroscience": { x: -128, y: 112 },
+    "computer-science-major": { x: 180, y: -18 },
+    "entrepreneurship": { x: 178, y: -14 },
+    "graduation-2027": { x: 0, y: -132 },
+    "life-science-major": { x: -180, y: -18 },
+    "longevity": { x: 0, y: 104 },
+    "science-student-association": { x: -184, y: -14 },
+  };
 
-  if (node.stage === 2) {
-    if (node.id === "science-student-association") return createLabel(point, node.label, "left");
-    if (node.id === "computational-neuroscience") return createLabel(point, node.label, "center", "below");
-    if (node.id === "ai-research") return createLabel(point, node.label, "center", "below");
-    return createLabel(point, node.label, "right");
-  }
-
-  if (node.stage === 3) {
-    return createLabel(point, node.label, "center", "above");
-  }
-
-  if (node.stage === 4) {
-    if (node.lane === "left") return createLabel(point, node.label, "left");
-    if (node.lane === "center") return createLabel(point, node.label, "center", "below");
-    return createLabel(point, node.label, "right");
-  }
-
-  return createLabel(point, node.label, "center");
+  const offset = labelOffsets[node.id] ?? { x: 0, y: -108 };
+  return createLabel(point, node.label, offset.x * horizontalScale, offset.y);
 };
 
 export const buildThreadPath = (
@@ -222,12 +217,13 @@ const getGlowWidth = (weight: LayoutEdge["weight"], faded?: boolean) => {
 export const computeAspirationLayout = (
   nodes: LandingAspirationNode[],
   edges: LandingAspirationEdge[],
+  horizontalScale = 1,
 ): AspirationLayout => {
   const layoutNodes = nodes.map((node) => {
-    const point = getNodePoint(node);
+    const point = getNodePoint(node, horizontalScale);
     return {
       ...node,
-      labelBox: getNodeLabel(node, point),
+      labelBox: getNodeLabel(node, point, horizontalScale),
       point,
     };
   });
@@ -268,10 +264,10 @@ export const computeAspirationLayout = (
   const leafEdges: LayoutEdge[] = stageFourNodes.flatMap((node) => {
     const spread =
       node.lane === "center"
-        ? [-88, 0, 88]
+        ? [-114, 0, 114]
         : node.lane === "left"
-          ? [-100, -24, 56]
-          : [-56, 24, 100];
+          ? [-130, -32, 72]
+          : [-72, 32, 130];
 
     return spread.map((offset, index) => ({
       faded: true,
@@ -281,7 +277,7 @@ export const computeAspirationLayout = (
       stage: 5,
       to: `${node.id}-leaf-end-${index}`,
       toPoint: {
-        x: node.point.x + offset,
+        x: node.point.x + offset * horizontalScale,
         y: STAGE_Y[5] + Math.abs(offset) * 0.09 + index * 8,
       },
       weight: "thread" as const,
