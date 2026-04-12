@@ -8,7 +8,7 @@ export interface LandingHeroIdentityProps {
   content: LandingHeroIdentityContent;
 }
 
-const LandingHeroIdentity: React.FC<LandingHeroIdentityProps> = ({
+const LandingHeroIdentityInner: React.FC<LandingHeroIdentityProps> = ({
   scrollContainerRef,
   heroSectionRef,
   content,
@@ -101,6 +101,30 @@ const LandingHeroIdentity: React.FC<LandingHeroIdentityProps> = ({
       </motion.div>
     </>
   );
+};
+
+const LandingHeroIdentity: React.FC<LandingHeroIdentityProps> = (props) => {
+  const [containerReady, setContainerReady] = useState(false);
+
+  useEffect(() => {
+    if (props.scrollContainerRef?.current) {
+      setContainerReady(true);
+    } else {
+      const interval = setInterval(() => {
+        if (props.scrollContainerRef?.current) {
+          setContainerReady(true);
+          clearInterval(interval);
+        }
+      }, 50);
+      return () => clearInterval(interval);
+    }
+  }, [props.scrollContainerRef]);
+
+  if (!containerReady) {
+    return <div className="pointer-events-none fixed" aria-hidden />;
+  }
+
+  return <LandingHeroIdentityInner {...props} />;
 };
 
 export default LandingHeroIdentity;

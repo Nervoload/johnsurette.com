@@ -57,7 +57,7 @@ const StorySectionRenderer: React.FC<StorySectionRendererProps> = ({ section, on
 const LandingStoryboard: React.FC<LandingStoryboardProps> = ({ onNavigate, scrollContainerRef, themeMode }) => {
   return (
     <LandingStoryRuntimeProvider scrollContainerRef={scrollContainerRef}>
-      <section className="relative z-10 overflow-x-clip">
+      <section className="relative z-10">
         <div className="theme-story-contrast-backdrop absolute inset-x-0 top-0 bottom-[100dvh]" />
         <div className="theme-story-contrast-top-fade pointer-events-none absolute inset-x-0 top-0 h-40" />
         <div className="theme-story-contrast-bottom-fade pointer-events-none absolute inset-x-0 bottom-[100dvh] h-40" />

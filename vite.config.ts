@@ -160,6 +160,7 @@ const codexContextFrameSavePlugin = () => ({
 export default defineConfig({
   plugins: [react(), codexContextFrameSavePlugin()],
   build: {
+    sourcemap: true,
     chunkSizeWarningLimit: 700,
     rollupOptions: {
       onwarn(warning, warn) {

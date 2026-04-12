@@ -697,7 +697,7 @@ const OverlayBeatText: React.FC<OverlaySpec & { isDark: boolean }> = ({ id, maxW
   );
 };
 
-const AspirationTreePlaceholder: React.FC<AspirationTreePlaceholderProps> = ({
+const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
   nodes,
   edges,
   overlayBeats,
@@ -1664,6 +1664,31 @@ const AspirationTreePlaceholder: React.FC<AspirationTreePlaceholderProps> = ({
       </div>
     </div>
   );
+};
+
+const AspirationTreePlaceholder: React.FC<AspirationTreePlaceholderProps> = (props) => {
+  const { scrollContainerRef } = useLandingStoryRuntime();
+  const [containerReady, setContainerReady] = useState(false);
+
+  useEffect(() => {
+    if (scrollContainerRef?.current) {
+      setContainerReady(true);
+    } else {
+      const interval = setInterval(() => {
+        if (scrollContainerRef?.current) {
+          setContainerReady(true);
+          clearInterval(interval);
+        }
+      }, 50);
+      return () => clearInterval(interval);
+    }
+  }, [scrollContainerRef]);
+
+  if (!containerReady) {
+    return <div className="theme-story-contrast-label relative" style={{ height: `${SECTION_VIEWPORTS * 100}dvh` }} />;
+  }
+
+  return <AspirationTreeInner {...props} />;
 };
 
 export default AspirationTreePlaceholder;

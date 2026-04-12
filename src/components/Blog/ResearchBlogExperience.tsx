@@ -27,7 +27,7 @@ interface ResearchBlogExperienceProps {
 
 const clamp = (value: number, min = 0, max = 1) => Math.min(max, Math.max(min, value));
 
-const ResearchBlogExperience: React.FC<ResearchBlogExperienceProps> = ({
+const ResearchBlogExperienceInner: React.FC<ResearchBlogExperienceProps> = ({
   posts,
   pageContent,
   articleSlug,
@@ -182,6 +182,30 @@ const ResearchBlogExperience: React.FC<ResearchBlogExperienceProps> = ({
       )}
     </LayoutGroup>
   );
+};
+
+const ResearchBlogExperience: React.FC<ResearchBlogExperienceProps> = (props) => {
+  const [containerReady, setContainerReady] = useState(false);
+
+  useEffect(() => {
+    if (props.scrollRef?.current) {
+      setContainerReady(true);
+    } else {
+      const interval = setInterval(() => {
+        if (props.scrollRef?.current) {
+          setContainerReady(true);
+          clearInterval(interval);
+        }
+      }, 50);
+      return () => clearInterval(interval);
+    }
+  }, [props.scrollRef]);
+
+  if (!containerReady) {
+    return <div style={{ minHeight: "100vh" }} />;
+  }
+
+  return <ResearchBlogExperienceInner {...props} />;
 };
 
 export default ResearchBlogExperience;
