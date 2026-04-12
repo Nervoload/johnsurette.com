@@ -1150,18 +1150,18 @@ const AspirationTreePlaceholder: React.FC<AspirationTreePlaceholderProps> = ({
 
     let best: { distance: number; id: SceneNodeId } | null = null;
 
-    candidates.forEach((candidate) => {
+    for (const candidate of candidates) {
       const distance = Math.hypot(pointer.x - candidate.point.x, pointer.y - candidate.point.y);
       if (distance > candidate.radius) {
-        return;
+        continue;
       }
 
       if (!best || distance < best.distance) {
         best = { distance, id: candidate.id };
       }
-    });
+    }
 
-    return best?.id ?? null;
+    return best ? best.id : null;
   };
 
   const updatePointer = (clientX: number, clientY: number, pointerType: string | null) => {
