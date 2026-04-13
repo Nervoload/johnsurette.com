@@ -220,6 +220,7 @@ export interface LandingStoryPoster {
 
 export interface LandingPhotoPlaceholder {
   id: string;
+  src?: string;
   alt: string;
   caption: string;
   palette: [string, string, string];

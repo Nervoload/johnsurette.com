@@ -785,9 +785,10 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
   });
   const { scrollContainerRef } = useLandingStoryRuntime();
   const compactViewport = useMediaQuery(`(max-width: ${COMPACT_VIEWPORT_MAX}px)`);
+  const mobileStaticMode = compactViewport;
   const prefersReducedMotion = Boolean(useReducedMotion()) || qualityTier === "static";
   const compactExperience = compactViewport || qualityTier !== "high";
-  const fullPointerInteractivity = !prefersReducedMotion && !compactExperience;
+  const fullPointerInteractivity = !mobileStaticMode && !prefersReducedMotion && !compactExperience;
   const sectionViewportCount = compactExperience ? COMPACT_SECTION_VIEWPORTS : SECTION_VIEWPORTS;
   const artboardHeightMultiplier = compactExperience ? COMPACT_ARTBOARD_HEIGHT_MULTIPLIER : ARTBOARD_HEIGHT_MULTIPLIER;
   const isDarkTheme = themeMode === "dark";
@@ -1017,6 +1018,64 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
     });
     leafRuntimeRef.current = nextLeafStates;
   }, [allLayoutNodes, animatedEdges, compactExperience, layout.edgesByStage]);
+
+  useEffect(() => {
+    if (!mobileStaticMode) {
+      return;
+    }
+
+    resetPointer();
+
+    const rootState = nodeRuntimeRef.current["aspiration-root"];
+    if (rootState) {
+      rootState.hoverEnergy = 0;
+      rootState.offsetX = 0;
+      rootState.offsetY = 0;
+      rootState.velocityX = 0;
+      rootState.velocityY = 0;
+    }
+
+    currentNodePointsRef.current["aspiration-root"] = ROOT_POINT;
+    rootGroupRef.current?.setAttribute("transform", "translate(0 0)");
+
+    allLayoutNodes.forEach((node) => {
+      const id = node.id as SceneNodeId;
+      const state = nodeRuntimeRef.current[id];
+      if (state) {
+        state.hoverEnergy = 0;
+        state.offsetX = 0;
+        state.offsetY = 0;
+        state.velocityX = 0;
+        state.velocityY = 0;
+      }
+
+      currentNodePointsRef.current[id] = node.point;
+      labelRefs.current[id]?.setAttribute("transform", "translate(0 0)");
+      nodeRefs.current[id]?.setAttribute("transform", "translate(0 0)");
+    });
+
+    animatedEdges.forEach((edge) => {
+      const edgeState = edgeRuntimeRef.current[edge.id];
+      if (edgeState) {
+        edgeState.pointerEnergy = 0;
+        edgeState.pluckEnergy = 0;
+      }
+
+      const bundleCount = getRenderedBundleCount(edge, compactExperience);
+      const threadRefs = edgeThreadRefs.current[edge.id] ?? [];
+      const edgeColor = getEdgeColor(edge);
+      for (let threadIndex = 0; threadIndex < bundleCount; threadIndex += 1) {
+        const pathRef = threadRefs[threadIndex];
+        if (!pathRef) continue;
+        pathRef.setAttribute("d", buildThreadPath(edge.fromPoint, edge.toPoint, threadIndex, bundleCount, 0));
+        pathRef.setAttribute("stroke", rgba(edgeColor, edge.faded ? 0.4 : 0.88));
+        pathRef.setAttribute(
+          "stroke-width",
+          `${aspirationThreadStyles.getThreadWidth(edge.weight, edge.faded) + (compactExperience ? 0.24 : 0)}`,
+        );
+      }
+    });
+  }, [allLayoutNodes, animatedEdges, compactExperience, mobileStaticMode]);
 
   const shellOpacity = useTransform(progressUnits, [0, 0.22, RUNWAY_VIEWPORTS], [0.74, 1, 1]);
   const shellScale = useTransform(progressUnits, [0, TIMELINE.stageFour.end, RUNWAY_VIEWPORTS], [0.992, 1, 1.012]);
@@ -1296,6 +1355,11 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
   };
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (mobileStaticMode) {
+      resetPointer();
+      return;
+    }
+
     updatePointer(event.clientX, event.clientY, event.pointerType);
     const pointer = pointerStateRef.current;
     const nearestNodeId = findNearestNode({ x: pointer.svgX, y: pointer.svgY });
@@ -1343,7 +1407,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
   }, [fullPointerInteractivity]);
 
   useAnimationFrame((timeMs, deltaMs) => {
-    if (prefersReducedMotion || !isNearViewport) {
+    if (prefersReducedMotion || !isNearViewport || mobileStaticMode) {
       return;
     }
 

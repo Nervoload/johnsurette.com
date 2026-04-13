@@ -122,10 +122,13 @@ const ContactPage: React.FC<ContactPageProps> = ({ themeMode }) => {
                 </article>
 
                 <aside className="theme-surface-subtle theme-border-subtle flex aspect-[4/5] min-h-[320px] items-center justify-center rounded-[2rem] border border-dashed p-8 text-center">
-                  <div className="max-w-[16rem]">
-                    <p className="theme-text-subtle text-xs uppercase tracking-[0.24em]">Portrait Placeholder</p>
-                    <p className="theme-text-primary mt-4 text-xl font-semibold tracking-tight">Image of your face goes here</p>
-                    <p className="theme-text-muted mt-3 text-sm leading-relaxed">Swap this with a portrait when you&apos;re ready.</p>
+                  <div className="max-w-[42rem]">
+                    <img
+                      src="/images/landing/velocityprofile.jpg"
+                      alt="John Surette at velocity"
+                      className="h-full w-full object-cover"
+                      loading="lazy"
+                    />
                   </div>
                 </aside>
               </div>

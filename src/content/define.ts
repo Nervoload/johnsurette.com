@@ -340,6 +340,7 @@ export const defineLandingPersonalIntroduction = (
   photos: (input.photos ?? []).map((photo) => ({
     ...photo,
     id: trim(photo.id),
+    src: photo.src ? trim(photo.src) : undefined,
     alt: trim(photo.alt),
     caption: trim(photo.caption),
     palette: photo.palette,
