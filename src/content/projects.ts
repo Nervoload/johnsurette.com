@@ -361,15 +361,15 @@ const caseStudyRow = (
 
 // EDIT HERE: projects page header copy.
 export const projectsPageContent: ProjectsPageContent = {
-  eyebrow: "Case Studies",
-  title: "Systems That Hold Up Under Pressure.",
-  summary: "Product automation, research tooling, and data infrastructure told as focused case studies instead of placeholders.",
+  eyebrow: "Projects",
+  title: "Project Portfolio",
+  summary: "My projects, prototypes, and research. A collection of polished work I'm proud of!",
 };
 
 const transfrHero = createArtifactTexture({
-  label: "TRANSFER ENGINE",
+  label: "TRANSF.R",
   title: "Transf.r Audio",
-  summary: "A guided automation system for the most tedious hour in audio collaboration.",
+  summary: "Fast, lossless DAW-to-DAW Audio Transfer.",
   accent: projectPalettes.aqua.accent,
   palette: projectPalettes.aqua.palette,
   material: "glass",
@@ -575,10 +575,10 @@ export const projects = [
   defineProject({
     id: "transfr-audio-macos-transfer-automation",
     slug: "transfr-audio",
-    title: "Transf.r Audio",
-    subtitle: "macOS automation for cross-platform audio project transfer",
+    title: "TRANSF.R AUDIO",
+    subtitle: "macOS application for cross-platform audio project transfer",
     summary:
-      "A macOS application that automates multitrack session transfers across music software workflows.",
+      "Fast, lossless DAW-to-DAW audio project transfer.",
     details:
       "Built a macOS app using Swift and C++ to reduce manual audio project transfer work. The system uses robotic process automation to batch export and import multitrack sessions, reducing transfer time to 20 minutes from workflows that previously took more than an hour. Product direction came from more than 100 interviews with industry professionals focused on compatibility and collaboration constraints in music software.",
     role: "Product direction, workflow design, and desktop automation engineering",
@@ -742,10 +742,10 @@ export const projects = [
   defineProject({
     id: "neurodegeneration-lesion-modeling-with-tvb",
     slug: "neurodegeneration-lesion-modeling",
-    title: "Neurodegeneration Lesion Modeling",
-    subtitle: "Alzheimer's cortical lesion modeling with deep learning feature extraction",
+    title: "Priage",
+    subtitle: "AI Powered Patient Processesing.",
     summary:
-      "Modeled cortical lesions and trained neural networks to learn salient cortical features for biomarker classification.",
+      "Dynamic patient triage and traffic platform for Emergency Departments.",
     details:
       "Modeled Alzheimer's Disease cortical lesions using The Virtual Brain Library and trained neural networks in PyTorch to learn salient cortical features. This work improved neurodegenerative biomarker classification accuracy by roughly 110 percent according to the reported research results.",
     role: "Research modeling, feature engineering, and deep learning experimentation",
@@ -756,8 +756,8 @@ export const projects = [
     media: [lesionHero, lesionGalleryModel, lesionGalleryReadout],
     links: contactWalkthroughLink,
     front: {
-      dateLabel: "Feb 2025 - Jun 2025",
-      status: "Archived",
+      dateLabel: "Nov 2025 - Present",
+      status: "Active",
       frontFamily: "atlas",
       popoutPreset: "orbitalCore",
       popoutIntensity: 0.72,
@@ -908,22 +908,22 @@ export const projects = [
   defineProject({
     id: "meeg-mri-cloud-pipelines-and-cnn-lesion-signatures",
     slug: "meeg-mri-deep-learning-pipelines",
-    title: "MEEG MRI Deep Learning Pipelines",
-    subtitle: "Cloud Python pipelines for Parkinson's and Alzheimer's detection",
+    title: "Tokamake",
+    subtitle: "Tokamak Reactor Physics Simulator.",
     summary:
-      "Built processing pipelines and trained convolutional neural networks on high-dimensional MEEG and MRI datasets.",
+      "Visualized and telemetered tokamak fusion physics for learning and ML training.",
     details:
       "Built cloud Python processing pipelines for high-dimensional Parkinson's and Alzheimer's MEEG and MRI datasets and trained convolutional neural networks in PyTorch to identify lesion signatures. The work covers dataset processing, model training, and evaluation workflows.",
     role: "Pipeline engineering, model experimentation, and dataset operations",
-    year: "2025",
+    year: "2026",
     tags: ["Python", "PyTorch", "Convolutional Neural Networks", "MEEG", "MRI"],
     accent: projectPalettes.magenta.accent,
     palette: projectPalettes.magenta.palette,
     media: [meegHero, meegGallerySystems, meegGallerySignal],
     links: contactWalkthroughLink,
     front: {
-      dateLabel: "Feb 2025 - Jun 2025",
-      status: "Archived",
+      dateLabel: "Dec 2025 - Present",
+      status: "Active",
       frontFamily: "forge",
       popoutPreset: "nodeConstellation",
       popoutIntensity: 0.7,

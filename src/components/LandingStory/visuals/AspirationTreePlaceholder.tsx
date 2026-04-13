@@ -187,17 +187,17 @@ const TIMELINE = (() => {
 })();
 
 const NODE_COLORS: Record<SceneNodeId, string> = {
-  "aging-biology": "#f472b6",
+  "aging-biology": "#ce3143",
   "ai-research": "#c084fc",
   "aspiration-root": "#7dd3fc",
-  "brain-computer-interface": "#38bdf8",
-  "computational-neuroscience": "#34d399",
-  "computer-science-major": "#818cf8",
-  "entrepreneurship": "#fb7185",
-  "graduation-2027": "#fbbf24",
-  "life-science-major": "#67e8f9",
+  "brain-computer-interface": "#6ad2ff",
+  "computational-neuroscience": "#d3cb34",
+  "computer-science-major": "#008cff",
+  "entrepreneurship": "#ea3f21",
+  "graduation-2027": "#d3c999",
+  "life-science-major": "#00da28",
   "longevity": "#4ade80",
-  "science-student-association": "#2dd4bf",
+  "science-student-association": "#32c5ff",
 };
 
 const NODE_GLOW_FILTER_ID = "aspiration-node-glow";

@@ -9,8 +9,7 @@ interface TypewriterTerminalProps {
 }
 
 const TYPE_SPEED_MS = 52;
-const DELETE_SPEED_MS = 26;
-const HOLD_MS = 1200;
+const CYCLE_MS = 10000;
 
 const pickNextIndex = (length: number, currentIndex: number): number => {
   if (length <= 1) return 0;
@@ -38,47 +37,40 @@ const TypewriterTerminal: React.FC<TypewriterTerminalProps> = ({ activeSection, 
 
   const [lineIndex, setLineIndex] = useState(0);
   const [typedLength, setTypedLength] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isHolding, setIsHolding] = useState(false);
 
   useEffect(() => {
+    if (prompts.length === 0) return;
     setLineIndex(Math.floor(Math.random() * prompts.length));
     setTypedLength(0);
-    setIsDeleting(false);
-    setIsHolding(false);
   }, [prompts]);
 
   useEffect(() => {
-    if (isHolding) return;
+    if (prompts.length === 0) return;
 
     const currentLine = prompts[lineIndex] ?? prompts[0];
-
-    const completedTyping = typedLength >= currentLine.length;
-    const completedDeleting = typedLength <= 0;
-
-    if (!isDeleting && completedTyping) {
-      setIsHolding(true);
-      const holdTimeout = window.setTimeout(() => {
-        setIsHolding(false);
-        setIsDeleting(true);
-      }, HOLD_MS);
-      return () => window.clearTimeout(holdTimeout);
-    }
-
-    if (isDeleting && completedDeleting) {
-      setIsDeleting(false);
-      setLineIndex((prev) => pickNextIndex(prompts.length, prev));
+    if (!currentLine || typedLength >= currentLine.length) {
       return;
     }
 
     const timeout = window.setTimeout(() => {
-      setTypedLength((prev) => prev + (isDeleting ? -1 : 1));
-    }, isDeleting ? DELETE_SPEED_MS : TYPE_SPEED_MS);
+      setTypedLength((prev) => prev + 1);
+    }, TYPE_SPEED_MS);
 
     return () => window.clearTimeout(timeout);
-  }, [isDeleting, isHolding, lineIndex, prompts, typedLength]);
+  }, [lineIndex, prompts, typedLength]);
 
-  const line = prompts[lineIndex] ?? prompts[0];
+  useEffect(() => {
+    if (prompts.length === 0) return;
+
+    const cycleInterval = window.setInterval(() => {
+      setLineIndex((prev) => pickNextIndex(prompts.length, prev));
+      setTypedLength(0);
+    }, CYCLE_MS);
+
+    return () => window.clearInterval(cycleInterval);
+  }, [prompts]);
+
+  const line = prompts[lineIndex] ?? prompts[0] ?? "";
   const visibleText = line.slice(0, Math.max(0, typedLength));
 
   return (

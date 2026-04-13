@@ -4,7 +4,7 @@ import { defineSiteMeta } from "./define";
 export const siteMeta = defineSiteMeta({
   ownerName: "John Surette",
   ownerEmail: "johnmsurette@gmail.com",
-  footerTagline: "Computational neuroscience researcher and full-stack engineer.",
+  footerTagline: "Last generation to die, or first generation to live forever?",
   socialLinks: [
     { label: "GitHub", href: "https://github.com/Nervoload" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/johnmsurette" },
