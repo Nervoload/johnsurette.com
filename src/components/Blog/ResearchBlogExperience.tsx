@@ -12,6 +12,7 @@ import {
 import type { BlogPageContent, BlogPostEntry } from "../../content";
 import { getBlogPostPath } from "../../content";
 import { WipeOptions } from "../Transitions/TransitionWipe";
+import { ResolvedThemeMode } from "../theme/themeMode";
 import ResearchArchiveField from "./ResearchArchiveField";
 import ResearchArticleView from "./ResearchArticleView";
 import ResearchHeroStage from "./ResearchHeroStage";
@@ -22,6 +23,7 @@ interface ResearchBlogExperienceProps {
   pageContent: BlogPageContent;
   articleSlug?: string;
   scrollRef: RefObject<HTMLDivElement>;
+  themeMode: ResolvedThemeMode;
   onNavigate: (path: string, opts?: WipeOptions) => void;
 }
 
@@ -32,6 +34,7 @@ const ResearchBlogExperienceInner: React.FC<ResearchBlogExperienceProps> = ({
   pageContent,
   articleSlug,
   scrollRef,
+  themeMode,
   onNavigate,
 }) => {
   const prefersReducedMotion = Boolean(useReducedMotion());
@@ -129,6 +132,7 @@ const ResearchBlogExperienceInner: React.FC<ResearchBlogExperienceProps> = ({
         <motion.div style={prefersReducedMotion ? undefined : { opacity: articleBackdropOpacity }}>
           <ResearchArticleView
             post={articlePost}
+            themeMode={themeMode}
             onBack={() =>
               onNavigate("/blog", {
                 color: articlePost.visualIdentity.palette.accent,
@@ -140,7 +144,7 @@ const ResearchBlogExperienceInner: React.FC<ResearchBlogExperienceProps> = ({
           />
         </motion.div>
       ) : articleSlug ? (
-        <section className="research-empty-state" style={getResearchThemeStyle(featuredPost)}>
+        <section className="research-empty-state" style={getResearchThemeStyle(featuredPost, themeMode)}>
           <p className="research-empty-eyebrow">Article Not Found</p>
           <h1 className="research-empty-title">This research note does not exist yet.</h1>
           <p className="research-empty-copy">
@@ -169,6 +173,7 @@ const ResearchBlogExperienceInner: React.FC<ResearchBlogExperienceProps> = ({
             postCount={posts.length}
             progress={heroProgress}
             sectionRef={heroSectionRef}
+            themeMode={themeMode}
             onOpenArticle={openArticle}
           />
           <ResearchArchiveField
@@ -176,6 +181,7 @@ const ResearchBlogExperienceInner: React.FC<ResearchBlogExperienceProps> = ({
             featuredPost={featuredPost}
             heroDominant={heroDominant}
             scrollRef={scrollRef}
+            themeMode={themeMode}
             onOpenArticle={openArticle}
           />
         </>

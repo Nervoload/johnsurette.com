@@ -5,14 +5,16 @@ import ResearchBlogExperience from "../components/Blog/ResearchBlogExperience";
 import ResearchSignalBackdrop from "../components/Blog/ResearchSignalBackdrop";
 import PageScaffold from "../components/layout/PageScaffold";
 import { WipeOptions } from "../components/Transitions/TransitionWipe";
+import { ResolvedThemeMode } from "../components/theme/themeMode";
 import { createCodexProbeAttributes } from "../devtools/codexContext/probe";
 
 interface BlogPageProps {
   onNavigate: (path: string, opts?: WipeOptions) => void;
   articleSlug?: string;
+  themeMode: ResolvedThemeMode;
 }
 
-const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, articleSlug }) => {
+const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, articleSlug, themeMode }) => {
   const blogPageProbe = createCodexProbeAttributes({
     componentName: "BlogPage",
     filePath: "/src/pages/BlogPage.tsx",
@@ -44,6 +46,7 @@ const BlogPage: React.FC<BlogPageProps> = ({ onNavigate, articleSlug }) => {
               pageContent={blogPageContent}
               articleSlug={articleSlug}
               scrollRef={scrollRef}
+              themeMode={themeMode}
               onNavigate={onNavigate}
             />
           </div>

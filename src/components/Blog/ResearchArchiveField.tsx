@@ -1,6 +1,7 @@
 import React, { RefObject, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { BlogPostEntry } from "../../content";
+import { ResolvedThemeMode } from "../theme/themeMode";
 import { useIsTouch } from "../../hooks/usePointerDevice";
 import BlogChronologyRail from "./BlogChronologyRail";
 import ResearchArchiveCard from "./ResearchArchiveCard";
@@ -10,6 +11,7 @@ interface ResearchArchiveFieldProps {
   featuredPost: BlogPostEntry;
   heroDominant: boolean;
   scrollRef: RefObject<HTMLDivElement>;
+  themeMode: ResolvedThemeMode;
   onOpenArticle: (post: BlogPostEntry) => void;
 }
 
@@ -18,6 +20,7 @@ const ResearchArchiveField: React.FC<ResearchArchiveFieldProps> = ({
   featuredPost,
   heroDominant,
   scrollRef,
+  themeMode,
   onOpenArticle,
 }) => {
   const isTouch = useIsTouch();
@@ -185,6 +188,7 @@ const ResearchArchiveField: React.FC<ResearchArchiveFieldProps> = ({
                 >
                   <ResearchArchiveCard
                     post={post}
+                    themeMode={themeMode}
                     expanded={expanded}
                     hovered={hovered}
                     onHoverStart={(postId) => {

@@ -139,6 +139,73 @@ export const blogPageContent: BlogPageContent = defineBlogPage({
   emptyLabel: "No published posts yet.",
 });
 
+type ArticlePaletteId =
+  | "consortia"
+  | "signal-over-surface"
+  | "mapping-the-middle-distance"
+  | "field-notes-on-interface-rhythm";
+
+interface ArticlePaletteSpec {
+  family: string;
+  coverPalette: [string, string, string];
+  accentLightColor: string;
+}
+
+type ArticlePaletteSet = Record<ArticlePaletteId, ArticlePaletteSpec>;
+
+const ARTICLE_PALETTE_PRESETS: Record<string, ArticlePaletteSet> = {
+  bioluminescent: {
+    consortia: {
+      family: "bioluminescent meadow",
+      coverPalette: ["#16a34a", "#22d3ee", "#2563eb"],
+      accentLightColor: "#34d399",
+    },
+    "signal-over-surface": {
+      family: "neon reef",
+      coverPalette: ["#0891b2", "#e879f9", "#4f46e5"],
+      accentLightColor: "#67e8f9",
+    },
+    "mapping-the-middle-distance": {
+      family: "aurora bloom",
+      coverPalette: ["#14b8a6", "#f97316", "#6366f1"],
+      accentLightColor: "#fb7185",
+    },
+    "field-notes-on-interface-rhythm": {
+      family: "signal canopy",
+      coverPalette: ["#22c55e", "#f472b6", "#0ea5e9"],
+      accentLightColor: "#e879f9",
+    },
+  },
+  prismLab: {
+    consortia: {
+      family: "prism lab",
+      coverPalette: ["#2563eb", "#34d399", "#f472b6"],
+      accentLightColor: "#34d399",
+    },
+    "signal-over-surface": {
+      family: "sunset terminal",
+      coverPalette: ["#0ea5e9", "#f59e0b", "#8b5cf6"],
+      accentLightColor: "#f59e0b",
+    },
+    "mapping-the-middle-distance": {
+      family: "ion stream",
+      coverPalette: ["#14b8a6", "#f97316", "#6366f1"],
+      accentLightColor: "#f97316",
+    },
+    "field-notes-on-interface-rhythm": {
+      family: "chromatic grove",
+      coverPalette: ["#22d3ee", "#e879f9", "#84cc16"],
+      accentLightColor: "#e879f9",
+    },
+  },
+};
+
+// Single-line theme switch for all article palettes.
+const ACTIVE_ARTICLE_PALETTE_PRESET = "prismLab";
+
+const articlePaletteSet = ARTICLE_PALETTE_PRESETS[ACTIVE_ARTICLE_PALETTE_PRESET] ?? ARTICLE_PALETTE_PRESETS.prismLab;
+const articlePalette = (id: ArticlePaletteId): ArticlePaletteSpec => articlePaletteSet[id];
+
 export const allBlogPosts: BlogPostEntry[] = [
   createPlaceholderPost({
     id: "consortia",
@@ -190,9 +257,9 @@ export const allBlogPosts: BlogPostEntry[] = [
       grain: "soft",
       articleTheme: "essay",
       sceneId: "orbitalField",
-      accentLight: { x: 76, y: 18, blur: 220, opacity: 0.42 },
+      accentLight: { color: articlePalette("consortia").accentLightColor, x: 76, y: 18, blur: 220, opacity: 0.42 },
     },
-    coverPalette: ["#c084fc", "#a5f3fc", "#334155"],
+    coverPalette: articlePalette("consortia").coverPalette,
   }),
   createPlaceholderPost({
     id: "signal-over-surface",
@@ -234,9 +301,115 @@ export const allBlogPosts: BlogPostEntry[] = [
       grain: "soft",
       articleTheme: "lab",
       sceneId: "signalGrid",
-      accentLight: { x: 82, y: 26, blur: 190, opacity: 0.3 },
+      accentLight: { color: articlePalette("signal-over-surface").accentLightColor, x: 82, y: 26, blur: 190, opacity: 0.3 },
     },
-    coverPalette: ["#38bdf8", "#f0abfc", "#1e293b"],
+    coverPalette: articlePalette("signal-over-surface").coverPalette,
+  }),
+  createPlaceholderPost({
+    id: "mapping-the-middle-distance",
+    slug: "mapping-the-middle-distance",
+    title: "Mapping The Middle Distance",
+    tag: "Research Notes",
+    summary:
+      "A placeholder entry on bridging polished hero moments and practical reading interfaces without losing narrative continuity.",
+    hook: "The hardest part of a portfolio is often the middle: not the first impression, and not the final detail, but the transition between them.",
+    intro: [
+      "This article draft explores how to design the in-between moments where users shift from browsing to committing attention. Those moments are where context, hierarchy, and pacing quietly determine whether the experience feels coherent.",
+      "The current blog system uses layered sections and progressive disclosure to keep this middle distance legible. Future iterations can refine density and cadence while preserving a stable reading spine.",
+    ],
+    articleSections: [
+      {
+        id: "threshold-design",
+        eyebrow: "Transition",
+        title: "Designing for threshold moments",
+        paragraphs: [
+          "Users do not switch from overview to deep reading in a single click. They scan metadata, preview a thesis, and test whether the voice feels worth following. Interfaces should support that gradient instead of forcing abrupt jumps.",
+          "Card expansion, visual continuity, and lightweight chronology rails can create confidence without requiring modal-heavy choreography.",
+        ],
+      },
+      {
+        id: "stack-consistency",
+        eyebrow: "System",
+        title: "Consistency across the full stack",
+        paragraphs: [
+          "Archive cards, hero features, and article views should share visual DNA while still expressing different density levels. Reusing layout IDs and palette semantics is one way to keep transitions believable.",
+          "This avoids the common pitfall where each stage looks independently polished but disconnected from the rest of the reading flow.",
+        ],
+      },
+      {
+        id: "future-tuning",
+        eyebrow: "Iteration",
+        title: "What to tune next",
+        paragraphs: [
+          "Later passes can tighten typography scales, adjust spacing under extreme viewport sizes, and refine how reduced-motion behavior preserves clarity under constrained devices.",
+          "The goal is not visual maximalism. It is steady comprehension with enough atmosphere to make exploration feel intentional.",
+        ],
+      },
+    ],
+    dateLabel: "November 2025",
+    publishedAt: "2025-11-09",
+    status: "published",
+    visualIdentity: {
+      material: "satin",
+      grain: "paper",
+      articleTheme: "lab",
+      sceneId: "neuralBloom",
+      accentLight: { color: articlePalette("mapping-the-middle-distance").accentLightColor, x: 68, y: 22, blur: 210, opacity: 0.32 },
+    },
+    coverPalette: articlePalette("mapping-the-middle-distance").coverPalette,
+  }),
+  createPlaceholderPost({
+    id: "field-notes-on-interface-rhythm",
+    slug: "field-notes-on-interface-rhythm",
+    title: "Field Notes On Interface Rhythm",
+    tag: "Lab Journal",
+    summary:
+      "An older placeholder journal entry on pacing visual complexity so interfaces remain readable over long sessions.",
+    hook: "Rhythm is an information architecture tool, not just a motion principle.",
+    intro: [
+      "This entry captures observations from iterative interface studies where the same content was shown with different pacing models. Small changes in rhythm altered comprehension and perceived effort more than expected.",
+      "The findings suggest that spacing, cadence, and contrast handoffs should be treated as first-class system constraints, especially in narrative-heavy pages.",
+    ],
+    articleSections: [
+      {
+        id: "cadence-baseline",
+        eyebrow: "Cadence",
+        title: "Build a baseline before adding flourish",
+        paragraphs: [
+          "Teams often jump to expressive visuals before stabilizing default reading cadence. A better sequence is to lock baseline rhythm first, then layer motion that reinforces rather than competes with content hierarchy.",
+          "In practice, that means measured section spacing, predictable action placement, and restrained animation timing in dense text regions.",
+        ],
+      },
+      {
+        id: "contrast-handshake",
+        eyebrow: "Contrast",
+        title: "Treat contrast as a handshake between states",
+        paragraphs: [
+          "When layouts transition between cards, feature panels, and article bodies, contrast should not reset arbitrarily. Users track continuity partly through consistent luminance relationships.",
+          "Theme-aware palette remapping helps keep those relationships stable across dark and light modes while preserving post identity.",
+        ],
+      },
+      {
+        id: "archive-longevity",
+        eyebrow: "Longevity",
+        title: "Design for archives, not just launch screens",
+        paragraphs: [
+          "A blog grows over time, so visual systems should anticipate older entries living alongside new work. Chronology needs to remain navigable even when cards vary in tone and topic.",
+          "Well-structured placeholders help pressure-test this now, so future content can scale without forcing architecture rewrites.",
+        ],
+      },
+    ],
+    dateLabel: "July 2025",
+    publishedAt: "2025-07-18",
+    status: "published",
+    visualIdentity: {
+      material: "mist",
+      grain: "soft",
+      articleTheme: "essay",
+      sceneId: "signalGrid",
+      accentLight: { color: articlePalette("field-notes-on-interface-rhythm").accentLightColor, x: 80, y: 30, blur: 188, opacity: 0.28 },
+    },
+    coverPalette: articlePalette("field-notes-on-interface-rhythm").coverPalette,
   }),
 ];
 

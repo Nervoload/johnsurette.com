@@ -9,6 +9,38 @@ const CODEX_CONTEXT_FRAMES_DIR = join(CODEX_CONTEXT_ROOT, "frames");
 const CODEX_CONTEXT_LATEST_FILE = join(CODEX_CONTEXT_ROOT, "latest-frame.json");
 const CODEX_CONTEXT_INDEX_FILE = join(CODEX_CONTEXT_ROOT, "frame-index.json");
 
+const resolveVendorChunk = (id: string): string | undefined => {
+  if (!id.includes("node_modules")) {
+    return undefined;
+  }
+
+  if (id.includes("/@react-three/drei/")) {
+    return "drei-vendor";
+  }
+
+  if (id.includes("/@react-three/fiber/")) {
+    return "r3f-vendor";
+  }
+
+  if (id.includes("/three/") || id.includes("three-mesh-bvh")) {
+    return "three-vendor";
+  }
+
+  if (id.includes("/framer-motion/")) {
+    return "motion-vendor";
+  }
+
+  if (id.includes("/react/") || id.includes("/react-dom/") || id.includes("/scheduler/")) {
+    return "react-vendor";
+  }
+
+  if (id.includes("/zustand/")) {
+    return "state-vendor";
+  }
+
+  return undefined;
+};
+
 const sanitizeRouteToken = (routePath: string | undefined): string => {
   if (!routePath || routePath === "/") return "home";
 
@@ -163,6 +195,11 @@ export default defineConfig({
     sourcemap: true,
     chunkSizeWarningLimit: 700,
     rollupOptions: {
+      output: {
+        manualChunks(id) {
+          return resolveVendorChunk(id);
+        },
+      },
       onwarn(warning, warn) {
         const isKnownThreeMeshBvhWarning =
           warning.code === "MISSING_EXPORT" &&
@@ -170,7 +207,7 @@ export default defineConfig({
           warning.message.includes('"BatchedMesh" is not exported by "node_modules/three/build/three.module.js"') &&
           typeof warning.id === "string" &&
           warning.id.includes("three-mesh-bvh/src/utils/ExtensionUtilities.js");
-
+ 
         if (isKnownThreeMeshBvhWarning) {
           return;
         }

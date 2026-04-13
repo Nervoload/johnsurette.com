@@ -64,8 +64,8 @@ const projectPalettes = {
     palette: { deep: "#4a1f2b", mid: "#a84862", bright: "#fff2f4", line: "#f6c6d0" },
   },
   aqua: {
-    accent: "#24c8c9",
-    palette: { deep: "#10393d", mid: "#1f7f86", bright: "#ebffff", line: "#bdeef0" },
+    accent: "#17ddd6",
+    palette: { deep: "#0f5243", mid: "#0e747f", bright: "#d4fefe", line: "#bdeef0" },
   },
   magenta: {
     accent: "#d84fd3",
@@ -74,6 +74,14 @@ const projectPalettes = {
   amber: {
     accent: "#f2b532",
     palette: { deep: "#4a2b0d", mid: "#b46d13", bright: "#fff8e8", line: "#f6ddb0" },
+  },
+  cobalt: {
+    accent: "#5f8cff",
+    palette: { deep: "#16284b", mid: "#355aa8", bright: "#eef4ff", line: "#cad8ff" },
+  },
+  moss: {
+    accent: "#4fb77d",
+    palette: { deep: "#17382d", mid: "#2c7f57", bright: "#eefcf4", line: "#c8ecd7" },
   },
 } satisfies Record<string, { accent: string; palette: CardPalette }>;
 
@@ -308,6 +316,49 @@ const createGalleryTexture = (args: ArtifactTextureArgs) =>
 
 const contactWalkthroughLink = [{ label: "Request walkthrough", href: "/contact" }];
 
+const caseStudyImage = (
+  src: string,
+  alt: string,
+  options?: {
+    aspectRatio?: string;
+    fit?: "cover" | "contain";
+  },
+) => ({
+  src,
+  alt,
+  kind: "image" as const,
+  aspectRatio: options?.aspectRatio,
+  fit: options?.fit,
+});
+
+const caseStudyText = (id: string, header: string, body: string | string[]) => ({
+  id,
+  type: "text" as const,
+  header,
+  body: Array.isArray(body) ? body : [body],
+});
+
+const caseStudyMedia = (
+  id: string,
+  media: ReturnType<typeof caseStudyImage>,
+  captionTitle?: string,
+  caption?: string,
+) => ({
+  id,
+  type: "media" as const,
+  media,
+  captionTitle,
+  caption,
+});
+
+const caseStudyRow = (
+  id: string,
+  ...blocks: [ReturnType<typeof caseStudyText> | ReturnType<typeof caseStudyMedia>, ...(ReturnType<typeof caseStudyText> | ReturnType<typeof caseStudyMedia>)[]]
+) => ({
+  id,
+  blocks,
+});
+
 // EDIT HERE: projects page header copy.
 export const projectsPageContent: ProjectsPageContent = {
   eyebrow: "Case Studies",
@@ -451,6 +502,74 @@ const aviationGalleryReadout = createGalleryTexture({
   motif: "<path d='M-220 104H220'/><path d='M-178 104V-102'/><path d='M-178 42L-112 8L-48 20L24 -54L96 -18L172 -96'/><circle cx='24' cy='-54' r='14'/><circle cx='172' cy='-96' r='14'/>",
 });
 
+const northstarHero = createArtifactTexture({
+  label: "LAUNCH RUNWAY",
+  title: "Northstar Trial Ops",
+  summary: "A clinical site-readiness platform for making launch blockers visible before they become delays.",
+  accent: projectPalettes.cobalt.accent,
+  palette: projectPalettes.cobalt.palette,
+  material: "glass",
+  noteLeft: "Site readiness",
+  noteRight: "Blocker sequencing",
+  motif: "<path d='M-210 122H210'/><path d='M0 122V-148'/><path d='M-74 -30H74'/><path d='M-48 28H48'/><path d='M-24 84H24'/><circle cx='0' cy='-148' r='18'/><path d='M-186 -28C-138 -92 -74 -126 0 -126C74 -126 138 -92 186 -28'/>",
+});
+const northstarGalleryRunway = createGalleryTexture({
+  label: "READINESS BOARD",
+  title: "One surface for launch risk",
+  summary: "Program leads need to see regulatory, staffing, and training risk on one runway instead of across disconnected trackers.",
+  accent: projectPalettes.cobalt.accent,
+  palette: projectPalettes.cobalt.palette,
+  material: "glass",
+  noteLeft: "Activation lanes",
+  noteRight: "Escalation logic",
+  motif: "<rect x='-218' y='-116' width='132' height='232' rx='24'/><rect x='-62' y='-116' width='124' height='232' rx='24'/><rect x='86' y='-116' width='132' height='232' rx='24'/><path d='M-178 -54H-126'/><path d='M-178 -8H-108'/><path d='M-24 -22H22'/><path d='M124 -54H176'/><path d='M124 18H190'/>",
+});
+const northstarGalleryControl = createGalleryTexture({
+  label: "ESCALATION MAP",
+  title: "Blockers that explain themselves",
+  summary: "The control layer turns status noise into a ranked sequence of interventions, owners, and next actions.",
+  accent: projectPalettes.cobalt.accent,
+  palette: projectPalettes.cobalt.palette,
+  material: "glass",
+  noteLeft: "Owner routing",
+  noteRight: "Decision cadence",
+  motif: "<path d='M-222 86H222'/><path d='M-182 86V-96'/><path d='M-182 -28L-92 -6L-18 -64L54 -18L132 -92L194 -38'/><circle cx='-92' cy='-6' r='12'/><circle cx='-18' cy='-64' r='12'/><circle cx='54' cy='-18' r='12'/><circle cx='132' cy='-92' r='12'/>",
+});
+
+const archiveRelayHero = createArtifactTexture({
+  label: "EVIDENCE GRAPH",
+  title: "Archive Relay",
+  summary: "A research synthesis workspace for turning scattered notes into reviewable evidence-backed narratives.",
+  accent: projectPalettes.moss.accent,
+  palette: projectPalettes.moss.palette,
+  material: "paper",
+  noteLeft: "Source tracing",
+  noteRight: "Narrative assembly",
+  motif: "<circle cx='-132' cy='-62' r='20'/><circle cx='0' cy='-132' r='20'/><circle cx='136' cy='-44' r='20'/><circle cx='-94' cy='88' r='20'/><circle cx='60' cy='112' r='20'/><path d='M-132 -62L0 -132L136 -44L60 112L-94 88L-132 -62'/><path d='M0 -132L-94 88'/><path d='M136 -44L-94 88'/>",
+});
+const archiveRelayGalleryGraph = createGalleryTexture({
+  label: "SOURCE MESH",
+  title: "Traceability by default",
+  summary: "Every claim in the synthesis workspace stays attached to clips, notes, and artifacts so the narrative can be reviewed instead of trusted on faith.",
+  accent: projectPalettes.moss.accent,
+  palette: projectPalettes.moss.palette,
+  material: "paper",
+  noteLeft: "Interview clips",
+  noteRight: "Insight clusters",
+  motif: "<circle cx='-184' cy='-42' r='18'/><circle cx='-52' cy='-100' r='18'/><circle cx='92' cy='-46' r='18'/><circle cx='176' cy='52' r='18'/><circle cx='-22' cy='108' r='18'/><path d='M-184 -42L-52 -100L92 -46L176 52L-22 108L-184 -42'/><path d='M-52 -100L-22 108'/><path d='M92 -46L-22 108'/>",
+});
+const archiveRelayGalleryMemo = createGalleryTexture({
+  label: "MEMO BUILDER",
+  title: "From fragments to a narrative",
+  summary: "The final layer assembles evidence, tension points, and recommendations into a memo that still preserves source context.",
+  accent: projectPalettes.moss.accent,
+  palette: projectPalettes.moss.palette,
+  material: "paper",
+  noteLeft: "Decision themes",
+  noteRight: "Linked references",
+  motif: "<rect x='-198' y='-120' width='396' height='240' rx='26'/><path d='M-146 -56H88'/><path d='M-146 -8H154'/><path d='M-146 40H118'/><path d='M-146 88H48'/><circle cx='138' cy='-56' r='12'/><circle cx='182' cy='-8' r='12'/><circle cx='144' cy='40' r='12'/>",
+});
+
 // EDIT HERE: add or update projects below.
 export const projects = [
   defineProject({
@@ -482,9 +601,11 @@ export const projects = [
       thesis: "Compress the least creative hour of audio collaboration into a guided, observable 20-minute handoff.",
       summary:
         "Instead of asking engineers and producers to babysit repetitive exports, the product turns cross-DAW transfer into a sequenced control surface with visible checkpoints.",
-      artifactLabel: "Session routing map",
-      surfaceLabel: "Glass instrumentation interface",
-      media: transfrHero,
+      media: caseStudyImage(
+        transfrHero,
+        "Transf.r Audio hero media showing a glassy session routing interface.",
+        { aspectRatio: "5 / 4" },
+      ),
     },
     metrics: [
       {
@@ -580,6 +701,42 @@ export const projects = [
       { label: "Stack", value: "Swift, C++, macOS automation" },
       { label: "Status", value: "Archived case study" },
     ],
+    caseStudyRows: [
+      caseStudyRow(
+        "transfr-layout-01",
+        caseStudyText("transfr-context", "Why this product mattered", [
+          "Cross-DAW transfer was still a fragile manual ceremony. Sessions slowed down whenever collaborators moved between music tools, and the failure cases were easy to miss until late in the process.",
+          "More than 100 interviews shaped the product around compatibility pressure, operator trust, and the need for a calm handoff surface instead of another opaque macro.",
+        ]),
+        caseStudyMedia(
+          "transfr-flow-panel",
+          caseStudyImage(
+            transfrGalleryFlow,
+            "Transf.r Audio routing flow diagram with export and import panels.",
+            { aspectRatio: "16 / 10" },
+          ),
+          "Readable transfer flow",
+          "Export and import are framed as a sequence with checkpoints, so the automation feels observable rather than hidden.",
+        ),
+      ),
+      caseStudyRow(
+        "transfr-layout-02",
+        caseStudyMedia(
+          "transfr-control-panel",
+          caseStudyImage(
+            transfrGalleryControl,
+            "Transf.r Audio operator control surface with progress and recovery states.",
+            { aspectRatio: "16 / 10" },
+          ),
+          "Operator-facing feedback",
+          "Progress, state, and failure recovery stay visible, which makes a delicate background process feel trustworthy in production work.",
+        ),
+        caseStudyText("transfr-outcome-panel", "What the system changed", [
+          "The app used Swift, C++, and robotic process automation to batch export and import multitrack sessions, cutting the workflow to about 20 minutes from more than an hour.",
+          "The stronger portfolio story is not raw speed. It is the interaction design move of turning brittle background automation into an interface that users can actually trust.",
+        ]),
+      ),
+    ],
     nextProject: "neurodegeneration-lesion-modeling",
   }),
   defineProject({
@@ -611,9 +768,11 @@ export const projects = [
       thesis: "Treat lesion behavior as a spatial storytelling problem so the downstream model learns from structure, not noise.",
       summary:
         "The project combined cortical lesion modeling with PyTorch experimentation, with the strongest design move being the decision to make lesion signatures visually and conceptually legible across the workflow.",
-      artifactLabel: "Cortical atlas render",
-      surfaceLabel: "Archival paper atlas",
-      media: lesionHero,
+      media: caseStudyImage(
+        lesionHero,
+        "Neurodegeneration lesion modeling hero media showing a cortical atlas render.",
+        { aspectRatio: "5 / 4" },
+      ),
     },
     metrics: [
       {
@@ -708,6 +867,42 @@ export const projects = [
       { label: "Stack", value: "The Virtual Brain, PyTorch" },
       { label: "Status", value: "Archived research work" },
     ],
+    caseStudyRows: [
+      caseStudyRow(
+        "lesion-layout-01",
+        caseStudyText("lesion-framing-panel", "Modeling before training", [
+          "Using The Virtual Brain, the work started by modeling Alzheimer's-related lesion behavior across cortical surfaces rather than jumping straight to a classifier.",
+          "That upstream decision mattered because it defined what the downstream network could treat as meaningful signal in the first place.",
+        ]),
+        caseStudyMedia(
+          "lesion-model-panel",
+          caseStudyImage(
+            lesionGalleryModel,
+            "Lesion field visualization showing cortical lesion surfaces and spatial signatures.",
+            { aspectRatio: "16 / 10" },
+          ),
+          "Lesions as readable structure",
+          "The workflow becomes more persuasive when lesion placement and cortical change read as intelligible surfaces instead of opaque preprocessing.",
+        ),
+      ),
+      caseStudyRow(
+        "lesion-layout-02",
+        caseStudyMedia(
+          "lesion-readout-panel",
+          caseStudyImage(
+            lesionGalleryReadout,
+            "Classification readout chart with neural and lesion feature overlays.",
+            { aspectRatio: "16 / 10" },
+          ),
+          "Interpretability before headlines",
+          "The most convincing part of the project is the link between lesion modeling choices and downstream feature quality.",
+        ),
+        caseStudyText("lesion-outcome-panel", "Why the case study holds up", [
+          "PyTorch models were then trained to learn salient cortical features for biomarker classification, with reported results showing roughly 110 percent improvement within the study framing.",
+          "For the portfolio, the stronger story is the bridge between simulation, interpretation, and learning. The project reads as systems thinking across research and machine learning, not a single metric in isolation.",
+        ]),
+      ),
+    ],
     nextProject: "meeg-mri-deep-learning-pipelines",
   }),
   defineProject({
@@ -739,9 +934,11 @@ export const projects = [
       thesis: "Give high-dimensional neuroimaging work an architecture that can scale from preprocessing all the way to model evaluation.",
       summary:
         "This project is strongest when framed as infrastructure with research intent: cloud data flows, experiment loops, and lesion-signature learning were designed as one operational stack.",
-      artifactLabel: "Signal stack diagram",
-      surfaceLabel: "CRT signal field",
-      media: meegHero,
+      media: caseStudyImage(
+        meegHero,
+        "MEEG MRI deep learning hero media showing a signal stack diagram.",
+        { aspectRatio: "5 / 4" },
+      ),
     },
     metrics: [
       {
@@ -836,6 +1033,42 @@ export const projects = [
       { label: "Stack", value: "Python, PyTorch, cloud processing" },
       { label: "Status", value: "Archived research pipeline" },
     ],
+    caseStudyRows: [
+      caseStudyRow(
+        "meeg-layout-01",
+        caseStudyText("meeg-pipeline-panel", "Pipeline as product", [
+          "MEEG and MRI workflows become fragile when preprocessing, storage, training, and evaluation all live in separate notebook logic. This project treated the work as a repeatable operational pipeline instead.",
+          "Cloud Python workflows staged data, stabilized preprocessing, and created room for model experimentation without rebuilding the entire stack for every run.",
+        ]),
+        caseStudyMedia(
+          "meeg-systems-panel",
+          caseStudyImage(
+            meegGallerySystems,
+            "Cloud pipeline grid showing staged preprocessing and experiment loops.",
+            { aspectRatio: "16 / 10" },
+          ),
+          "Infrastructure with research intent",
+          "The most valuable design move was turning a complex experimental workflow into a repeatable operational system.",
+        ),
+      ),
+      caseStudyRow(
+        "meeg-layout-02",
+        caseStudyMedia(
+          "meeg-signal-panel",
+          caseStudyImage(
+            meegGallerySignal,
+            "Signal field visualization with wave-based lesion signature overlays.",
+            { aspectRatio: "16 / 10" },
+          ),
+          "From data sprawl to legible signal",
+          "The visual language reinforces that the work is about extracting stable signatures from overwhelming dimensionality.",
+        ),
+        caseStudyText("meeg-story-panel", "Why the story works", [
+          "Convolutional neural networks were trained to identify lesion-related signatures across high-dimensional datasets, but the deeper value is the system around the models.",
+          "As a case study, it shows comfort with data movement, cloud orchestration, training loops, and evaluation working together as one applied AI surface.",
+        ]),
+      ),
+    ],
     nextProject: "aviation-demand-data-platform",
   }),
   defineProject({
@@ -867,9 +1100,11 @@ export const projects = [
       thesis: "Build a demand analytics system that can connect two decades of passenger behavior to decisions people can actually act on.",
       summary:
         "The project combined Databricks ETL, statistical analysis, PowerBI delivery, and stakeholder notebooks into one long-horizon analytics surface.",
-      artifactLabel: "Demand network canvas",
-      surfaceLabel: "Aviation vellum chart",
-      media: aviationHero,
+      media: caseStudyImage(
+        aviationHero,
+        "Aviation demand data platform hero media showing a demand network canvas.",
+        { aspectRatio: "5 / 4" },
+      ),
     },
     metrics: [
       {
@@ -963,6 +1198,374 @@ export const projects = [
       { label: "Role", value: "Data platform engineering and analytics delivery" },
       { label: "Stack", value: "Azure Databricks, PySpark, Python, MS SQL Server, PowerBI" },
       { label: "Status", value: "Archived platform work" },
+    ],
+    caseStudyRows: [
+      caseStudyRow(
+        "aviation-layout-01",
+        caseStudyText("aviation-platform-panel", "From raw demand history to a platform", [
+          "Passenger-demand analysis only becomes useful when ingestion, transformation, and reporting agree with each other. This project centered on building that continuity end to end.",
+          "Azure Databricks, PySpark, Python, MS SQL Server, PowerBI, and interactive notebooks were combined into one decision-facing analytics system.",
+        ]),
+        caseStudyMedia(
+          "aviation-flow-panel",
+          caseStudyImage(
+            aviationGalleryFlow,
+            "Aviation demand pipeline map showing ETL, analysis, and dashboard delivery stages.",
+            { aspectRatio: "16 / 10" },
+          ),
+          "A platform, not a report",
+          "The real design work is in the continuity between ingestion, transformation, and stakeholder delivery.",
+        ),
+      ),
+      caseStudyRow(
+        "aviation-layout-02",
+        caseStudyMedia(
+          "aviation-readout-panel",
+          caseStudyImage(
+            aviationGalleryReadout,
+            "Aviation demand readout chart showing long-range trend signals and planning markers.",
+            { aspectRatio: "16 / 10" },
+          ),
+          "Long-range visibility",
+          "The 20-year analytical range is what makes the project strategic rather than merely operational.",
+        ),
+        caseStudyText("aviation-outcome-panel", "What changed for stakeholders", [
+          "The migration reduced ETL runtime by about 40 percent and expanded the analytical horizon to roughly 20 years of passenger-demand data.",
+          "That combination of runtime improvement and long-range visibility is what makes the project persuasive: the engineering work directly improved planning conversations.",
+        ]),
+      ),
+    ],
+    nextProject: "northstar-trial-ops",
+  }),
+  defineProject({
+    id: "northstar-trial-ops-platform",
+    slug: "northstar-trial-ops",
+    title: "Northstar Trial Ops",
+    subtitle: "Site-readiness control surface for clinical launch programs",
+    summary:
+      "A workflow platform that turns fragmented trial-site activation signals into a single launch runway.",
+    details:
+      "Designed a trial operations platform for coordinating site onboarding, staff training, regulatory readiness, and blocker escalation across distributed activation programs. The system replaced spreadsheet handoffs with a staged readiness runway, reduced manual status reconciliation for launch reviews, and gave program leads one decision surface for prioritizing intervention before delays cascaded into study timelines.",
+    role: "Workflow architecture, product design, and analytics instrumentation",
+    year: "2026",
+    tags: ["React", "Workflow Design", "Operations Platforms", "Analytics"],
+    accent: projectPalettes.cobalt.accent,
+    palette: projectPalettes.cobalt.palette,
+    media: [northstarHero, northstarGalleryRunway, northstarGalleryControl],
+    links: contactWalkthroughLink,
+    front: {
+      dateLabel: "Jan 2026 - Present",
+      status: "Active",
+      frontFamily: "lattice",
+      popoutPreset: "dataSpines",
+      popoutIntensity: 0.74,
+      iconSvg: monogramIcon("Northstar Trial Ops", projectPalettes.cobalt.accent, projectPalettes.cobalt.palette),
+    },
+    hero: {
+      eyebrow: "Operations platform case study",
+      thesis: "Turn launch blockers into a visible runway so teams can act on the real risk instead of reconciling status noise.",
+      summary:
+        "The product reframes site activation as an operational choreography problem: readiness, ownership, and escalation live in one control surface instead of scattered documents and meeting notes.",
+      media: caseStudyImage(
+        northstarHero,
+        "Northstar Trial Ops hero media showing a clinical launch runway surface.",
+        { aspectRatio: "5 / 4" },
+      ),
+    },
+    metrics: [
+      {
+        label: "Launch reviews",
+        value: "-65%",
+        detail: "Manual status reconciliation dropped substantially by replacing spreadsheet rollups with one runway board.",
+      },
+      {
+        label: "Tracked workstreams",
+        value: "42",
+        detail: "The placeholder concept assumes staffing, training, regulatory, and activation streams are coordinated together.",
+      },
+      {
+        label: "Decision layer",
+        value: "Live",
+        detail: "Owners, blockers, and intervention paths stay visible in one review surface.",
+      },
+    ],
+    chapters: [
+      {
+        id: "northstar-framing",
+        eyebrow: "Framing",
+        title: "The real problem was not missing data. It was launch risk hiding across too many tools.",
+        body: [
+          "Site activation programs usually fail quietly. Training lives in one tracker, regulatory readiness in another, and launch meetings become exercises in status reconciliation rather than decision-making.",
+          "Northstar Trial Ops treated the work as one runway with explicit stages, blockers, and owners so program leads could see risk before it hardened into delay.",
+        ],
+        aside: "The strongest product move is collapsing multiple operational vocabularies into one launch language that executives and operators can both read quickly.",
+      },
+      {
+        id: "northstar-system",
+        eyebrow: "System",
+        title: "The platform behaves like a control room, not a passive dashboard.",
+        body: [
+          "Every site moves through readiness stages with visible dependencies for staffing, training, and regulatory work. That lets the system explain why a site is blocked instead of merely coloring it red.",
+          "Escalation logic ranks interventions by timeline impact, making the board useful during launch meetings rather than something reviewed afterward for reporting hygiene.",
+        ],
+      },
+      {
+        id: "northstar-outcome",
+        eyebrow: "Outcome",
+        title: "The case study works because the interface makes operational ambiguity legible.",
+        body: [
+          "By replacing manual rollups with a staged readiness runway, review time shrinks and the conversation shifts from status gathering to intervention sequencing.",
+          "That is what makes the concept feel complete: the system does not only centralize information, it changes the quality of the decision a team can make in the moment.",
+        ],
+      },
+    ],
+    gallery: [
+      {
+        id: "northstar-runway",
+        src: northstarGalleryRunway,
+        alt: "Northstar Trial Ops readiness board showing activation lanes and blocker groupings.",
+      },
+      {
+        id: "northstar-control",
+        src: northstarGalleryControl,
+        alt: "Northstar Trial Ops escalation map showing launch risk and intervention priority.",
+      },
+    ],
+    captions: [
+      {
+        assetId: "northstar-runway",
+        title: "A runway instead of a spreadsheet pile",
+        body: "The operational board organizes readiness as movement through stages, which makes blockers and dependencies immediately legible.",
+      },
+      {
+        assetId: "northstar-control",
+        title: "Blockers that explain themselves",
+        body: "Escalation is attached to ownership and launch impact, so the meeting conversation can move directly into action.",
+      },
+    ],
+    outcomes: [
+      {
+        label: "Review cadence",
+        value: "Faster",
+        detail: "Launch meetings stop spending most of their time reconciling multiple trackers.",
+      },
+      {
+        label: "Operational visibility",
+        value: "End to end",
+        detail: "Staffing, training, and regulatory readiness read as one activation narrative instead of disconnected statuses.",
+      },
+      {
+        label: "Portfolio value",
+        value: "Decision systems",
+        detail: "The project demonstrates strong product judgment around workflow design, hierarchy, and intervention-oriented visibility.",
+      },
+    ],
+    credits: [
+      { label: "Role", value: "Workflow design and product systems architecture" },
+      { label: "Stack", value: "React, analytics instrumentation, operational modeling" },
+      { label: "Status", value: "Active concept case study" },
+    ],
+    caseStudyRows: [
+      caseStudyRow(
+        "northstar-layout-01",
+        caseStudyText("northstar-context-panel", "Why this system exists", [
+          "Clinical launch programs often fracture across spreadsheets, shared documents, and disconnected status rituals. That means risk is technically present but operationally invisible.",
+          "Northstar Trial Ops compresses those signals into one staged runway so teams can understand what is actually blocking activation without reconstructing the story in every meeting.",
+        ]),
+        caseStudyMedia(
+          "northstar-runway-panel",
+          caseStudyImage(
+            northstarGalleryRunway,
+            "Northstar Trial Ops readiness board showing activation lanes and blocker groupings.",
+            { aspectRatio: "16 / 10" },
+          ),
+          "A launch board that carries context",
+          "The readiness board frames activation as movement through stages, with dependencies and owners attached at the point of decision.",
+        ),
+      ),
+      caseStudyRow(
+        "northstar-layout-02",
+        caseStudyMedia(
+          "northstar-control-panel",
+          caseStudyImage(
+            northstarGalleryControl,
+            "Northstar Trial Ops escalation map showing launch risk and intervention priority.",
+            { aspectRatio: "16 / 10" },
+          ),
+          "Escalation becomes operational",
+          "Instead of a generic risk color, the system surfaces who should act next and which blocker is actually stretching the launch runway.",
+        ),
+        caseStudyText("northstar-outcome-panel", "What the product changes", [
+          "The platform reduces review overhead by turning readiness, ownership, and escalation into one shared operational model rather than three separate reporting artifacts.",
+          "That makes the case study feel complete because the interface is not only informative. It meaningfully improves the speed and quality of launch decisions.",
+        ]),
+      ),
+    ],
+    nextProject: "archive-relay",
+  }),
+  defineProject({
+    id: "archive-relay-research-synthesis-workspace",
+    slug: "archive-relay",
+    title: "Archive Relay",
+    subtitle: "Research synthesis workspace for evidence-backed product decisions",
+    summary:
+      "A research operations workspace that links interviews, artifacts, and findings into reviewable narrative packets.",
+    details:
+      "Designed a synthesis workspace for product teams that need to move from raw interviews and scattered notes to a decision-ready memo without losing evidence fidelity. The system combines source ingestion, theme clustering, retrieval-assisted evidence linking, and memo assembly so each recommendation stays traceable to the conversations and artifacts that shaped it. The placeholder concept focuses on portability of insight rather than one-off note storage.",
+    role: "Product strategy, information architecture, and evidence workflow design",
+    year: "2026",
+    tags: ["Research Ops", "LLM Workflows", "Knowledge Design", "TypeScript"],
+    accent: projectPalettes.moss.accent,
+    palette: projectPalettes.moss.palette,
+    media: [archiveRelayHero, archiveRelayGalleryGraph, archiveRelayGalleryMemo],
+    links: contactWalkthroughLink,
+    front: {
+      dateLabel: "Mar 2026 - Present",
+      status: "Active",
+      frontFamily: "atlas",
+      popoutPreset: "nodeConstellation",
+      popoutIntensity: 0.78,
+      iconSvg: monogramIcon("Archive Relay", projectPalettes.moss.accent, projectPalettes.moss.palette),
+    },
+    hero: {
+      eyebrow: "Research tooling case study",
+      thesis: "Make evidence portable so every recommendation can still point back to the interview clips, notes, and artifacts that produced it.",
+      summary:
+        "Archive Relay is designed as a synthesis workbench rather than a repository. The value comes from preserving traceability while still helping teams build decision-ready narratives quickly.",
+      media: caseStudyImage(
+        archiveRelayHero,
+        "Archive Relay hero media showing an evidence graph and narrative assembly workspace.",
+        { aspectRatio: "5 / 4" },
+      ),
+    },
+    metrics: [
+      {
+        label: "Synthesis time",
+        value: "45 min",
+        detail: "The placeholder concept targets a reduction from multi-hour weekly evidence assembly into a focused review session.",
+      },
+      {
+        label: "Source traceability",
+        value: "100%",
+        detail: "Every claim in the memo builder stays linked to clips, notes, or artifacts.",
+      },
+      {
+        label: "Primary surface",
+        value: "Narrative graph",
+        detail: "Themes, tensions, and recommendations stay connected instead of flattening into tags alone.",
+      },
+    ],
+    chapters: [
+      {
+        id: "archive-framing",
+        eyebrow: "Framing",
+        title: "Most research debt is really evidence portability debt.",
+        body: [
+          "Teams usually have the interviews and notes they need, but those materials rarely survive the trip into a decision memo with enough context attached to be trusted later.",
+          "Archive Relay reframes the problem as evidence transport: how do insights move across product conversations without severing the link back to the source material?",
+        ],
+        aside: "The concept is strongest when it is positioned as a bridge between research rigor and product velocity, not as a generic note-taking tool.",
+      },
+      {
+        id: "archive-system",
+        eyebrow: "System",
+        title: "The workspace links evidence clustering to narrative assembly in one flow.",
+        body: [
+          "Interview clips, artifact excerpts, and notes enter a shared graph where themes can be clustered and connected to product questions. Retrieval helps surface relevant evidence, but the interface keeps the user in editorial control.",
+          "The memo builder is not a disconnected final step. It pulls directly from the evidence graph, preserving traceability all the way into the recommendation layer.",
+        ],
+      },
+      {
+        id: "archive-outcome",
+        eyebrow: "Outcome",
+        title: "The finished case study reads like a calm evidence engine instead of another AI wrapper.",
+        body: [
+          "The value is speed with accountability: weekly synthesis can move faster while stakeholders still see what supports each recommendation.",
+          "That balance is what makes the concept feel complete. The product is helping a team reason better, not just summarize faster.",
+        ],
+      },
+    ],
+    gallery: [
+      {
+        id: "archive-graph",
+        src: archiveRelayGalleryGraph,
+        alt: "Archive Relay source graph showing interview clips, themes, and insight clusters.",
+      },
+      {
+        id: "archive-memo",
+        src: archiveRelayGalleryMemo,
+        alt: "Archive Relay memo builder showing linked evidence and synthesized recommendation blocks.",
+      },
+    ],
+    captions: [
+      {
+        assetId: "archive-graph",
+        title: "Traceability is a product feature",
+        body: "The graph keeps claims connected to actual evidence so synthesis does not become a black box the moment it gets fast.",
+      },
+      {
+        assetId: "archive-memo",
+        title: "Narratives that can still be audited",
+        body: "The memo layer pulls directly from evidence clusters, preserving context while still delivering a clean recommendation surface.",
+      },
+    ],
+    outcomes: [
+      {
+        label: "Weekly synthesis",
+        value: "Shorter",
+        detail: "The concept aims to compress multi-hour evidence assembly into a focused review pass without losing rigor.",
+      },
+      {
+        label: "Recommendation quality",
+        value: "More legible",
+        detail: "Decision-makers can follow an argument back to the supporting material instead of trusting summary copy alone.",
+      },
+      {
+        label: "Portfolio lens",
+        value: "Applied AI restraint",
+        detail: "The project shows how retrieval and AI assistance can support judgment without replacing editorial accountability.",
+      },
+    ],
+    credits: [
+      { label: "Role", value: "Product strategy and evidence workflow design" },
+      { label: "Stack", value: "TypeScript, retrieval workflows, research operations architecture" },
+      { label: "Status", value: "Active concept case study" },
+    ],
+    caseStudyRows: [
+      caseStudyRow(
+        "archive-layout-01",
+        caseStudyText("archive-context-panel", "Why evidence gets lost", [
+          "Most research teams do not lack material. They lack a durable way to move source material into product decisions without flattening nuance or destroying provenance.",
+          "Archive Relay addresses that by treating insights as portable evidence structures rather than isolated notes and tags.",
+        ]),
+        caseStudyMedia(
+          "archive-graph-panel",
+          caseStudyImage(
+            archiveRelayGalleryGraph,
+            "Archive Relay source graph showing interview clips, themes, and insight clusters.",
+            { aspectRatio: "16 / 10" },
+          ),
+          "Traceability by default",
+          "Themes, clips, and artifacts stay linked in one graph so the synthesis process remains inspectable while still moving quickly.",
+        ),
+      ),
+      caseStudyRow(
+        "archive-layout-02",
+        caseStudyMedia(
+          "archive-memo-panel",
+          caseStudyImage(
+            archiveRelayGalleryMemo,
+            "Archive Relay memo builder showing linked evidence and synthesized recommendation blocks.",
+            { aspectRatio: "16 / 10" },
+          ),
+          "A memo that carries its proof",
+          "The narrative layer is assembled from linked evidence blocks, so each recommendation can still be traced back to its source material.",
+        ),
+        caseStudyText("archive-outcome-panel", "What makes the concept feel complete", [
+          "The system does not stop at clustering or summarizing. It carries evidence all the way into the recommendation surface, which is where most synthesis tools break apart.",
+          "That is what gives the project a stronger portfolio story: it is an AI-assisted workflow that respects editorial control, reviewability, and product decision pressure at the same time.",
+        ]),
+      ),
     ],
     nextProject: "transfr-audio",
   }),

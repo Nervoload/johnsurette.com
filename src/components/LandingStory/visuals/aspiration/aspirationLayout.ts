@@ -70,14 +70,15 @@ const wrapLabel = (label: string) => {
   return [words.slice(0, midpoint).join(" "), words.slice(midpoint).join(" ")];
 };
 
-const resolveLabelFrame = (label: string) => {
+const resolveLabelFrame = (label: string, labelScale = 1) => {
   const lines = wrapLabel(label);
   const longestLineLength = Math.max(...lines.map((line) => line.length));
+  const scaledWidth = (longestLineLength * 15.8 + 68) * labelScale;
 
   return {
-    height: lines.length > 1 ? 96 : 70,
+    height: (lines.length > 1 ? 96 : 70) * labelScale,
     lines,
-    width: clamp(longestLineLength * 15.8 + 68, 208, 328),
+    width: clamp(scaledWidth, 208 * labelScale, 328 * labelScale),
   };
 };
 
@@ -86,9 +87,15 @@ const createLabel = (
   label: string,
   offsetX: number,
   offsetY: number,
+  labelScale = 1,
+  safeViewportWidth = VIEWBOX_WIDTH,
 ): LabelGeometry => {
-  const { height, width } = resolveLabelFrame(label);
-  const left = clamp(point.x + offsetX - width / 2, 24, VIEWBOX_WIDTH - width - 24);
+  const { height, width } = resolveLabelFrame(label, labelScale);
+  const safeInsetX = Math.max((VIEWBOX_WIDTH - safeViewportWidth) / 2, 0);
+  const minLeft = safeInsetX + 24;
+  const maxLeft = Math.max(minLeft, VIEWBOX_WIDTH - safeInsetX - width - 24);
+  const offsetScale = 0.42 + labelScale * 0.58;
+  const left = clamp(point.x + offsetX * offsetScale - width / 2, minLeft, maxLeft);
   const top = clamp(point.y + offsetY - height / 2, 24, VIEWBOX_HEIGHT - height - 24);
   const centerX = left + width / 2;
   const centerY = top + height / 2;
@@ -100,11 +107,11 @@ const createLabel = (
   if (centerX < point.x - 48) {
     align = "left";
     lineEndX = left + width;
-    lineEndY = clamp(point.y, top + 16, top + height - 16);
+    lineEndY = clamp(point.y, top + 16 * labelScale, top + height - 16 * labelScale);
   } else if (centerX > point.x + 48) {
     align = "right";
     lineEndX = left;
-    lineEndY = clamp(point.y, top + 16, top + height - 16);
+    lineEndY = clamp(point.y, top + 16 * labelScale, top + height - 16 * labelScale);
   }
 
   return {
@@ -145,7 +152,13 @@ export const getNodePoint = (node: LandingAspirationNode, horizontalScale = 1): 
   return ROOT_POINT;
 };
 
-export const getNodeLabel = (node: LandingAspirationNode, point: Point, horizontalScale = 1): LabelGeometry => {
+export const getNodeLabel = (
+  node: LandingAspirationNode,
+  point: Point,
+  horizontalScale = 1,
+  labelScale = 1,
+  safeViewportWidth = VIEWBOX_WIDTH,
+): LabelGeometry => {
   const labelOffsets: Record<string, { x: number; y: number }> = {
     "aging-biology": { x: 178, y: 12 },
     "ai-research": { x: 128, y: 112 },
@@ -160,7 +173,7 @@ export const getNodeLabel = (node: LandingAspirationNode, point: Point, horizont
   };
 
   const offset = labelOffsets[node.id] ?? { x: 0, y: -108 };
-  return createLabel(point, node.label, offset.x * horizontalScale, offset.y);
+  return createLabel(point, node.label, offset.x * horizontalScale, offset.y, labelScale, safeViewportWidth);
 };
 
 export const buildThreadPath = (
@@ -218,12 +231,14 @@ export const computeAspirationLayout = (
   nodes: LandingAspirationNode[],
   edges: LandingAspirationEdge[],
   horizontalScale = 1,
+  labelScale = 1,
+  safeViewportWidth = VIEWBOX_WIDTH,
 ): AspirationLayout => {
   const layoutNodes = nodes.map((node) => {
     const point = getNodePoint(node, horizontalScale);
     return {
       ...node,
-      labelBox: getNodeLabel(node, point, horizontalScale),
+      labelBox: getNodeLabel(node, point, horizontalScale, labelScale, safeViewportWidth),
       point,
     };
   });

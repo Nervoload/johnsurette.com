@@ -6,7 +6,9 @@ import { ProjectItem } from "./projectData";
 import { ResolvedThemeMode } from "../theme/themeMode";
 import { createCodexProbeAttributes } from "../../devtools/codexContext/probe";
 import { upsertRuntimeContextEntry, removeRuntimeContextEntry } from "../../devtools/codexContext/runtimeRegistry";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { getProjectStoryboardPhaseLabel } from "./storyboardPhase";
+import { getProjectLatePhaseTiming, getProjectRawLatePhaseBoundaries, getProjectStoryboardHeight } from "./storyboardTiming";
 
 export interface ProjectStoryboardProps {
   scrollContainer: RefObject<HTMLDivElement>;
@@ -18,15 +20,6 @@ export interface ProjectStoryboardProps {
 }
 
 const clamp01 = (value: number) => Math.min(1, Math.max(0, value));
-const STORYBOARD_BASE_HEIGHT_VH = 640;
-const STORYBOARD_EXTRA_CARD_VH = 140;
-
-const getStoryboardHeight = (count: number) => {
-  const extraCards = Math.max(0, count - 4);
-  // Give the deal and browse phases enough runway so the scene does not collapse
-  // into the route index after a short scroll flick.
-  return STORYBOARD_BASE_HEIGHT_VH + extraCards * STORYBOARD_EXTRA_CARD_VH;
-};
 
 /**
  * Remap raw scroll 0–1 into animation-timeline 0–1.
@@ -34,26 +27,48 @@ const getStoryboardHeight = (count: number) => {
  * Scroll region →  Animation phase
  * 0.00–0.12     →  0.00–0.12   Shuffle build-up
  * 0.12–0.30     →  0.12–0.42   Shuffle + early spread
- * 0.30–0.46     →  0.42–0.68   Orbit + exit
- * 0.46–0.62     →  0.68–0.84   Deal into column (slower)
- * 0.62–0.76     →  0.84–0.96   Flip reveal (slower)
- * 0.76–1.00     →  0.96–1.00   Browse through cards
+ * 0.30–0.44     →  0.42–dealStart   Orbit + exit
+ * 0.44–X        →  dealStart–dealEnd   Deal into column
+ * X–Y           →  dealEnd–flipEnd   Flip reveal into stack
+ * Y–Z           →  flipEnd–browseStart   Stacked preview settle
+ * Z–1.00        →  browseStart–1.00   Browse through cards
  */
-const remapProgress = (raw: number, count: number): number => {
+const remapProgress = (raw: number, count: number, compactViewport: boolean): number => {
   const p = clamp01(raw);
-  const extraCards = Math.max(0, count - 4);
-  const dealEnd = Math.min(0.67, 0.62 + extraCards * 0.03);
-  const flipEnd = Math.min(0.84, 0.76 + extraCards * 0.04);
-  const browseStart = Math.min(0.9, 0.76 + extraCards * 0.05);
-  const browseDenominator = Math.max(0.08, 1 - browseStart);
+  const timeline = getProjectLatePhaseTiming(count, compactViewport);
+  const rawPhase = getProjectRawLatePhaseBoundaries(count, compactViewport);
+  const browseDenominator = Math.max(0.08, 1 - rawPhase.stackPreviewEnd);
 
   if (p <= 0.12) return p;
   if (p <= 0.3) return 0.12 + ((p - 0.12) / 0.18) * 0.3;
-  if (p <= 0.46) return 0.42 + ((p - 0.3) / 0.16) * 0.26;
-  if (p <= dealEnd) return 0.68 + ((p - 0.46) / (dealEnd - 0.46)) * 0.16;
-  if (p <= flipEnd) return 0.84 + ((p - dealEnd) / (flipEnd - dealEnd)) * 0.12;
-  if (p <= browseStart) return 0.96;
-  return 0.96 + ((p - browseStart) / browseDenominator) * 0.04;
+  if (p <= rawPhase.dealStart) {
+    return 0.42 + ((p - 0.3) / (rawPhase.dealStart - 0.3)) * (timeline.dealStart - 0.42);
+  }
+  if (p <= rawPhase.dealEnd) {
+    return (
+      timeline.dealStart +
+      ((p - rawPhase.dealStart) / (rawPhase.dealEnd - rawPhase.dealStart)) *
+        (timeline.dealEnd - timeline.dealStart)
+    );
+  }
+  if (p <= rawPhase.flipEnd) {
+    return (
+      timeline.dealEnd +
+      ((p - rawPhase.dealEnd) / (rawPhase.flipEnd - rawPhase.dealEnd)) *
+        (timeline.flipEnd - timeline.dealEnd)
+    );
+  }
+  if (p <= rawPhase.stackPreviewEnd) {
+    return (
+      timeline.flipEnd +
+      ((p - rawPhase.flipEnd) / (rawPhase.stackPreviewEnd - rawPhase.flipEnd)) *
+        (timeline.browseStart - timeline.flipEnd)
+    );
+  }
+  return (
+    timeline.browseStart +
+    ((p - rawPhase.stackPreviewEnd) / browseDenominator) * (1 - timeline.browseStart)
+  );
 };
 
 const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
@@ -74,7 +89,8 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   const sceneRef = useRef<HTMLDivElement>(null);
   const rawRef = useRef(0);
   const snapFramesRef = useRef(0);
-  const storyboardHeight = getStoryboardHeight(items.length);
+  const compactViewport = useMediaQuery("(max-width: 900px)");
+  const storyboardHeight = getProjectStoryboardHeight(items.length, compactViewport);
   const runtimeContextId = "projects:storyboard-scroll";
 
   const timelineProgress = useMotionValue(0);
@@ -91,7 +107,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
     if (!import.meta.env.DEV) return;
 
     const raw = clamp01(value);
-    const mapped = remapProgress(raw, items.length);
+    const mapped = remapProgress(raw, items.length, compactViewport);
     const container = scrollContainer.current;
     const maxScrollTop = Math.max(0, (container?.scrollHeight ?? 0) - (container?.clientHeight ?? 0));
 
@@ -119,10 +135,10 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   const syncTimelineToScroll = useCallback(() => {
     const raw = clamp01(scrollYProgress.get());
     rawRef.current = raw;
-    timelineProgress.set(remapProgress(raw, items.length));
+    timelineProgress.set(remapProgress(raw, items.length, compactViewport));
     // Skip smoothing briefly so timeline instantly matches new viewport geometry.
     snapFramesRef.current = 3;
-  }, [items.length, scrollYProgress, timelineProgress]);
+  }, [compactViewport, items.length, scrollYProgress, timelineProgress]);
 
   useEffect(() => {
     syncTimelineToScroll();
@@ -132,7 +148,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
     if (!import.meta.env.DEV) return;
 
     const raw = clamp01(scrollYProgress.get());
-    const mapped = remapProgress(raw, items.length);
+    const mapped = remapProgress(raw, items.length, compactViewport);
     const container = scrollContainer.current;
     const maxScrollTop = Math.max(0, (container?.scrollHeight ?? 0) - (container?.clientHeight ?? 0));
 
@@ -159,7 +175,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
     return () => {
       removeRuntimeContextEntry("/projects", runtimeContextId);
     };
-  }, [forceLowPower, items.length, runtimeContextId, scrollContainer, scrollYProgress, storyboardHeight]);
+  }, [compactViewport, forceLowPower, items.length, runtimeContextId, scrollContainer, scrollYProgress, storyboardHeight]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -194,7 +210,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   }, [scrollContainer, syncTimelineToScroll]);
 
   useAnimationFrame((_, delta) => {
-    const mappedTarget = remapProgress(rawRef.current, items.length);
+    const mappedTarget = remapProgress(rawRef.current, items.length, compactViewport);
     const current = timelineProgress.get();
 
     if (snapFramesRef.current > 0) {
@@ -206,7 +222,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
     // Keep progression deliberately slower through deal/flip so cards don't snap through.
     const introZone = mappedTarget < 0.68;
     const dealFlipZone = mappedTarget < 0.96;
-    const maxStep = (introZone ? 0.0003 : dealFlipZone ? 0.00044 : 0.00078) * delta;
+    const maxStep = (introZone ? (compactViewport ? 0.00042 : 0.0003) : dealFlipZone ? (compactViewport ? 0.00058 : 0.00044) : 0.00078) * delta;
     const diff = mappedTarget - current;
 
     const step = Math.sign(diff) * Math.min(Math.abs(diff), maxStep);
@@ -221,6 +237,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
         progress={timelineProgress}
         height={storyboardHeight}
         forceLowPower={forceLowPower}
+        scrollContainer={scrollContainer}
         themeMode={themeMode}
       >
         {(progress, context) => (
@@ -231,6 +248,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
             onActiveProjectChange={onActiveProjectChange}
             lowPowerMode={context.lowPowerMode}
             mobileViewport={context.mobileViewport}
+            sceneActive={context.sceneActive}
             themeMode={themeMode}
           />
         )}

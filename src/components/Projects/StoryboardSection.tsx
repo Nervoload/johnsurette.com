@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { RefObject, useEffect, useMemo, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { MotionValue } from "framer-motion";
+import { MotionValue, useInView, useReducedMotion } from "framer-motion";
 import * as THREE from "three";
 import CanvasErrorBoundary from "../CanvasErrorBoundary";
 import SceneBloom from "./SceneBloom";
 import { ResolvedThemeMode } from "../theme/themeMode";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 import {
   removeRuntimeContextEntry,
   upsertRuntimeContextEntry,
@@ -14,12 +15,14 @@ interface StoryboardSectionProps {
   progress: MotionValue<number>;
   height?: number;
   forceLowPower?: boolean;
+  scrollContainer?: RefObject<HTMLDivElement>;
   themeMode: ResolvedThemeMode;
   children: (
     progress: MotionValue<number>,
     context: {
       lowPowerMode: boolean;
       mobileViewport: boolean;
+      sceneActive: boolean;
     },
   ) => React.ReactNode;
 }
@@ -28,44 +31,20 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
   progress,
   height = 200,
   forceLowPower = false,
+  scrollContainer,
   themeMode,
   children,
 }) => {
-  const [mobileViewport, setMobileViewport] = useState(false);
-  const [reducedMotionMode, setReducedMotionMode] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const viewportQuery = window.matchMedia("(max-width: 900px)");
-    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const update = () => {
-      setMobileViewport(viewportQuery.matches);
-      setReducedMotionMode(motionQuery.matches);
-    };
-
-    update();
-
-    if (viewportQuery.addEventListener) {
-      viewportQuery.addEventListener("change", update);
-      motionQuery.addEventListener("change", update);
-    } else {
-      viewportQuery.addListener(update);
-      motionQuery.addListener(update);
-    }
-
-    return () => {
-      if (viewportQuery.removeEventListener) {
-        viewportQuery.removeEventListener("change", update);
-        motionQuery.removeEventListener("change", update);
-      } else {
-        viewportQuery.removeListener(update);
-        motionQuery.removeListener(update);
-      }
-    };
-  }, []);
-
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const mobileViewport = useMediaQuery("(max-width: 900px)");
+  const reducedMotionMode = Boolean(useReducedMotion());
+  const sceneActive = useInView(sectionRef, {
+    root: scrollContainer,
+    amount: "some",
+    margin: "24% 0px 24% 0px",
+  });
   const effectiveLowPowerMode = reducedMotionMode || forceLowPower;
+  const compactRenderMode = effectiveLowPowerMode || mobileViewport;
   const renderHeight = height;
   const fogColor = useMemo(() => {
     return themeMode === "dark" ? "#0b1326" : "#eef4fb";
@@ -88,33 +67,37 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
         renderHeightVh: renderHeight,
         lowPowerMode: effectiveLowPowerMode,
         mobileViewport,
+        sceneActive,
         themeMode,
-        hasHazeLayers: true,
-        canvasMode: "sticky-fullscreen",
+        hasHazeLayers: !compactRenderMode,
+        canvasMode: sceneActive ? "sticky-fullscreen" : "paused-offscreen",
       },
     });
 
     return () => {
       removeRuntimeContextEntry(pagePath, contextId);
     };
-  }, [effectiveLowPowerMode, mobileViewport, renderHeight, themeMode]);
+  }, [compactRenderMode, effectiveLowPowerMode, mobileViewport, renderHeight, sceneActive, themeMode]);
 
   return (
-    <section style={{ height: `${renderHeight}vh` }} className="relative">
+    <section ref={sectionRef} style={{ height: `${renderHeight}vh` }} className="relative">
       <div className="sticky top-0 h-[100svh] overflow-hidden">
         <div className="theme-project-scene-haze-a pointer-events-none absolute inset-0" />
-        <div className="theme-project-scene-haze-b pointer-events-none absolute inset-0" />
+        {!compactRenderMode ? (
+          <div className="theme-project-scene-haze-b pointer-events-none absolute inset-0" />
+        ) : null}
 
         <CanvasErrorBoundary>
           <Canvas
             className="absolute inset-0 h-full w-full"
             camera={{ position: [0, 0.14, 6.15], fov: 43 }}
-            dpr={effectiveLowPowerMode ? [1, 1.5] : [1, 2]}
+            dpr={compactRenderMode ? [0.85, 1.15] : [1, 2]}
+            frameloop={sceneActive ? "always" : "never"}
             shadows={false}
             gl={{
               preserveDrawingBuffer: false,
-              antialias: !effectiveLowPowerMode,
-              powerPreference: "high-performance",
+              antialias: !compactRenderMode,
+              powerPreference: compactRenderMode ? "low-power" : "high-performance",
               alpha: true,
             }}
             onCreated={({ gl }) => {
@@ -131,19 +114,21 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
               position={[0, 5.2, 2.6]}
               angle={0.56}
               penumbra={0.66}
-              intensity={effectiveLowPowerMode ? 1.45 : 1.68}
+              intensity={compactRenderMode ? 1.36 : 1.68}
               distance={26}
             />
             <directionalLight
               position={[2.8, 2.6, 2.4]}
-              intensity={0.45}
+              intensity={compactRenderMode ? 0.34 : 0.45}
             />
-            <directionalLight position={[-3.2, 1.4, -2.8]} intensity={0.18} />
+            {!compactRenderMode ? (
+              <directionalLight position={[-3.2, 1.4, -2.8]} intensity={0.18} />
+            ) : null}
 
-            <SceneBloom enabled={!effectiveLowPowerMode} />
+            <SceneBloom enabled={!compactRenderMode} />
 
-            <group scale={1.14} position={[0, 0.02, 0]}>
-              {children(progress, { lowPowerMode: effectiveLowPowerMode, mobileViewport })}
+            <group scale={compactRenderMode ? 1.08 : 1.14} position={[0, compactRenderMode ? 0 : 0.02, 0]}>
+              {children(progress, { lowPowerMode: effectiveLowPowerMode, mobileViewport, sceneActive })}
             </group>
           </Canvas>
         </CanvasErrorBoundary>

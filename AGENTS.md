@@ -150,6 +150,7 @@ Projects files previously removed from active architecture (do not restore by de
 ## Known Technical Debt (Track Explicitly)
 - Placeholder links and emails still exist in project/contact/footer content and should be replaced.
 - Build currently emits a `three-mesh-bvh`/`three` compatibility warning and dependency alignment should be reviewed.
+- **Framer Motion + React Refs (`useScroll`)**: When binding `useScroll` to a custom React ref container (e.g., from `PageScaffold.tsx`), `scrollContainerRef.current` is `null` on the first render. Since refs don't trigger re-renders, `useScroll` fails silently and animations get stuck in production. Always wrap these components in a proxy that polls for the ref's attachment (e.g., using `setInterval`) before rendering the `useScroll` logic.
 
 ## Dev Commands
 - Install deps: `npm install`

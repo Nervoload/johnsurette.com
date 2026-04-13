@@ -32,6 +32,18 @@ export interface ProjectLink {
   href: string;
 }
 
+export type ProjectCaseStudyMediaKind = "image" | "video";
+export type ProjectCaseStudyMediaFit = "cover" | "contain";
+
+export interface ProjectCaseStudyMedia {
+  src: string;
+  alt: string;
+  kind?: ProjectCaseStudyMediaKind;
+  poster?: string;
+  aspectRatio?: string;
+  fit?: ProjectCaseStudyMediaFit;
+}
+
 export interface ProjectMetric {
   label: string;
   value: string;
@@ -42,9 +54,7 @@ export interface ProjectHeroContent {
   eyebrow: string;
   thesis: string;
   summary: string;
-  artifactLabel: string;
-  surfaceLabel: string;
-  media: string;
+  media: ProjectCaseStudyMedia;
 }
 
 export interface ProjectChapter {
@@ -76,6 +86,28 @@ export interface ProjectOutcome {
 export interface ProjectCredit {
   label: string;
   value: string;
+}
+
+export interface ProjectCaseStudyTextBlock {
+  id: string;
+  type: "text";
+  header: string;
+  body: string[];
+}
+
+export interface ProjectCaseStudyMediaBlock {
+  id: string;
+  type: "media";
+  media: ProjectCaseStudyMedia;
+  captionTitle?: string;
+  caption?: string;
+}
+
+export type ProjectCaseStudyBlock = ProjectCaseStudyTextBlock | ProjectCaseStudyMediaBlock;
+
+export interface ProjectCaseStudyRow {
+  id: string;
+  blocks: ProjectCaseStudyBlock[];
 }
 
 export interface CardPalette {
@@ -127,6 +159,7 @@ export interface ProjectEntry {
   captions: ProjectCaption[];
   outcomes: ProjectOutcome[];
   credits: ProjectCredit[];
+  caseStudyRows: ProjectCaseStudyRow[];
   nextProject?: string;
 }
 

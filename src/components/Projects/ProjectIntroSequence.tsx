@@ -14,6 +14,7 @@ import {
   upsertRuntimeSceneEntity,
 } from "../../devtools/codexContext/runtimeRegistry";
 import { getProjectStoryboardPhaseLabel } from "./storyboardPhase";
+import { getProjectLatePhaseTiming } from "./storyboardTiming";
 
 /* ───────────────────────── types ───────────────────────── */
 
@@ -24,6 +25,7 @@ interface ProjectIntroSequenceProps {
   onActiveProjectChange?: (item: ProjectItem | null) => void;
   lowPowerMode?: boolean;
   mobileViewport?: boolean;
+  sceneActive?: boolean;
   themeMode: ResolvedThemeMode;
 }
 
@@ -178,28 +180,6 @@ const toScreenRectSnapshot = (
   };
 };
 
-const getLatePhaseTiming = (count: number, mobileViewport: boolean) => {
-  const extraCards = Math.max(0, count - 4);
-
-  return {
-    dealStart: 0.64,
-    dealEnd: mobileViewport
-      ? Math.min(0.91, 0.88 + extraCards * 0.025)
-      : Math.min(0.92, 0.84 + extraCards * 0.03),
-    flipStart: mobileViewport
-      ? Math.max(0.7, 0.72 - extraCards * 0.01)
-      : Math.max(0.74, 0.78 - extraCards * 0.01),
-    flipEnd: mobileViewport
-      ? Math.min(0.94, 0.86 + extraCards * 0.03)
-      : 0.98,
-    browseStart: mobileViewport
-      ? Math.min(0.92, 0.86 + extraCards * 0.025)
-      : Math.min(0.97, 0.95 + extraCards * 0.015),
-    dealDelaySpan: Math.min(0.5, 0.32 + extraCards * 0.045),
-    flipDelaySpan: Math.min(0.52, 0.35 + extraCards * 0.05),
-  };
-};
-
 const createLayoutMetrics = (
   viewportWidth: number,
   viewportHeight: number,
@@ -249,6 +229,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   onActiveProjectChange,
   lowPowerMode = false,
   mobileViewport = false,
+  sceneActive = true,
   themeMode,
 }) => {
   const { viewport, pointer, camera, gl } = useThree();
@@ -341,13 +322,14 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
   /* ── Per-frame animation ────────────────────────────── */
   useFrame((state, delta) => {
     const deck = deckRef.current;
-    if (!deck) return;
+    if (!deck || !sceneActive) return;
     const time = state.clock.getElapsedTime();
     const t = clamp01(progress.get());
+    const motionIntensity = lowPowerMode ? (mobileViewport ? 0.42 : 0.68) : mobileViewport ? 0.78 : 1;
     const targetMetrics = createLayoutMetrics(viewport.width, viewport.height, mobileViewport);
     const metrics = layoutMetricsRef.current;
     const metricAlpha = 1 - Math.exp(-Math.min(delta, 0.2) * 10);
-    const latePhaseTiming = getLatePhaseTiming(count, mobileViewport);
+    const latePhaseTiming = getProjectLatePhaseTiming(count, mobileViewport);
 
     metrics.width = metricLerp(metrics.width, targetMetrics.width, metricAlpha);
     metrics.height = metricLerp(metrics.height, targetMetrics.height, metricAlpha);
@@ -387,16 +369,16 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
     const dealGlowWindow = clamp01(Math.max(dealGlowIn, browseGlowFloor));
 
     const inDealMode = t > 0.64;
-    clickableRef.current = t > (mobileViewport ? 0.9 : 0.84);
+    clickableRef.current = t > (mobileViewport ? 0.86 : 0.84);
 
     /* ── Deck-level mouse tracking ─────────────────────── */
     const tiltAmount = shuffleT * (1 - spreadT);
     const deckMouseFade = 1 - easeOut(phase(t, 0.56, 0.72));
     const mx = pointer.x;
     const my = pointer.y;
-    const baseRotX = Math.PI * 0.24 * tiltAmount;
-    const baseRotY = -Math.PI * 0.035 * tiltAmount;
-    const subtleParallax = inDealMode ? (mobileViewport ? 0.008 : 0.012) : 0;
+    const baseRotX = Math.PI * 0.24 * tiltAmount * motionIntensity;
+    const baseRotY = -Math.PI * 0.035 * tiltAmount * motionIntensity;
+    const subtleParallax = (inDealMode ? (mobileViewport ? 0.008 : 0.012) : 0) * motionIntensity;
 
     deck.rotation.x =
       (baseRotX + my * 0.03) * deckMouseFade + my * subtleParallax;
@@ -419,8 +401,8 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
       onActiveProjectChange?.(estimatedCenteredProject);
     }
 
-    deck.position.x = mx * metrics.browseParallaxX * deckMouseFade;
-    deck.position.y = my * metrics.browseParallaxY * deckMouseFade + browseShift;
+    deck.position.x = mx * metrics.browseParallaxX * deckMouseFade * motionIntensity;
+    deck.position.y = my * metrics.browseParallaxY * deckMouseFade * motionIntensity + browseShift;
 
     /* ── Ring / orbit params ───────────────────────────── */
     const ringRx = metrics.ringRx;
@@ -463,8 +445,8 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
         const spZ = THREE.MathUtils.lerp(shZ, rZ, spreadT);
 
         const exitDrop = metrics.exitDropMax * exitT;
-        const exitDrift = Math.sin(angle * 1.1) * 0.06 * exitT;
-        const bobS = 0.01 + spreadT * 0.022;
+        const exitDrift = Math.sin(angle * 1.1) * 0.06 * exitT * motionIntensity;
+        const bobS = (0.01 + spreadT * 0.022) * motionIntensity;
         const bobY = Math.sin(time * 1.65 + i * 0.82) * bobS;
         const bobZ =
           Math.cos(time * 1.2 + i * 0.58) * bobS * 0.45;
@@ -475,7 +457,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
 
         group.rotation.x = 0;
         group.rotation.y = 0;
-        group.rotation.z = angle * (mobileViewport ? 0.08 : 0.1) * spreadT;
+        group.rotation.z = angle * (mobileViewport ? 0.08 : 0.1) * spreadT * motionIntensity;
 
         // Keep cards face-down (back visible) throughout intro.
         flipValues.current[i].set(1);
@@ -508,7 +490,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
 
         // Slight arc forward during descent
         const dealArc =
-          Math.sin(localDealT * Math.PI) * metrics.dealArcMax;
+          Math.sin(localDealT * Math.PI) * metrics.dealArcMax * motionIntensity;
 
         const stackDepth = -i * metrics.stackDepthStep;
         group.position.x = 0;
@@ -528,7 +510,7 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
         // Wobble rotation during flight, settles to target orientation.
         group.rotation.x = 0;
         const dealWobble =
-          (1 - localDealT) * ((i % 2 === 0 ? -1 : 1) * 0.08);
+          (1 - localDealT) * ((i % 2 === 0 ? -1 : 1) * 0.08) * motionIntensity;
         const flightRotZ = landscapeRot + dealWobble;
         group.rotation.z = THREE.MathUtils.lerp(
           flightRotZ,
@@ -547,9 +529,9 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
 
         // Card lifts toward camera + lifts up during flip
         const flipArcZ =
-          Math.sin(localFlipT * Math.PI) * metrics.flipArcZMax;
+          Math.sin(localFlipT * Math.PI) * metrics.flipArcZMax * motionIntensity;
         const flipArcY =
-          Math.sin(localFlipT * Math.PI) * metrics.flipArcYMax;
+          Math.sin(localFlipT * Math.PI) * metrics.flipArcYMax * motionIntensity;
         group.position.z += flipArcZ;
         group.position.y += flipArcY;
 
@@ -559,9 +541,9 @@ const ProjectIntroSequence: React.FC<ProjectIntroSequenceProps> = ({
         // Gentle idle bob after fully dealt & flipped
         if (localDealT > 0.98 && localFlipT > 0.98) {
           group.position.y +=
-            Math.sin(time * 1.1 + i * 1.3) * 0.01;
+            Math.sin(time * 1.1 + i * 1.3) * 0.01 * motionIntensity;
           group.position.z +=
-            Math.cos(time * 0.9 + i * 0.7) * 0.005;
+            Math.cos(time * 0.9 + i * 0.7) * 0.005 * motionIntensity;
         }
 
         group.rotation.y = 0; // Card3D handles Y via flip

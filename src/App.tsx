@@ -243,7 +243,7 @@ function App() {
     const blogSlug = getBlogPostSlugFromPath(path);
 
     if (path === "/blog" || blogSlug) {
-      return <BlogPage onNavigate={navigate} articleSlug={blogSlug ?? undefined} />;
+      return <BlogPage onNavigate={navigate} articleSlug={blogSlug ?? undefined} themeMode={resolvedMode} />;
     }
 
     return (

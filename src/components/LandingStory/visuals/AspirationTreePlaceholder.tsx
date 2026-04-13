@@ -6,6 +6,7 @@ import {
   LandingAspirationOverlayBeat,
   LandingAspirationOverlayBeatId,
 } from "../../../content";
+import { useMediaQuery } from "../../../hooks/useMediaQuery";
 import { ResolvedThemeMode } from "../../theme/themeMode";
 import { useLandingStoryRuntime, useSectionActivity } from "../runtime/LandingStoryRuntime";
 import {
@@ -28,6 +29,8 @@ interface AspirationTreePlaceholderProps {
 }
 
 const ARTBOARD_HEIGHT_MULTIPLIER = 2.08;
+const COMPACT_ARTBOARD_HEIGHT_MULTIPLIER = 1.82;
+const COMPACT_VIEWPORT_MAX = 900;
 const TIMELINE_SCALE = 1.3;
 
 const TIMELINE_VIEWPORT_LENGTHS = {
@@ -149,6 +152,20 @@ const timelineEntries = Object.entries(TIMELINE_VIEWPORT_LENGTHS) as Array<[Time
 
 const RUNWAY_VIEWPORTS = timelineEntries.reduce((sum, [, length]) => sum + length, 0);
 const SECTION_VIEWPORTS = RUNWAY_VIEWPORTS + 1;
+const COMPACT_SECTION_VIEWPORTS = RUNWAY_VIEWPORTS * 0.8 + 0.72;
+
+const INACTIVE_POINTER_STATE: PointerState = {
+  active: false,
+  inside: false,
+  lastSvgX: ROOT_POINT.x,
+  lastSvgY: ROOT_POINT.y,
+  pointerType: null,
+  targetNodeId: null,
+  velocityX: 0,
+  velocityY: 0,
+  svgX: ROOT_POINT.x,
+  svgY: ROOT_POINT.y,
+};
 
 const TIMELINE = (() => {
   let cursor = 0;
@@ -581,19 +598,23 @@ const NodeLabel: React.FC<{
   color: string;
   groupRef: (element: SVGGElement | null) => void;
   isDark: boolean;
+  labelScale: number;
   node: LayoutNode;
   reveal: MotionValue<number>;
-}> = ({ color, groupRef, isDark, node, reveal }) => {
+}> = ({ color, groupRef, isDark, labelScale, node, reveal }) => {
   const localLabel = toLocalLabelGeometry(node);
   const lines = wrapLabel(node.label);
   const labelAnchorX = localLabel.left + localLabel.width / 2;
   const textCenterY = localLabel.top + localLabel.height / 2;
-  const lineGap = 22.4;
+  const lineGap = 22.4 * labelScale;
   const firstLineY = textCenterY - ((lines.length - 1) * lineGap) / 2;
   const labelFill = isDark ? "rgba(255,255,255,0.98)" : "rgba(0,0,0,0.94)";
   const labelFilter = isDark
     ? `drop-shadow(0 0 12px ${rgba(color, 0.5)}) drop-shadow(0 0 24px ${rgba(color, 0.28)})`
     : "drop-shadow(0 4px 12px rgba(15,23,42,0.24))";
+  const fontSize = (lines.length > 1 ? 20.4 : 21.6) * labelScale;
+  const letterSpacing = -0.24 * labelScale;
+  const leaderStrokeWidth = clamp(1.15 * labelScale, 0.9, 1.5);
 
   return (
     <motion.g style={{ opacity: reveal }} transform={`translate(${node.point.x} ${node.point.y})`}>
@@ -601,7 +622,7 @@ const NodeLabel: React.FC<{
         <line
           stroke={rgba(color, 0.5)}
           strokeLinecap="round"
-          strokeWidth="1.5"
+          strokeWidth={leaderStrokeWidth}
           x1="0"
           x2={labelAnchorX}
           y1="0"
@@ -609,9 +630,9 @@ const NodeLabel: React.FC<{
         />
         <text
           fill={labelFill}
-          fontSize={lines.length > 1 ? "20.4" : "21.6"}
+          fontSize={fontSize}
           fontWeight="650"
-          letterSpacing="-0.24"
+          letterSpacing={letterSpacing}
           style={{ filter: labelFilter }}
           textAnchor="middle"
           x={labelAnchorX}
@@ -628,13 +649,37 @@ const NodeLabel: React.FC<{
   );
 };
 
+const getRenderedBundleCount = (edge: LayoutEdge, compactMode: boolean) => {
+  const baseCount = aspirationThreadStyles.getBundleCount(edge.weight, edge.faded);
+
+  if (!compactMode) {
+    return baseCount;
+  }
+
+  if (edge.faded) {
+    return 1;
+  }
+
+  if (edge.weight === "trunk") {
+    return Math.min(baseCount, 3);
+  }
+
+  if (edge.weight === "branch") {
+    return Math.min(baseCount, 2);
+  }
+
+  return 1;
+};
+
 const EdgeBundle: React.FC<{
   color: string;
+  compactMode: boolean;
   edge: LayoutEdge;
   reveal: MotionValue<number>;
   threadRef: (threadIndex: number, element: SVGPathElement | null) => void;
-}> = ({ color, edge, reveal, threadRef }) => {
-  const bundleCount = aspirationThreadStyles.getBundleCount(edge.weight, edge.faded);
+}> = ({ color, compactMode, edge, reveal, threadRef }) => {
+  const bundleCount = getRenderedBundleCount(edge, compactMode);
+  const strokeWidth = aspirationThreadStyles.getThreadWidth(edge.weight, edge.faded) + (compactMode ? 0.24 : 0);
 
   return (
     <g>
@@ -647,7 +692,7 @@ const EdgeBundle: React.FC<{
           ref={(element) => threadRef(threadIndex, element)}
           stroke={rgba(color, edge.faded ? 0.44 : 0.94)}
           strokeLinecap="round"
-          strokeWidth={aspirationThreadStyles.getThreadWidth(edge.weight, edge.faded)}
+          strokeWidth={strokeWidth}
           style={{ pathLength: reveal }}
         />
       ))}
@@ -655,11 +700,40 @@ const EdgeBundle: React.FC<{
   );
 };
 
-const OverlayBeatText: React.FC<OverlaySpec & { isDark: boolean }> = ({ id, maxWidth, opacity, text, x, y, isDark }) => {
-  const maxChars = id === "between-root-and-majors" ? 38 : id === "stage-two-experiences" ? 34 : 28;
+const OverlayBeatText: React.FC<OverlaySpec & { compactMode: boolean; isDark: boolean }> = ({
+  id,
+  maxWidth,
+  opacity,
+  text,
+  x,
+  y,
+  isDark,
+  compactMode,
+}) => {
+  const maxChars = compactMode
+    ? id === "between-root-and-majors"
+      ? 28
+      : id === "stage-two-experiences"
+        ? 26
+        : 22
+    : id === "between-root-and-majors"
+      ? 38
+      : id === "stage-two-experiences"
+        ? 34
+        : 28;
   const lines = wrapOverlayText(text, maxChars);
-  const fontSize = id === "root" ? 44 : id === "graduation" ? 36 : 31;
-  const lineHeight = id === "root" ? 47 : 39;
+  const fontSize = compactMode
+    ? id === "root"
+      ? 32
+      : id === "graduation"
+        ? 26
+        : 22
+    : id === "root"
+      ? 44
+      : id === "graduation"
+        ? 36
+        : 31;
+  const lineHeight = compactMode ? (id === "root" ? 34 : 29) : id === "root" ? 47 : 39;
   const firstLineY = y - ((lines.length - 1) * lineHeight) / 2;
   const fill = isDark ? "rgba(248,250,252,0.96)" : "rgba(0,0,0,0.96)";
   const filter = isDark
@@ -672,7 +746,7 @@ const OverlayBeatText: React.FC<OverlaySpec & { isDark: boolean }> = ({ id, maxW
         fill={fill}
         fontSize={fontSize}
         fontWeight={id === "root" ? "700" : "560"}
-        letterSpacing={id === "root" ? "-0.8" : "-0.45"}
+        letterSpacing={compactMode ? (id === "root" ? "-0.55" : "-0.28") : id === "root" ? "-0.8" : "-0.45"}
         style={{ filter }}
         textAnchor="middle"
         x={x}
@@ -688,7 +762,7 @@ const OverlayBeatText: React.FC<OverlaySpec & { isDark: boolean }> = ({ id, maxW
         fill="none"
         height={Math.max(52, lines.length * lineHeight + 18)}
         opacity="0"
-        rx="20"
+        rx={compactMode ? 14 : 20}
         width={maxWidth}
         x={x - maxWidth / 2}
         y={y - Math.max(52, lines.length * lineHeight + 18) / 2}
@@ -703,14 +777,19 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
   overlayBeats,
   themeMode,
 }) => {
-  const { sectionRef, qualityTier } = useSectionActivity<HTMLDivElement>({
+  const { sectionRef, qualityTier, isNearViewport, isPrimaryActive } = useSectionActivity<HTMLDivElement>({
     nearAmount: 0.08,
     nearMargin: "28% 0px 28% 0px",
     primaryAmount: 0.38,
     primaryMargin: "-14% 0px -14% 0px",
   });
   const { scrollContainerRef } = useLandingStoryRuntime();
+  const compactViewport = useMediaQuery(`(max-width: ${COMPACT_VIEWPORT_MAX}px)`);
   const prefersReducedMotion = Boolean(useReducedMotion()) || qualityTier === "static";
+  const compactExperience = compactViewport || qualityTier !== "high";
+  const fullPointerInteractivity = !prefersReducedMotion && !compactExperience;
+  const sectionViewportCount = compactExperience ? COMPACT_SECTION_VIEWPORTS : SECTION_VIEWPORTS;
+  const artboardHeightMultiplier = compactExperience ? COMPACT_ARTBOARD_HEIGHT_MULTIPLIER : ARTBOARD_HEIGHT_MULTIPLIER;
   const isDarkTheme = themeMode === "dark";
   const stickyViewportRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -719,18 +798,8 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
   const labelRefs = useRef<Record<string, SVGGElement | null>>({});
   const nodeRefs = useRef<Record<string, SVGGElement | null>>({});
   const edgeThreadRefs = useRef<Record<string, Array<SVGPathElement | null>>>({});
-  const pointerStateRef = useRef<PointerState>({
-    active: false,
-    inside: false,
-    lastSvgX: ROOT_POINT.x,
-    lastSvgY: ROOT_POINT.y,
-    pointerType: null,
-    targetNodeId: null,
-    velocityX: 0,
-    velocityY: 0,
-    svgX: ROOT_POINT.x,
-    svgY: ROOT_POINT.y,
-  });
+  const pointerStateRef = useRef<PointerState>({ ...INACTIVE_POINTER_STATE });
+  const frameThrottleRef = useRef(0);
   const currentNodePointsRef = useRef<Record<SceneNodeId, Point>>({
     "aspiration-root": ROOT_POINT,
   });
@@ -748,20 +817,27 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
   });
   const progressUnits = useTransform(scrollYProgress, [0, 1], [0, RUNWAY_VIEWPORTS]);
 
-  const baseLayout = useMemo(() => computeAspirationLayout(nodes, edges, 1), [edges, nodes]);
+  const baseLayout = useMemo(() => computeAspirationLayout(nodes, edges, 1, 1), [edges, nodes]);
+
+  const visibleViewboxWidth = useMemo(() => {
+    if (stickyViewport.width <= 0 || stickyViewport.height <= 0) {
+      return VIEWBOX_WIDTH;
+    }
+
+    const artboardWidth = stickyViewport.height * artboardHeightMultiplier * (VIEWBOX_WIDTH / VIEWBOX_HEIGHT);
+    if (artboardWidth <= 0) {
+      return VIEWBOX_WIDTH;
+    }
+
+    const visiblePixelWidth = Math.max(stickyViewport.width - 32, 0);
+    return VIEWBOX_WIDTH * Math.min(1, visiblePixelWidth / artboardWidth);
+  }, [artboardHeightMultiplier, stickyViewport]);
 
   const horizontalLayoutScale = useMemo(() => {
     if (stickyViewport.width <= 0 || stickyViewport.height <= 0) {
       return 1;
     }
 
-    const artboardWidth = stickyViewport.height * ARTBOARD_HEIGHT_MULTIPLIER * (VIEWBOX_WIDTH / VIEWBOX_HEIGHT);
-    if (artboardWidth <= 0) {
-      return 1;
-    }
-
-    const visiblePixelWidth = Math.max(stickyViewport.width - 32, 0);
-    const visibleViewboxWidth = VIEWBOX_WIDTH * Math.min(1, visiblePixelWidth / artboardWidth);
     const baseNodes = [
       ...baseLayout.nodesByStage[1],
       ...baseLayout.nodesByStage[2],
@@ -785,13 +861,25 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
     }
 
     const availableHalfSpan = Math.max(visibleViewboxWidth / 2 - 28, 0);
-    return clamp(availableHalfSpan / designHalfSpan, 0.24, 1);
-  }, [baseLayout, stickyViewport]);
+    return clamp(availableHalfSpan / designHalfSpan, compactExperience ? 0.2 : 0.24, 1);
+  }, [baseLayout, compactExperience, visibleViewboxWidth]);
+
+  const labelLayoutScale = useMemo(() => {
+    if (stickyViewport.width <= 0 || stickyViewport.height <= 0) {
+      return 1;
+    }
+
+    const visibleRatio = clamp01(visibleViewboxWidth / VIEWBOX_WIDTH);
+    const responsiveBaseScale = 0.58 + visibleRatio * 0.42;
+    const followNodeCompression = 0.52 + horizontalLayoutScale * 0.48;
+
+    return clamp(Math.min(responsiveBaseScale, followNodeCompression), compactExperience ? 0.58 : 0.64, 1);
+  }, [compactExperience, horizontalLayoutScale, stickyViewport, visibleViewboxWidth]);
 
   // Keep the aspirations tree centered while compressing its horizontal spread on narrow viewports.
   const layout = useMemo(
-    () => computeAspirationLayout(nodes, edges, horizontalLayoutScale),
-    [edges, horizontalLayoutScale, nodes],
+    () => computeAspirationLayout(nodes, edges, horizontalLayoutScale, labelLayoutScale, visibleViewboxWidth),
+    [edges, horizontalLayoutScale, labelLayoutScale, nodes, visibleViewboxWidth],
   );
 
   const allLayoutNodes = useMemo(
@@ -876,7 +964,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
       return 0;
     }
 
-    const scale = (stickyViewport.height * ARTBOARD_HEIGHT_MULTIPLIER) / VIEWBOX_HEIGHT;
+    const scale = (stickyViewport.height * artboardHeightMultiplier) / VIEWBOX_HEIGHT;
     return scale * (VIEWBOX_HEIGHT / 2 - bounds.centerY);
   };
 
@@ -889,7 +977,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
       stageThree: getCenterTranslate(stageBounds.stageThree),
       stageTwo: getCenterTranslate(stageBounds.stageTwo),
     }),
-    [prefersReducedMotion, stageBounds, stickyViewport.height],
+    [artboardHeightMultiplier, prefersReducedMotion, stageBounds, stickyViewport.height],
   );
 
   useEffect(() => {
@@ -914,7 +1002,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
     const nextThreadStates: Record<string, RuntimeThreadState[]> = {};
     trackedEdges.forEach((edge, id) => {
       nextEdgeStates[id] = edgeRuntimeRef.current[id] ?? createEdgeRuntimeState(id, edge.weight);
-      const bundleCount = aspirationThreadStyles.getBundleCount(edge.weight, edge.faded);
+      const bundleCount = getRenderedBundleCount(edge, compactExperience);
       const existingThreadStates = threadRuntimeRef.current[id] ?? [];
       nextThreadStates[id] = Array.from({ length: bundleCount }, (_, threadIndex) => (
         existingThreadStates[threadIndex] ?? createThreadRuntimeState(id, threadIndex, edge.weight)
@@ -928,7 +1016,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
       nextLeafStates[edge.id] = leafRuntimeRef.current[edge.id] ?? createLeafRuntimeState(edge.id);
     });
     leafRuntimeRef.current = nextLeafStates;
-  }, [allLayoutNodes, animatedEdges, layout.edgesByStage]);
+  }, [allLayoutNodes, animatedEdges, compactExperience, layout.edgesByStage]);
 
   const shellOpacity = useTransform(progressUnits, [0, 0.22, RUNWAY_VIEWPORTS], [0.74, 1, 1]);
   const shellScale = useTransform(progressUnits, [0, TIMELINE.stageFour.end, RUNWAY_VIEWPORTS], [0.992, 1, 1.012]);
@@ -1076,38 +1164,39 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
     () => [
       {
         id: "root",
-        maxWidth: 320,
+        maxWidth: compactExperience ? 240 : 320,
         opacity: overlayRootOpacity,
         text: overlayBeatMap.root ?? "",
         x: ROOT_POINT.x,
-        y: ROOT_POINT.y + 64,
+        y: ROOT_POINT.y + (compactExperience ? 54 : 64),
       },
       {
         id: "between-root-and-majors",
-        maxWidth: 460,
+        maxWidth: compactExperience ? 300 : 460,
         opacity: overlayMajorsOpacity,
         text: overlayBeatMap["between-root-and-majors"] ?? "",
         x: (ROOT_POINT.x + stageOneCenter.x) / 2,
-        y: (ROOT_POINT.y + stageOneCenter.y) / 2 - 24,
+        y: (ROOT_POINT.y + stageOneCenter.y) / 2 - (compactExperience ? 8 : 24),
       },
       {
         id: "stage-two-experiences",
-        maxWidth: 420,
+        maxWidth: compactExperience ? 300 : 420,
         opacity: overlayExperiencesOpacity,
         text: overlayBeatMap["stage-two-experiences"] ?? "",
         x: stageTwoCenter.x,
-        y: stageTwoCenter.y - 118,
+        y: stageTwoCenter.y - (compactExperience ? 88 : 118),
       },
       {
         id: "graduation",
-        maxWidth: 420,
+        maxWidth: compactExperience ? 300 : 420,
         opacity: overlayGraduationOpacity,
         text: overlayBeatMap.graduation ?? "",
         x: graduationNode?.point.x ?? VIEWBOX_WIDTH / 2,
-        y: (graduationNode?.point.y ?? 820) + 122,
+        y: (graduationNode?.point.y ?? 820) + (compactExperience ? 100 : 122),
       },
     ],
     [
+      compactExperience,
       graduationNode,
       overlayBeatMap,
       overlayExperiencesOpacity,
@@ -1179,7 +1268,30 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
     pointer.inside = true;
   };
 
+  const resetPointer = () => {
+    Object.assign(pointerStateRef.current, INACTIVE_POINTER_STATE);
+  };
+
+  const nudgeNode = (nodeId: SceneNodeId | null, velocityX = 0, velocityY = 0) => {
+    if (!nodeId) {
+      return;
+    }
+
+    const nodeState = nodeRuntimeRef.current[nodeId];
+    if (!nodeState) {
+      return;
+    }
+
+    const compactImpulse = compactExperience ? 0.22 : 0.34;
+    nodeState.velocityX += velocityX * compactImpulse;
+    nodeState.velocityY += velocityY * compactImpulse - (compactExperience ? 7.5 : 12);
+  };
+
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!fullPointerInteractivity || event.pointerType === "touch") {
+      return;
+    }
+
     updatePointer(event.clientX, event.clientY, event.pointerType);
   };
 
@@ -1187,60 +1299,65 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
     updatePointer(event.clientX, event.clientY, event.pointerType);
     const pointer = pointerStateRef.current;
     const nearestNodeId = findNearestNode({ x: pointer.svgX, y: pointer.svgY });
-    pointer.active = Boolean(nearestNodeId);
-    pointer.targetNodeId = nearestNodeId;
 
     if (!nearestNodeId) {
+      resetPointer();
       return;
     }
 
-    const nodeState = nodeRuntimeRef.current[nearestNodeId];
-    if (!nodeState) {
+    if (!fullPointerInteractivity || event.pointerType === "touch") {
+      nudgeNode(nearestNodeId, pointer.velocityX, pointer.velocityY);
+      resetPointer();
       return;
     }
 
-    if (event.pointerType === "touch") {
-      nodeState.velocityX += pointer.velocityX * 0.34;
-      nodeState.velocityY += pointer.velocityY * 0.34 - 12;
-      pointer.active = false;
-      pointer.targetNodeId = null;
-      return;
-    }
+    pointer.active = true;
+    pointer.targetNodeId = nearestNodeId;
 
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const handlePointerUp = () => {
+    if (!fullPointerInteractivity) {
+      resetPointer();
+      return;
+    }
+
     const pointer = pointerStateRef.current;
     const targetNodeId = pointer.targetNodeId;
 
-    if (targetNodeId) {
-      const state = nodeRuntimeRef.current[targetNodeId];
-      if (state) {
-        state.velocityX += pointer.velocityX * 0.34;
-        state.velocityY += pointer.velocityY * 0.34;
-      }
-    }
+    nudgeNode(targetNodeId, pointer.velocityX, pointer.velocityY);
 
     pointer.active = false;
     pointer.targetNodeId = null;
   };
 
   const handlePointerLeave = () => {
-    const pointer = pointerStateRef.current;
-    pointer.inside = false;
-    pointer.active = false;
-    pointer.targetNodeId = null;
+    resetPointer();
   };
 
+  useEffect(() => {
+    if (!fullPointerInteractivity) {
+      resetPointer();
+    }
+  }, [fullPointerInteractivity]);
+
   useAnimationFrame((timeMs, deltaMs) => {
-    if (prefersReducedMotion) {
+    if (prefersReducedMotion || !isNearViewport) {
       return;
     }
 
-    const dt = Math.min(deltaMs / 1000, 0.033);
+    if (compactExperience) {
+      frameThrottleRef.current = (frameThrottleRef.current + 1) % 2;
+      if (frameThrottleRef.current !== 0) {
+        return;
+      }
+    }
+
+    const dt = Math.min(deltaMs / 1000, compactExperience ? 0.05 : 0.033);
     const timeSeconds = timeMs / 1000;
-    const pointer = pointerStateRef.current;
+    const pointer = fullPointerInteractivity && isPrimaryActive ? pointerStateRef.current : INACTIVE_POINTER_STATE;
+    const motionIntensity = compactExperience ? 0.58 : !isPrimaryActive ? 0.78 : 1;
 
     const rootState = nodeRuntimeRef.current["aspiration-root"];
     if (rootState && rootGroupRef.current) {
@@ -1265,8 +1382,8 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
       rootState.offsetY += rootState.velocityY * dt;
 
       const rootPoint = {
-        x: ROOT_POINT.x + Math.sin(timeSeconds * rootState.floatFreqX + rootState.phase) * rootState.floatAmpX + rootState.offsetX,
-        y: ROOT_POINT.y + Math.cos(timeSeconds * rootState.floatFreqY + rootState.phase * 1.2) * rootState.floatAmpY + rootState.offsetY,
+        x: ROOT_POINT.x + Math.sin(timeSeconds * rootState.floatFreqX + rootState.phase) * rootState.floatAmpX * motionIntensity + rootState.offsetX,
+        y: ROOT_POINT.y + Math.cos(timeSeconds * rootState.floatFreqY + rootState.phase * 1.2) * rootState.floatAmpY * motionIntensity + rootState.offsetY,
       };
 
       currentNodePointsRef.current["aspiration-root"] = rootPoint;
@@ -1303,8 +1420,8 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
       state.offsetX += state.velocityX * dt;
       state.offsetY += state.velocityY * dt;
 
-      const floatX = Math.sin(timeSeconds * state.floatFreqX + state.phase) * state.floatAmpX;
-      const floatY = Math.cos(timeSeconds * state.floatFreqY + state.phase * 1.18) * state.floatAmpY;
+      const floatX = Math.sin(timeSeconds * state.floatFreqX + state.phase) * state.floatAmpX * motionIntensity;
+      const floatY = Math.cos(timeSeconds * state.floatFreqY + state.phase * 1.18) * state.floatAmpY * motionIntensity;
       const nextPoint = {
         x: node.point.x + floatX + state.offsetX,
         y: node.point.y + floatY + state.offsetY,
@@ -1335,8 +1452,8 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
           toPoint = edge.toPoint;
         } else {
           toPoint = {
-            x: edge.toPoint.x + Math.sin(timeSeconds * leafState.swayFreqX + leafState.phase) * leafState.swayAmpX,
-            y: edge.toPoint.y + Math.cos(timeSeconds * leafState.swayFreqY + leafState.phase * 1.22) * leafState.swayAmpY,
+            x: edge.toPoint.x + Math.sin(timeSeconds * leafState.swayFreqX + leafState.phase) * leafState.swayAmpX * motionIntensity,
+            y: edge.toPoint.y + Math.cos(timeSeconds * leafState.swayFreqY + leafState.phase * 1.22) * leafState.swayAmpY * motionIntensity,
           };
         }
       } else {
@@ -1374,7 +1491,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
       const animatedBaseCurve = buildDynamicCurve(fromPoint, toPoint, edge, edgeState, timeSeconds, pointer);
       const edgeColor = getEdgeColor(edge);
       const threadRefs = edgeThreadRefs.current[edge.id] ?? [];
-      const bundleCount = aspirationThreadStyles.getBundleCount(edge.weight, edge.faded);
+      const bundleCount = getRenderedBundleCount(edge, compactExperience);
       const threadStates = threadRuntimeRef.current[edge.id] ?? [];
 
       for (let threadIndex = 0; threadIndex < bundleCount; threadIndex += 1) {
@@ -1401,7 +1518,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
         pathRef.setAttribute("stroke", rgba(edgeColor, edge.faded ? 0.4 : 0.88 + edgeState.pointerEnergy * 0.08));
         pathRef.setAttribute(
           "stroke-width",
-          `${aspirationThreadStyles.getThreadWidth(edge.weight, edge.faded) + edgeState.pointerEnergy * 0.78 + edgeState.pluckEnergy * 0.42}`,
+          `${aspirationThreadStyles.getThreadWidth(edge.weight, edge.faded) + (compactExperience ? 0.24 : 0) + edgeState.pointerEnergy * 0.78 + edgeState.pluckEnergy * 0.42}`,
         );
       }
     });
@@ -1411,7 +1528,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
     <div
       className="theme-story-contrast-label relative"
       ref={sectionRef as React.RefObject<HTMLDivElement>}
-      style={{ height: `${SECTION_VIEWPORTS * 100}dvh` }}
+      style={{ height: `${sectionViewportCount * 100}dvh` }}
     >
       <div className="theme-story-contrast-backdrop absolute inset-0" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(34,211,238,0.16),transparent_18%),radial-gradient(circle_at_50%_56%,rgba(168,85,247,0.12),transparent_26%)]" />
@@ -1447,8 +1564,11 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                 style={{ touchAction: "pan-y" }}
               >
                 <div
-                  className="absolute left-1/2 top-1/2 h-[208%] max-w-none -translate-x-1/2 -translate-y-1/2"
-                  style={{ aspectRatio: `${VIEWBOX_WIDTH} / ${VIEWBOX_HEIGHT}` }}
+                  className="absolute left-1/2 top-1/2 max-w-none -translate-x-1/2 -translate-y-1/2"
+                  style={{
+                    height: `${artboardHeightMultiplier * 100}%`,
+                    aspectRatio: `${VIEWBOX_WIDTH} / ${VIEWBOX_HEIGHT}`,
+                  }}
                 >
                   <motion.div className="h-full w-full" style={{ opacity: assetOpacity, scale: assetScale, y: assetTranslateY }}>
                     <svg
@@ -1476,6 +1596,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                         {layout.edgesByStage[1].map((edge) => (
                           <EdgeBundle
                             color={getEdgeColor(edge)}
+                            compactMode={compactExperience}
                             edge={edge}
                             key={edge.id}
                             reveal={stageOneReveal}
@@ -1502,6 +1623,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                         {layout.edgesByStage[2].map((edge) => (
                           <EdgeBundle
                             color={getEdgeColor(edge)}
+                            compactMode={compactExperience}
                             edge={edge}
                             key={edge.id}
                             reveal={stageTwoReveal}
@@ -1528,6 +1650,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                         {layout.edgesByStage[3].map((edge) => (
                           <EdgeBundle
                             color={getEdgeColor(edge)}
+                            compactMode={compactExperience}
                             edge={edge}
                             key={edge.id}
                             reveal={stageThreeReveal}
@@ -1554,6 +1677,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                         {layout.edgesByStage[4].map((edge) => (
                           <EdgeBundle
                             color={getEdgeColor(edge)}
+                            compactMode={compactExperience}
                             edge={edge}
                             key={edge.id}
                             reveal={stageFourReveal}
@@ -1580,6 +1704,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                         {layout.edgesByStage[5].map((edge) => (
                           <EdgeBundle
                             color={getEdgeColor(edge)}
+                            compactMode={compactExperience}
                             edge={edge}
                             key={edge.id}
                             reveal={leafReveal}
@@ -1600,6 +1725,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                             }}
                             isDark={isDarkTheme}
                             key={`label-${node.id}`}
+                            labelScale={labelLayoutScale}
                             node={node}
                             reveal={stageOneReveal}
                           />
@@ -1615,6 +1741,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                             }}
                             isDark={isDarkTheme}
                             key={`label-${node.id}`}
+                            labelScale={labelLayoutScale}
                             node={node}
                             reveal={stageTwoReveal}
                           />
@@ -1630,6 +1757,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                             }}
                             isDark={isDarkTheme}
                             key={`label-${node.id}`}
+                            labelScale={labelLayoutScale}
                             node={node}
                             reveal={stageThreeReveal}
                           />
@@ -1645,6 +1773,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                             }}
                             isDark={isDarkTheme}
                             key={`label-${node.id}`}
+                            labelScale={labelLayoutScale}
                             node={node}
                             reveal={stageFourReveal}
                           />
@@ -1652,7 +1781,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                       </motion.g>
 
                       {overlaySpecs.map((overlay) => (
-                        <OverlayBeatText {...overlay} isDark={isDarkTheme} key={overlay.id} />
+                        <OverlayBeatText {...overlay} compactMode={compactExperience} isDark={isDarkTheme} key={overlay.id} />
                       ))}
                     </svg>
                   </motion.div>
@@ -1668,6 +1797,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
 
 const AspirationTreePlaceholder: React.FC<AspirationTreePlaceholderProps> = (props) => {
   const { scrollContainerRef } = useLandingStoryRuntime();
+  const compactViewport = useMediaQuery(`(max-width: ${COMPACT_VIEWPORT_MAX}px)`);
   const [containerReady, setContainerReady] = useState(false);
 
   useEffect(() => {
@@ -1685,7 +1815,8 @@ const AspirationTreePlaceholder: React.FC<AspirationTreePlaceholderProps> = (pro
   }, [scrollContainerRef]);
 
   if (!containerReady) {
-    return <div className="theme-story-contrast-label relative" style={{ height: `${SECTION_VIEWPORTS * 100}dvh` }} />;
+    const sectionViewportCount = compactViewport ? COMPACT_SECTION_VIEWPORTS : SECTION_VIEWPORTS;
+    return <div className="theme-story-contrast-label relative" style={{ height: `${sectionViewportCount * 100}dvh` }} />;
   }
 
   return <AspirationTreeInner {...props} />;

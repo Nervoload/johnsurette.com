@@ -1,10 +1,12 @@
 import React, { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { BlogPostEntry } from "../../content";
+import { ResolvedThemeMode } from "../theme/themeMode";
 import { getResearchLayoutIds, getResearchThemeStyle } from "./researchVisuals";
 
 interface ResearchArchiveCardProps {
   post: BlogPostEntry;
+  themeMode: ResolvedThemeMode;
   expanded: boolean;
   hovered: boolean;
   onHoverStart: (postId: string) => void;
@@ -29,6 +31,7 @@ const detailTransition = {
 
 const ResearchArchiveCard: React.FC<ResearchArchiveCardProps> = ({
   post,
+  themeMode,
   expanded,
   hovered,
   onHoverStart,
@@ -81,7 +84,7 @@ const ResearchArchiveCard: React.FC<ResearchArchiveCardProps> = ({
   return (
     <motion.article
       className={`research-archive-card ${expanded ? "is-expanded" : "is-collapsed"} ${hovered ? "is-hovered" : ""}`}
-      style={getResearchThemeStyle(post)}
+      style={getResearchThemeStyle(post, themeMode)}
       role="button"
       tabIndex={0}
       aria-label={`${post.title} research article preview`}

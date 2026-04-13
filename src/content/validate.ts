@@ -104,14 +104,18 @@ export const validateContent = ({
     assert(slugPattern.test(project.slug), `project.${project.id}.slug must be URL-safe.`);
     assertNonEmpty(`project.${project.id}.title`, project.title);
     assert(project.media.length > 0, `project.${project.id} must include at least one media item.`);
+    assertNonEmpty(`project.${project.id}.hero.media.src`, project.hero.media.src);
+    assertNonEmpty(`project.${project.id}.hero.media.alt`, project.hero.media.alt);
     assert(project.metrics.length > 0, `project.${project.id} must include at least one metric.`);
     assert(project.chapters.length > 0, `project.${project.id} must include at least one chapter.`);
     assert(project.gallery.length > 0, `project.${project.id} must include at least one gallery asset.`);
     assert(project.captions.length > 0, `project.${project.id} must include at least one caption.`);
     assert(project.outcomes.length > 0, `project.${project.id} must include at least one outcome.`);
     assert(project.credits.length > 0, `project.${project.id} must include at least one credit.`);
+    assert(project.caseStudyRows.length > 0, `project.${project.id} must include at least one caseStudyRows entry.`);
     assertUnique(project.gallery, (asset) => asset.id, `project.${project.id} gallery asset id`);
     assertUnique(project.captions, (caption) => caption.assetId, `project.${project.id} caption asset id`);
+    assertUnique(project.caseStudyRows, (row) => row.id, `project.${project.id} case study row id`);
 
     const galleryAssetIds = new Set(project.gallery.map((asset) => asset.id));
     project.captions.forEach((caption, index) => {
@@ -119,6 +123,41 @@ export const validateContent = ({
         galleryAssetIds.has(caption.assetId),
         `project.${project.id}.captions[${index}] references unknown gallery asset ${caption.assetId}`,
       );
+    });
+
+    project.caseStudyRows.forEach((row, rowIndex) => {
+      assert(
+        row.blocks.length > 0 && row.blocks.length <= 2,
+        `project.${project.id}.caseStudyRows[${rowIndex}] must contain one or two blocks.`,
+      );
+
+      row.blocks.forEach((block, blockIndex) => {
+        assertNonEmpty(
+          `project.${project.id}.caseStudyRows[${rowIndex}].blocks[${blockIndex}].id`,
+          block.id,
+        );
+
+        if (block.type === "text") {
+          assertNonEmpty(
+            `project.${project.id}.caseStudyRows[${rowIndex}].blocks[${blockIndex}].header`,
+            block.header,
+          );
+          assert(
+            block.body.length > 0,
+            `project.${project.id}.caseStudyRows[${rowIndex}].blocks[${blockIndex}] must include body copy.`,
+          );
+          return;
+        }
+
+        assertNonEmpty(
+          `project.${project.id}.caseStudyRows[${rowIndex}].blocks[${blockIndex}].media.src`,
+          block.media.src,
+        );
+        assertNonEmpty(
+          `project.${project.id}.caseStudyRows[${rowIndex}].blocks[${blockIndex}].media.alt`,
+          block.media.alt,
+        );
+      });
     });
 
     project.links.forEach((link, index) => {

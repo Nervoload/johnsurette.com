@@ -18,6 +18,8 @@ import {
   LandingStoryEntry,
   NavigationItem,
   PageVisualConfig,
+  ProjectCaseStudyBlock,
+  ProjectCaseStudyMedia,
   ProjectEntry,
   SiteMeta,
   TimelineEntry,
@@ -32,6 +34,35 @@ const assertNonEmpty = (label: string, value: string) => {
 };
 
 const normalizeStringArray = (value?: string[]) => (value ?? []).map((item) => item.trim()).filter(Boolean);
+
+const defineProjectCaseStudyMedia = (input: ProjectCaseStudyMedia): ProjectCaseStudyMedia => ({
+  ...input,
+  src: trim(input.src),
+  alt: trim(input.alt),
+  kind: input.kind ?? "image",
+  poster: input.poster?.trim(),
+  aspectRatio: input.aspectRatio?.trim(),
+  fit: input.fit ?? "cover",
+});
+
+const defineProjectCaseStudyBlock = (input: ProjectCaseStudyBlock): ProjectCaseStudyBlock => {
+  if (input.type === "text") {
+    return {
+      ...input,
+      id: trim(input.id),
+      header: trim(input.header),
+      body: normalizeStringArray(input.body),
+    };
+  }
+
+  return {
+    ...input,
+    id: trim(input.id),
+    media: defineProjectCaseStudyMedia(input.media),
+    captionTitle: input.captionTitle?.trim(),
+    caption: input.caption?.trim(),
+  };
+};
 
 export const defineSiteMeta = (input: SiteMeta): SiteMeta => {
   assertNonEmpty("siteMeta.ownerName", input.ownerName);
@@ -107,9 +138,7 @@ export const defineProject = (input: ProjectEntry): ProjectEntry => {
       eyebrow: trim(input.hero.eyebrow),
       thesis: trim(input.hero.thesis),
       summary: trim(input.hero.summary),
-      artifactLabel: trim(input.hero.artifactLabel),
-      surfaceLabel: trim(input.hero.surfaceLabel),
-      media: trim(input.hero.media),
+      media: defineProjectCaseStudyMedia(input.hero.media),
     },
     metrics: (input.metrics ?? []).map((metric) => ({
       label: trim(metric.label),
@@ -146,6 +175,11 @@ export const defineProject = (input: ProjectEntry): ProjectEntry => {
       ...credit,
       label: trim(credit.label),
       value: trim(credit.value),
+    })),
+    caseStudyRows: (input.caseStudyRows ?? []).map((row) => ({
+      ...row,
+      id: trim(row.id),
+      blocks: (row.blocks ?? []).map(defineProjectCaseStudyBlock),
     })),
     nextProject: input.nextProject?.trim(),
   };

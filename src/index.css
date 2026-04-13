@@ -2777,7 +2777,7 @@ img.blog-post-cover,
 .research-empty-title {
   margin-top: 0.75rem;
   max-width: 18ch;
-  color: white;
+  color: color-mix(in srgb, var(--research-text) 90%, var(--research-highlight) 10%);
   font-size: clamp(3rem, 7vw, 6.2rem);
   font-weight: 600;
   letter-spacing: -0.05em;
@@ -2801,9 +2801,9 @@ img.blog-post-cover,
   align-items: center;
   gap: 0.4rem;
   border-radius: 999px;
-  background: rgba(2, 6, 23, 0.28);
+  background: color-mix(in srgb, var(--research-surface) 74%, rgba(2, 6, 23, 0.34) 26%);
   padding: 0.58rem 0.86rem;
-  color: white;
+  color: color-mix(in srgb, var(--research-text) 88%, white 12%);
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -2822,10 +2822,48 @@ img.blog-post-cover,
   overflow: hidden;
   border-radius: 2.2rem;
   background:
-    linear-gradient(160deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
-    color-mix(in srgb, var(--research-bg) 68%, rgba(2, 6, 23, 0.9) 32%);
+    linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01)),
+    color-mix(in srgb, var(--research-bg) 56%, rgba(2, 6, 23, 0.92) 44%);
   border: 1px solid color-mix(in srgb, var(--research-highlight) 16%, transparent);
   box-shadow: 0 32px 96px -72px rgba(2, 6, 23, 0.74);
+}
+
+[data-theme="light"] .research-feature-shell,
+[data-theme="light"] .research-article-hero-shell,
+[data-theme="light"] .research-card-shell,
+[data-theme="light"] .research-article-section,
+[data-theme="light"] .research-article-callout,
+[data-theme="light"] .research-article-outline,
+[data-theme="light"] .research-empty-state {
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.16)),
+    color-mix(in srgb, var(--research-bg) 76%, white 24%);
+  border: 1px solid color-mix(in srgb, var(--research-highlight) 18%, transparent);
+  box-shadow: 0 26px 70px -54px rgba(15, 23, 42, 0.26);
+}
+
+[data-theme="light"] .research-hero-page-summary,
+[data-theme="light"] .research-archive-summary,
+[data-theme="light"] .research-empty-copy,
+[data-theme="light"] .research-feature-summary,
+[data-theme="light"] .research-article-summary,
+[data-theme="light"] .research-card-hook,
+[data-theme="light"] .research-card-preview {
+  color: color-mix(in srgb, var(--research-text) 93%, #0f172a 7%);
+}
+
+[data-theme="dark"] .research-feature-shell,
+[data-theme="dark"] .research-article-hero-shell,
+[data-theme="dark"] .research-card-shell,
+[data-theme="dark"] .research-article-section,
+[data-theme="dark"] .research-article-callout,
+[data-theme="dark"] .research-article-outline,
+[data-theme="dark"] .research-empty-state {
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01)),
+    color-mix(in srgb, var(--research-bg) 50%, #020617 50%);
+  border: 1px solid color-mix(in srgb, var(--research-highlight) 20%, transparent);
+  box-shadow: 0 34px 104px -72px rgba(2, 6, 23, 0.82);
 }
 
 .research-feature-shell,
@@ -2874,7 +2912,7 @@ img.blog-post-cover,
 
 .research-feature-title,
 .research-article-title {
-  color: white;
+  color: color-mix(in srgb, var(--research-text) 90%, var(--research-highlight) 10%);
   font-size: clamp(2.4rem, 4.8vw, 5.3rem);
   font-weight: 600;
   letter-spacing: -0.05em;
@@ -2922,7 +2960,7 @@ img.blog-post-cover,
   border: 1px solid color-mix(in srgb, var(--research-highlight) 30%, transparent);
   background: rgba(255, 255, 255, 0.06);
   padding: 0.88rem 1.1rem;
-  color: white;
+  color: color-mix(in srgb, var(--research-text) 92%, var(--research-highlight) 8%);
   font-size: 0.74rem;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -3042,7 +3080,7 @@ img.blog-post-cover,
 }
 
 .research-card-title {
-  color: white;
+  color: color-mix(in srgb, var(--research-text) 90%, var(--research-highlight) 10%);
   font-size: clamp(1.45rem, 1.8vw, 2rem);
   font-weight: 600;
   letter-spacing: -0.04em;
@@ -3192,7 +3230,7 @@ img.blog-post-cover,
 
 .research-article-section-title {
   margin-top: 0.4rem;
-  color: white;
+  color: color-mix(in srgb, var(--research-text) 90%, var(--research-highlight) 10%);
   font-size: clamp(1.7rem, 2.1vw, 2.6rem);
   font-weight: 600;
   letter-spacing: -0.04em;

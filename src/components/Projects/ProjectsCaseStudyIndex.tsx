@@ -51,8 +51,6 @@ const ProjectsCaseStudyIndex: React.FC<ProjectsCaseStudyIndexProps> = ({
         <div className="mt-8 overflow-hidden rounded-[1.8rem] border p-2 sm:p-3" style={routeIndexStyle}>
           <div className="space-y-2">
             {projects.map((project, index) => {
-              const projectMetric = project.metrics[0];
-
               return (
                 <button
                   key={project.id}
@@ -91,20 +89,6 @@ const ProjectsCaseStudyIndex: React.FC<ProjectsCaseStudyIndexProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex shrink-0 items-center justify-between gap-5 sm:justify-end">
-                      <div className="text-left sm:text-right">
-                        <p className="theme-text-primary text-[0.96rem] font-semibold tracking-[-0.03em]">
-                          {projectMetric.value}
-                        </p>
-                        <p className="theme-text-subtle mt-1 text-[0.64rem] uppercase tracking-[0.18em]">
-                          {projectMetric.label}
-                        </p>
-                      </div>
-
-                      <div className="theme-text-subtle text-[0.68rem] font-semibold uppercase tracking-[0.2em] transition-transform duration-200 group-hover:translate-x-1">
-                        Open
-                      </div>
-                    </div>
                   </div>
                 </button>
               );

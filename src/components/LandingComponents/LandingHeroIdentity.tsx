@@ -90,7 +90,7 @@ const LandingHeroIdentityInner: React.FC<LandingHeroIdentityProps> = ({
         </motion.div>
 
         <motion.div
-          className="absolute left-0 top-0 overflow-hidden"
+          className="absolute left-0 top-0 overflow-hidden hidden md:block"
           style={{ opacity: compactOpacity, y: compactY, clipPath: compactClipPath }}
           aria-hidden
         >

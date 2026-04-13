@@ -161,7 +161,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
     <PageScaffold
       backgroundClassName={pageVisuals.landing.backgroundClassName}
       footerBackgroundColor={pageVisuals.landing.footerBackgroundColor}
-      footerRunwayVh={36}
+      footerRunwayVh={56}
     >
       {(scrollRef) => (
         <LandingContent

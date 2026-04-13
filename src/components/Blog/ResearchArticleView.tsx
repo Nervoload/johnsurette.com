@@ -1,22 +1,24 @@
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { BlogPostEntry } from "../../content";
+import { ResolvedThemeMode } from "../theme/themeMode";
 import ResearchAmbientScene from "./ResearchAmbientScene";
 import { getResearchLayoutIds, getResearchThemeStyle } from "./researchVisuals";
 
 interface ResearchArticleViewProps {
   post: BlogPostEntry;
+  themeMode: ResolvedThemeMode;
   onBack: () => void;
 }
 
-const ResearchArticleView: React.FC<ResearchArticleViewProps> = ({ post, onBack }) => {
+const ResearchArticleView: React.FC<ResearchArticleViewProps> = ({ post, themeMode, onBack }) => {
   const layoutIds = getResearchLayoutIds(post.id);
   const prefersReducedMotion = Boolean(useReducedMotion());
 
   return (
     <article
       className={`research-article-page is-${post.visualIdentity.articleTheme}`}
-      style={getResearchThemeStyle(post)}
+      style={getResearchThemeStyle(post, themeMode)}
     >
       <section className="research-article-stage">
         <ResearchAmbientScene post={post} reducedMotion={prefersReducedMotion} />

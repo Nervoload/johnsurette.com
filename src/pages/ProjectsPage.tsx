@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import { getProjectPath, pageVisuals, projectsPageContent } from "../content";
 import DepthRainBackdrop from "../components/LandingComponents/DepthRainBackdrop";
 import LandingOnboardingOverlay from "../components/LandingComponents/onboarding/LandingOnboardingOverlay";
-import ProjectStoryboard from "../components/Projects/ProjectStoryboard";
 import ProjectsCaseStudyIndex from "../components/Projects/ProjectsCaseStudyIndex";
 import { ProjectItem, projectItems } from "../components/Projects/projectData";
 import PageScaffold from "../components/layout/PageScaffold";
@@ -10,6 +9,8 @@ import { WipeOptions } from "../components/Transitions/TransitionWipe";
 import { ResolvedThemeMode } from "../components/theme/themeMode";
 import { createCodexProbeAttributes } from "../devtools/codexContext/probe";
 import { useIsTouch } from "../hooks/usePointerDevice";
+
+const ProjectStoryboard = lazy(() => import("../components/Projects/ProjectStoryboard"));
 
 export interface ProjectsPageProps {
   themeMode: ResolvedThemeMode;
@@ -93,13 +94,28 @@ const ProjectsPage: React.FC<ProjectsPageProps> = ({ themeMode, navInteractionTi
             </header>
 
             <div className="relative mt-10">
-              <ProjectStoryboard
-                scrollContainer={scrollRef}
-                items={projectItems}
-                onCardSelect={handleCardSelect}
-                forceLowPower={bootLowPower}
-                themeMode={themeMode}
-              />
+              <Suspense
+                fallback={
+                  <div className="mx-auto flex min-h-[72svh] w-full max-w-6xl items-center justify-center px-6">
+                    <div className="theme-surface-subtle theme-border-subtle w-full max-w-3xl rounded-[2rem] border px-6 py-12 text-center">
+                      <p className="theme-text-subtle text-[0.72rem] font-semibold uppercase tracking-[0.28em]">
+                        Loading Project Preview
+                      </p>
+                      <p className="theme-text-muted mt-4 text-[0.98rem] leading-relaxed">
+                        Preparing the interactive deck.
+                      </p>
+                    </div>
+                  </div>
+                }
+              >
+                <ProjectStoryboard
+                  scrollContainer={scrollRef}
+                  items={projectItems}
+                  onCardSelect={handleCardSelect}
+                  forceLowPower={bootLowPower}
+                  themeMode={themeMode}
+                />
+              </Suspense>
             </div>
 
             <ProjectsCaseStudyIndex

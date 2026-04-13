@@ -1,6 +1,7 @@
 import React, { RefObject } from "react";
 import { motion, MotionValue, useReducedMotion, useTransform } from "framer-motion";
 import type { BlogPageContent, BlogPostEntry } from "../../content";
+import { ResolvedThemeMode } from "../theme/themeMode";
 import ResearchAmbientScene from "./ResearchAmbientScene";
 import { getResearchLayoutIds, getResearchThemeStyle } from "./researchVisuals";
 
@@ -10,6 +11,7 @@ interface ResearchHeroStageProps {
   postCount: number;
   progress: MotionValue<number>;
   sectionRef: RefObject<HTMLElement>;
+  themeMode: ResolvedThemeMode;
   onOpenArticle: (post: BlogPostEntry) => void;
 }
 
@@ -19,6 +21,7 @@ const ResearchHeroStage: React.FC<ResearchHeroStageProps> = ({
   postCount,
   progress,
   sectionRef,
+  themeMode,
   onOpenArticle,
 }) => {
   const prefersReducedMotion = Boolean(useReducedMotion());
@@ -32,7 +35,7 @@ const ResearchHeroStage: React.FC<ResearchHeroStageProps> = ({
     <section
       ref={sectionRef}
       className="research-hero-section"
-      style={getResearchThemeStyle(post)}
+      style={getResearchThemeStyle(post, themeMode)}
     >
       <div className="research-hero-sticky">
         <motion.div
