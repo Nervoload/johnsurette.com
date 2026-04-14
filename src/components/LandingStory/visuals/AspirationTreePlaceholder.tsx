@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { motion, MotionValue, useAnimationFrame, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, MotionValue, useInView, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import {
   LandingAspirationEdge,
   LandingAspirationNode,
   LandingAspirationOverlayBeat,
   LandingAspirationOverlayBeatId,
 } from "../../../content";
-import { useMediaQuery } from "../../../hooks/useMediaQuery";
+import { useHandheldDevice } from "../../../hooks/useHandheldDevice";
+import { useCompactViewport } from "../../../hooks/useViewport";
 import { ResolvedThemeMode } from "../../theme/themeMode";
 import { useLandingStoryRuntime, useSectionActivity } from "../runtime/LandingStoryRuntime";
 import {
@@ -30,7 +31,6 @@ interface AspirationTreePlaceholderProps {
 
 const ARTBOARD_HEIGHT_MULTIPLIER = 2.08;
 const COMPACT_ARTBOARD_HEIGHT_MULTIPLIER = 1.82;
-const COMPACT_VIEWPORT_MAX = 900;
 const TIMELINE_SCALE = 1.3;
 
 const TIMELINE_VIEWPORT_LENGTHS = {
@@ -777,22 +777,28 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
   overlayBeats,
   themeMode,
 }) => {
-  const { sectionRef, qualityTier, isNearViewport, isPrimaryActive } = useSectionActivity<HTMLDivElement>({
+  const { scrollContainerRef } = useLandingStoryRuntime();
+  const stickyViewportRef = useRef<HTMLDivElement>(null);
+  const stickyViewportActive = useInView(stickyViewportRef, {
+    root: scrollContainerRef,
+    amount: 0.55,
+    margin: "-6% 0px -6% 0px",
+  });
+  const { sectionRef, qualityTier, isNearViewport } = useSectionActivity<HTMLDivElement>({
     nearAmount: 0.08,
     nearMargin: "28% 0px 28% 0px",
     primaryAmount: 0.38,
     primaryMargin: "-14% 0px -14% 0px",
   });
-  const { scrollContainerRef } = useLandingStoryRuntime();
-  const compactViewport = useMediaQuery(`(max-width: ${COMPACT_VIEWPORT_MAX}px)`);
-  const mobileStaticMode = compactViewport;
+  const compactViewport = useCompactViewport();
+  const mobileStaticMode = useHandheldDevice();
   const prefersReducedMotion = Boolean(useReducedMotion()) || qualityTier === "static";
-  const compactExperience = compactViewport || qualityTier !== "high";
-  const fullPointerInteractivity = !mobileStaticMode && !prefersReducedMotion && !compactExperience;
+  const compactExperience = compactViewport;
+  const reducedDensityMode = compactViewport || qualityTier !== "high" || mobileStaticMode;
+  const fullPointerInteractivity = !mobileStaticMode && !prefersReducedMotion;
   const sectionViewportCount = compactExperience ? COMPACT_SECTION_VIEWPORTS : SECTION_VIEWPORTS;
   const artboardHeightMultiplier = compactExperience ? COMPACT_ARTBOARD_HEIGHT_MULTIPLIER : ARTBOARD_HEIGHT_MULTIPLIER;
   const isDarkTheme = themeMode === "dark";
-  const stickyViewportRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const [stickyViewport, setStickyViewport] = useState<StickyViewportMetrics>({ height: 0, width: 0 });
   const rootGroupRef = useRef<SVGGElement | null>(null);
@@ -1003,7 +1009,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
     const nextThreadStates: Record<string, RuntimeThreadState[]> = {};
     trackedEdges.forEach((edge, id) => {
       nextEdgeStates[id] = edgeRuntimeRef.current[id] ?? createEdgeRuntimeState(id, edge.weight);
-      const bundleCount = getRenderedBundleCount(edge, compactExperience);
+      const bundleCount = getRenderedBundleCount(edge, reducedDensityMode);
       const existingThreadStates = threadRuntimeRef.current[id] ?? [];
       nextThreadStates[id] = Array.from({ length: bundleCount }, (_, threadIndex) => (
         existingThreadStates[threadIndex] ?? createThreadRuntimeState(id, threadIndex, edge.weight)
@@ -1017,7 +1023,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
       nextLeafStates[edge.id] = leafRuntimeRef.current[edge.id] ?? createLeafRuntimeState(edge.id);
     });
     leafRuntimeRef.current = nextLeafStates;
-  }, [allLayoutNodes, animatedEdges, compactExperience, layout.edgesByStage]);
+  }, [allLayoutNodes, animatedEdges, layout.edgesByStage, reducedDensityMode]);
 
   useEffect(() => {
     if (!mobileStaticMode) {
@@ -1061,7 +1067,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
         edgeState.pluckEnergy = 0;
       }
 
-      const bundleCount = getRenderedBundleCount(edge, compactExperience);
+      const bundleCount = getRenderedBundleCount(edge, reducedDensityMode);
       const threadRefs = edgeThreadRefs.current[edge.id] ?? [];
       const edgeColor = getEdgeColor(edge);
       for (let threadIndex = 0; threadIndex < bundleCount; threadIndex += 1) {
@@ -1071,14 +1077,13 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
         pathRef.setAttribute("stroke", rgba(edgeColor, edge.faded ? 0.4 : 0.88));
         pathRef.setAttribute(
           "stroke-width",
-          `${aspirationThreadStyles.getThreadWidth(edge.weight, edge.faded) + (compactExperience ? 0.24 : 0)}`,
+          `${aspirationThreadStyles.getThreadWidth(edge.weight, edge.faded) + (reducedDensityMode ? 0.24 : 0)}`,
         );
       }
     });
-  }, [allLayoutNodes, animatedEdges, compactExperience, mobileStaticMode]);
+  }, [allLayoutNodes, animatedEdges, mobileStaticMode, reducedDensityMode]);
 
   const shellOpacity = useTransform(progressUnits, [0, 0.22, RUNWAY_VIEWPORTS], [0.74, 1, 1]);
-  const shellScale = useTransform(progressUnits, [0, TIMELINE.stageFour.end, RUNWAY_VIEWPORTS], [0.992, 1, 1.012]);
   const focusGlowOpacity = useTransform(progressUnits, [0, TIMELINE.stageTwo.mid, RUNWAY_VIEWPORTS], [0.18, 0.34, 0.24]);
   const focusGlowScale = useTransform(progressUnits, [0, TIMELINE.stageThree.mid, RUNWAY_VIEWPORTS], [0.78, 1.02, 1.1]);
   const focusGlowY = useTransform(progressUnits, [0, RUNWAY_VIEWPORTS], [18, -18]);
@@ -1341,9 +1346,9 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
       return;
     }
 
-    const compactImpulse = compactExperience ? 0.22 : 0.34;
+    const compactImpulse = reducedDensityMode ? 0.22 : 0.34;
     nodeState.velocityX += velocityX * compactImpulse;
-    nodeState.velocityY += velocityY * compactImpulse - (compactExperience ? 7.5 : 12);
+    nodeState.velocityY += velocityY * compactImpulse - (reducedDensityMode ? 7.5 : 12);
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -1406,203 +1411,253 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
     }
   }, [fullPointerInteractivity]);
 
-  useAnimationFrame((timeMs, deltaMs) => {
+  useEffect(() => {
+    if (!stickyViewportActive) {
+      resetPointer();
+    }
+  }, [stickyViewportActive]);
+
+  useEffect(() => {
     if (prefersReducedMotion || !isNearViewport || mobileStaticMode) {
       return;
     }
 
-    if (compactExperience) {
-      frameThrottleRef.current = (frameThrottleRef.current + 1) % 2;
-      if (frameThrottleRef.current !== 0) {
-        return;
-      }
-    }
+    let rafId = 0;
+    let lastTime = performance.now();
+    frameThrottleRef.current = 0;
 
-    const dt = Math.min(deltaMs / 1000, compactExperience ? 0.05 : 0.033);
-    const timeSeconds = timeMs / 1000;
-    const pointer = fullPointerInteractivity && isPrimaryActive ? pointerStateRef.current : INACTIVE_POINTER_STATE;
-    const motionIntensity = compactExperience ? 0.58 : !isPrimaryActive ? 0.78 : 1;
+    const tick = (now: number) => {
+      const deltaMs = now - lastTime;
+      lastTime = now;
 
-    const rootState = nodeRuntimeRef.current["aspiration-root"];
-    if (rootState && rootGroupRef.current) {
-      const rootDistance = pointer.inside ? Math.hypot(pointer.svgX - ROOT_POINT.x, pointer.svgY - ROOT_POINT.y) : Number.POSITIVE_INFINITY;
-      const rootHover = clamp01(1 - rootDistance / rootState.hoverRadius);
-      rootState.hoverEnergy = lerp(rootState.hoverEnergy, rootHover, Math.min(dt * 8.5, 1));
-
-      if (!pointer.active || pointer.targetNodeId !== "aspiration-root") {
-        const pushStrength = rootState.hoverEnergy * 42;
-        if (Number.isFinite(rootDistance) && rootDistance > 0.001) {
-          rootState.velocityX += ((ROOT_POINT.x - pointer.svgX) / rootDistance) * pushStrength * dt;
-          rootState.velocityY += ((ROOT_POINT.y - pointer.svgY) / rootDistance) * pushStrength * dt;
+      if (reducedDensityMode) {
+        frameThrottleRef.current = (frameThrottleRef.current + 1) % 2;
+        if (frameThrottleRef.current !== 0) {
+          rafId = window.requestAnimationFrame(tick);
+          return;
         }
-      } else {
-        rootState.velocityX += ((pointer.svgX - ROOT_POINT.x) * 0.86 - rootState.offsetX) * dt * 22;
-        rootState.velocityY += ((pointer.svgY - ROOT_POINT.y) * 0.86 - rootState.offsetY) * dt * 22;
       }
 
-      rootState.velocityX += (-rootState.offsetX * rootState.spring - rootState.velocityX * rootState.damping) * dt;
-      rootState.velocityY += (-rootState.offsetY * rootState.spring - rootState.velocityY * rootState.damping) * dt;
-      rootState.offsetX += rootState.velocityX * dt;
-      rootState.offsetY += rootState.velocityY * dt;
+      const dt = Math.min(deltaMs / 1000, reducedDensityMode ? 0.05 : 0.033);
+      const timeSeconds = now / 1000;
+      const pointer = fullPointerInteractivity && stickyViewportActive ? pointerStateRef.current : INACTIVE_POINTER_STATE;
+      const motionIntensity = reducedDensityMode ? 0.58 : !stickyViewportActive ? 0.78 : 1;
 
-      const rootPoint = {
-        x: ROOT_POINT.x + Math.sin(timeSeconds * rootState.floatFreqX + rootState.phase) * rootState.floatAmpX * motionIntensity + rootState.offsetX,
-        y: ROOT_POINT.y + Math.cos(timeSeconds * rootState.floatFreqY + rootState.phase * 1.2) * rootState.floatAmpY * motionIntensity + rootState.offsetY,
-      };
+      const rootState = nodeRuntimeRef.current["aspiration-root"];
+      if (rootState && rootGroupRef.current) {
+        const rootDistance = pointer.inside
+          ? Math.hypot(pointer.svgX - ROOT_POINT.x, pointer.svgY - ROOT_POINT.y)
+          : Number.POSITIVE_INFINITY;
+        const rootHover = clamp01(1 - rootDistance / rootState.hoverRadius);
+        rootState.hoverEnergy = lerp(rootState.hoverEnergy, rootHover, Math.min(dt * 8.5, 1));
 
-      currentNodePointsRef.current["aspiration-root"] = rootPoint;
-      rootGroupRef.current.setAttribute("transform", `translate(${rootPoint.x - ROOT_POINT.x} ${rootPoint.y - ROOT_POINT.y})`);
-    }
-
-    allLayoutNodes.forEach((node) => {
-      const id = node.id as SceneNodeId;
-      const state = nodeRuntimeRef.current[id];
-      if (!state) {
-        return;
-      }
-
-      const currentPoint = currentNodePointsRef.current[id] ?? node.point;
-      const distance = pointer.inside
-        ? Math.hypot(pointer.svgX - currentPoint.x, pointer.svgY - currentPoint.y)
-        : Number.POSITIVE_INFINITY;
-      const hoverStrength = clamp01(1 - distance / state.hoverRadius);
-      state.hoverEnergy = lerp(state.hoverEnergy, hoverStrength, Math.min(dt * 8.4, 1));
-
-      if (!pointer.active || pointer.targetNodeId !== id) {
-        const pushStrength = state.hoverEnergy * (node.stage === 3 ? 46 : 40);
-        if (Number.isFinite(distance) && distance > 0.001) {
-          state.velocityX += ((currentPoint.x - pointer.svgX) / distance) * pushStrength * dt;
-          state.velocityY += ((currentPoint.y - pointer.svgY) / distance) * pushStrength * dt;
-        }
-      } else {
-        state.velocityX += ((pointer.svgX - node.point.x) * 0.82 - state.offsetX) * dt * 20;
-        state.velocityY += ((pointer.svgY - node.point.y) * 0.82 - state.offsetY) * dt * 20;
-      }
-
-      state.velocityX += (-state.offsetX * state.spring - state.velocityX * state.damping) * dt;
-      state.velocityY += (-state.offsetY * state.spring - state.velocityY * state.damping) * dt;
-      state.offsetX += state.velocityX * dt;
-      state.offsetY += state.velocityY * dt;
-
-      const floatX = Math.sin(timeSeconds * state.floatFreqX + state.phase) * state.floatAmpX * motionIntensity;
-      const floatY = Math.cos(timeSeconds * state.floatFreqY + state.phase * 1.18) * state.floatAmpY * motionIntensity;
-      const nextPoint = {
-        x: node.point.x + floatX + state.offsetX,
-        y: node.point.y + floatY + state.offsetY,
-      };
-
-      currentNodePointsRef.current[id] = nextPoint;
-
-      const groupTransform = `translate(${nextPoint.x - node.point.x} ${nextPoint.y - node.point.y})`;
-      labelRefs.current[id]?.setAttribute("transform", groupTransform);
-      nodeRefs.current[id]?.setAttribute("transform", groupTransform);
-    });
-
-    animatedEdges.forEach((edge) => {
-      const edgeState = edgeRuntimeRef.current[edge.id];
-      if (!edgeState) {
-        return;
-      }
-
-      const fromPoint =
-        edge.from === "aspiration-root"
-          ? currentNodePointsRef.current["aspiration-root"] ?? ROOT_POINT
-          : currentNodePointsRef.current[edge.from as SceneNodeId] ?? edge.fromPoint;
-
-      let toPoint: Point;
-      if (edge.stage === 5) {
-        const leafState = leafRuntimeRef.current[edge.id];
-        if (!leafState) {
-          toPoint = edge.toPoint;
+        if (!pointer.active || pointer.targetNodeId !== "aspiration-root") {
+          const pushStrength = rootState.hoverEnergy * 42;
+          if (Number.isFinite(rootDistance) && rootDistance > 0.001) {
+            rootState.velocityX += ((ROOT_POINT.x - pointer.svgX) / rootDistance) * pushStrength * dt;
+            rootState.velocityY += ((ROOT_POINT.y - pointer.svgY) / rootDistance) * pushStrength * dt;
+          }
         } else {
-          toPoint = {
-            x: edge.toPoint.x + Math.sin(timeSeconds * leafState.swayFreqX + leafState.phase) * leafState.swayAmpX * motionIntensity,
-            y: edge.toPoint.y + Math.cos(timeSeconds * leafState.swayFreqY + leafState.phase * 1.22) * leafState.swayAmpY * motionIntensity,
-          };
+          rootState.velocityX += ((pointer.svgX - ROOT_POINT.x) * 0.86 - rootState.offsetX) * dt * 22;
+          rootState.velocityY += ((pointer.svgY - ROOT_POINT.y) * 0.86 - rootState.offsetY) * dt * 22;
         }
-      } else {
-        toPoint = currentNodePointsRef.current[edge.to as SceneNodeId] ?? edge.toPoint;
+
+        rootState.velocityX += (-rootState.offsetX * rootState.spring - rootState.velocityX * rootState.damping) * dt;
+        rootState.velocityY += (-rootState.offsetY * rootState.spring - rootState.velocityY * rootState.damping) * dt;
+        rootState.offsetX += rootState.velocityX * dt;
+        rootState.offsetY += rootState.velocityY * dt;
+
+        const rootPoint = {
+          x:
+            ROOT_POINT.x +
+            Math.sin(timeSeconds * rootState.floatFreqX + rootState.phase) * rootState.floatAmpX * motionIntensity +
+            rootState.offsetX,
+          y:
+            ROOT_POINT.y +
+            Math.cos(timeSeconds * rootState.floatFreqY + rootState.phase * 1.2) * rootState.floatAmpY * motionIntensity +
+            rootState.offsetY,
+        };
+
+        currentNodePointsRef.current["aspiration-root"] = rootPoint;
+        rootGroupRef.current.setAttribute("transform", `translate(${rootPoint.x - ROOT_POINT.x} ${rootPoint.y - ROOT_POINT.y})`);
       }
 
-      const baseCurve = buildDynamicCurve(fromPoint, toPoint, edge, edgeState, timeSeconds, pointer);
-      const edgeDistance = pointer.inside ? distanceToCurve({ x: pointer.svgX, y: pointer.svgY }, baseCurve, fromPoint, toPoint) : Number.POSITIVE_INFINITY;
-      const proximityRadius = edge.weight === "trunk" ? 92 : edge.weight === "branch" ? 72 : 58;
-      const pointerSpeed = Math.hypot(pointer.velocityX, pointer.velocityY);
-      const targetEdgeEnergy = clamp01(1 - edgeDistance / proximityRadius) * (pointer.active ? 1.38 : 1.02);
-      edgeState.pointerEnergy = lerp(edgeState.pointerEnergy, targetEdgeEnergy, Math.min(dt * 6.8, 1));
-      edgeState.pluckEnergy = Math.max(0, edgeState.pluckEnergy - edgeState.pluckDecay * dt);
-
-      if (pointer.inside) {
-        const pluckRadius = edge.weight === "trunk" ? 74 : edge.weight === "branch" ? 58 : 44;
-        const pluckProximity = clamp01(1 - edgeDistance / pluckRadius);
-        const motionImpact = clamp01((pointerSpeed - 4) / (edge.weight === "trunk" ? 18 : edge.weight === "branch" ? 16 : 13));
-
-        if (pluckProximity > 0 && motionImpact > 0) {
-          const dx = toPoint.x - fromPoint.x;
-          const dy = toPoint.y - fromPoint.y;
-          const distance = Math.hypot(dx, dy) || 1;
-          const normalX = -dy / distance;
-          const normalY = dx / distance;
-          const projectedVelocity = pointer.velocityX * normalX + pointer.velocityY * normalY;
-          const impulseStrength = pluckProximity * motionImpact * (pointer.active ? 1.34 : 1.08);
-
-          edgeState.pluckDirection = projectedVelocity >= 0 ? 1 : -1;
-          edgeState.pluckTime = timeSeconds;
-          edgeState.pluckEnergy = Math.max(edgeState.pluckEnergy, impulseStrength);
+      allLayoutNodes.forEach((node) => {
+        const id = node.id as SceneNodeId;
+        const state = nodeRuntimeRef.current[id];
+        if (!state) {
+          return;
         }
-      }
 
-      const animatedBaseCurve = buildDynamicCurve(fromPoint, toPoint, edge, edgeState, timeSeconds, pointer);
-      const edgeColor = getEdgeColor(edge);
-      const threadRefs = edgeThreadRefs.current[edge.id] ?? [];
-      const bundleCount = getRenderedBundleCount(edge, compactExperience);
-      const threadStates = threadRuntimeRef.current[edge.id] ?? [];
+        const currentPoint = currentNodePointsRef.current[id] ?? node.point;
+        const distance = pointer.inside
+          ? Math.hypot(pointer.svgX - currentPoint.x, pointer.svgY - currentPoint.y)
+          : Number.POSITIVE_INFINITY;
+        const hoverStrength = clamp01(1 - distance / state.hoverRadius);
+        state.hoverEnergy = lerp(state.hoverEnergy, hoverStrength, Math.min(dt * 8.4, 1));
 
-      for (let threadIndex = 0; threadIndex < bundleCount; threadIndex += 1) {
-        const pathRef = threadRefs[threadIndex];
-        if (!pathRef) continue;
-        const threadState =
-          threadStates[threadIndex] ?? createThreadRuntimeState(edge.id, threadIndex, edge.weight);
-        threadStates[threadIndex] = threadState;
+        if (!pointer.active || pointer.targetNodeId !== id) {
+          const pushStrength = state.hoverEnergy * (node.stage === 3 ? 46 : 40);
+          if (Number.isFinite(distance) && distance > 0.001) {
+            state.velocityX += ((currentPoint.x - pointer.svgX) / distance) * pushStrength * dt;
+            state.velocityY += ((currentPoint.y - pointer.svgY) / distance) * pushStrength * dt;
+          }
+        } else {
+          state.velocityX += ((pointer.svgX - node.point.x) * 0.82 - state.offsetX) * dt * 20;
+          state.velocityY += ((pointer.svgY - node.point.y) * 0.82 - state.offsetY) * dt * 20;
+        }
 
-        const threadCurve = buildThreadCurve(
-          fromPoint,
-          toPoint,
-          animatedBaseCurve,
-          edge,
-          edgeState,
-          threadState,
-          timeSeconds,
-          pointer,
-          threadIndex,
-          bundleCount,
-        );
+        state.velocityX += (-state.offsetX * state.spring - state.velocityX * state.damping) * dt;
+        state.velocityY += (-state.offsetY * state.spring - state.velocityY * state.damping) * dt;
+        state.offsetX += state.velocityX * dt;
+        state.offsetY += state.velocityY * dt;
 
-        pathRef.setAttribute("d", threadCurve.d);
-        pathRef.setAttribute("stroke", rgba(edgeColor, edge.faded ? 0.4 : 0.88 + edgeState.pointerEnergy * 0.08));
-        pathRef.setAttribute(
-          "stroke-width",
-          `${aspirationThreadStyles.getThreadWidth(edge.weight, edge.faded) + (compactExperience ? 0.24 : 0) + edgeState.pointerEnergy * 0.78 + edgeState.pluckEnergy * 0.42}`,
-        );
-      }
-    });
-  });
+        const floatX = Math.sin(timeSeconds * state.floatFreqX + state.phase) * state.floatAmpX * motionIntensity;
+        const floatY = Math.cos(timeSeconds * state.floatFreqY + state.phase * 1.18) * state.floatAmpY * motionIntensity;
+        const nextPoint = {
+          x: node.point.x + floatX + state.offsetX,
+          y: node.point.y + floatY + state.offsetY,
+        };
+
+        currentNodePointsRef.current[id] = nextPoint;
+
+        const groupTransform = `translate(${nextPoint.x - node.point.x} ${nextPoint.y - node.point.y})`;
+        labelRefs.current[id]?.setAttribute("transform", groupTransform);
+        nodeRefs.current[id]?.setAttribute("transform", groupTransform);
+      });
+
+      animatedEdges.forEach((edge) => {
+        const edgeState = edgeRuntimeRef.current[edge.id];
+        if (!edgeState) {
+          return;
+        }
+
+        const fromPoint =
+          edge.from === "aspiration-root"
+            ? currentNodePointsRef.current["aspiration-root"] ?? ROOT_POINT
+            : currentNodePointsRef.current[edge.from as SceneNodeId] ?? edge.fromPoint;
+
+        let toPoint: Point;
+        if (edge.stage === 5) {
+          const leafState = leafRuntimeRef.current[edge.id];
+          if (!leafState) {
+            toPoint = edge.toPoint;
+          } else {
+            toPoint = {
+              x: edge.toPoint.x + Math.sin(timeSeconds * leafState.swayFreqX + leafState.phase) * leafState.swayAmpX * motionIntensity,
+              y: edge.toPoint.y + Math.cos(timeSeconds * leafState.swayFreqY + leafState.phase * 1.22) * leafState.swayAmpY * motionIntensity,
+            };
+          }
+        } else {
+          toPoint = currentNodePointsRef.current[edge.to as SceneNodeId] ?? edge.toPoint;
+        }
+
+        const baseCurve = buildDynamicCurve(fromPoint, toPoint, edge, edgeState, timeSeconds, pointer);
+        const edgeDistance = pointer.inside
+          ? distanceToCurve({ x: pointer.svgX, y: pointer.svgY }, baseCurve, fromPoint, toPoint)
+          : Number.POSITIVE_INFINITY;
+        const proximityRadius = edge.weight === "trunk" ? 92 : edge.weight === "branch" ? 72 : 58;
+        const pointerSpeed = Math.hypot(pointer.velocityX, pointer.velocityY);
+        const targetEdgeEnergy = clamp01(1 - edgeDistance / proximityRadius) * (pointer.active ? 1.38 : 1.02);
+        edgeState.pointerEnergy = lerp(edgeState.pointerEnergy, targetEdgeEnergy, Math.min(dt * 6.8, 1));
+        edgeState.pluckEnergy = Math.max(0, edgeState.pluckEnergy - edgeState.pluckDecay * dt);
+
+        if (pointer.inside) {
+          const pluckRadius = edge.weight === "trunk" ? 74 : edge.weight === "branch" ? 58 : 44;
+          const pluckProximity = clamp01(1 - edgeDistance / pluckRadius);
+          const motionImpact = clamp01((pointerSpeed - 4) / (edge.weight === "trunk" ? 18 : edge.weight === "branch" ? 16 : 13));
+
+          if (pluckProximity > 0 && motionImpact > 0) {
+            const dx = toPoint.x - fromPoint.x;
+            const dy = toPoint.y - fromPoint.y;
+            const distance = Math.hypot(dx, dy) || 1;
+            const normalX = -dy / distance;
+            const normalY = dx / distance;
+            const projectedVelocity = pointer.velocityX * normalX + pointer.velocityY * normalY;
+            const impulseStrength = pluckProximity * motionImpact * (pointer.active ? 1.34 : 1.08);
+
+            edgeState.pluckDirection = projectedVelocity >= 0 ? 1 : -1;
+            edgeState.pluckTime = timeSeconds;
+            edgeState.pluckEnergy = Math.max(edgeState.pluckEnergy, impulseStrength);
+          }
+        }
+
+        const animatedBaseCurve = buildDynamicCurve(fromPoint, toPoint, edge, edgeState, timeSeconds, pointer);
+        const edgeColor = getEdgeColor(edge);
+        const threadRefs = edgeThreadRefs.current[edge.id] ?? [];
+        const bundleCount = getRenderedBundleCount(edge, reducedDensityMode);
+        const threadStates = threadRuntimeRef.current[edge.id] ?? [];
+
+        for (let threadIndex = 0; threadIndex < bundleCount; threadIndex += 1) {
+          const pathRef = threadRefs[threadIndex];
+          if (!pathRef) continue;
+          const threadState =
+            threadStates[threadIndex] ?? createThreadRuntimeState(edge.id, threadIndex, edge.weight);
+          threadStates[threadIndex] = threadState;
+
+          const threadCurve = buildThreadCurve(
+            fromPoint,
+            toPoint,
+            animatedBaseCurve,
+            edge,
+            edgeState,
+            threadState,
+            timeSeconds,
+            pointer,
+            threadIndex,
+            bundleCount,
+          );
+
+          pathRef.setAttribute("d", threadCurve.d);
+          pathRef.setAttribute("stroke", rgba(edgeColor, edge.faded ? 0.4 : 0.88 + edgeState.pointerEnergy * 0.08));
+          pathRef.setAttribute(
+            "stroke-width",
+            `${aspirationThreadStyles.getThreadWidth(edge.weight, edge.faded) + (reducedDensityMode ? 0.24 : 0) + edgeState.pointerEnergy * 0.78 + edgeState.pluckEnergy * 0.42}`,
+          );
+        }
+      });
+
+      rafId = window.requestAnimationFrame(tick);
+    };
+
+    rafId = window.requestAnimationFrame(tick);
+    return () => {
+      window.cancelAnimationFrame(rafId);
+    };
+  }, [
+    allLayoutNodes,
+    animatedEdges,
+    fullPointerInteractivity,
+    isNearViewport,
+    mobileStaticMode,
+    prefersReducedMotion,
+    reducedDensityMode,
+    stickyViewportActive,
+  ]);
 
   return (
     <div
       className="theme-story-contrast-label relative"
       ref={sectionRef as React.RefObject<HTMLDivElement>}
-      style={{ height: `${sectionViewportCount * 100}dvh` }}
+      style={{ height: `${sectionViewportCount * 100}svh` }}
     >
       <div className="theme-story-contrast-backdrop absolute inset-0" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(34,211,238,0.16),transparent_18%),radial-gradient(circle_at_50%_56%,rgba(168,85,247,0.12),transparent_26%)]" />
       <div className="theme-story-contrast-top-fade pointer-events-none absolute inset-x-0 top-0 h-28" />
       <div className="theme-story-contrast-bottom-fade pointer-events-none absolute inset-x-0 bottom-0 h-28" />
 
-      <div ref={stickyViewportRef} className="sticky top-0 flex h-[100dvh] items-center justify-center overflow-hidden">
+      <div ref={stickyViewportRef} className="sticky top-0 flex h-[100svh] items-center justify-center overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0"
+          style={{ top: "-12svh", bottom: "-12svh" }}
+        >
+          <div className="theme-story-contrast-backdrop absolute inset-0" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(34,211,238,0.16),transparent_18%),radial-gradient(circle_at_50%_56%,rgba(168,85,247,0.12),transparent_26%)]" />
+        </div>
         <motion.div
           className="relative h-full w-full overflow-hidden px-4 sm:px-6 lg:px-10"
-          style={{ opacity: shellOpacity, scale: shellScale }}
+          style={{ opacity: shellOpacity }}
         >
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             <div className="absolute left-1/2 top-[10%] h-52 w-52 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
@@ -1660,7 +1715,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                         {layout.edgesByStage[1].map((edge) => (
                           <EdgeBundle
                             color={getEdgeColor(edge)}
-                            compactMode={compactExperience}
+                            compactMode={reducedDensityMode}
                             edge={edge}
                             key={edge.id}
                             reveal={stageOneReveal}
@@ -1687,7 +1742,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                         {layout.edgesByStage[2].map((edge) => (
                           <EdgeBundle
                             color={getEdgeColor(edge)}
-                            compactMode={compactExperience}
+                            compactMode={reducedDensityMode}
                             edge={edge}
                             key={edge.id}
                             reveal={stageTwoReveal}
@@ -1714,7 +1769,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                         {layout.edgesByStage[3].map((edge) => (
                           <EdgeBundle
                             color={getEdgeColor(edge)}
-                            compactMode={compactExperience}
+                            compactMode={reducedDensityMode}
                             edge={edge}
                             key={edge.id}
                             reveal={stageThreeReveal}
@@ -1741,7 +1796,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                         {layout.edgesByStage[4].map((edge) => (
                           <EdgeBundle
                             color={getEdgeColor(edge)}
-                            compactMode={compactExperience}
+                            compactMode={reducedDensityMode}
                             edge={edge}
                             key={edge.id}
                             reveal={stageFourReveal}
@@ -1768,7 +1823,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                         {layout.edgesByStage[5].map((edge) => (
                           <EdgeBundle
                             color={getEdgeColor(edge)}
-                            compactMode={compactExperience}
+                            compactMode={reducedDensityMode}
                             edge={edge}
                             key={edge.id}
                             reveal={leafReveal}
@@ -1861,7 +1916,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
 
 const AspirationTreePlaceholder: React.FC<AspirationTreePlaceholderProps> = (props) => {
   const { scrollContainerRef } = useLandingStoryRuntime();
-  const compactViewport = useMediaQuery(`(max-width: ${COMPACT_VIEWPORT_MAX}px)`);
+  const compactViewport = useCompactViewport();
   const [containerReady, setContainerReady] = useState(false);
 
   useEffect(() => {
@@ -1880,7 +1935,7 @@ const AspirationTreePlaceholder: React.FC<AspirationTreePlaceholderProps> = (pro
 
   if (!containerReady) {
     const sectionViewportCount = compactViewport ? COMPACT_SECTION_VIEWPORTS : SECTION_VIEWPORTS;
-    return <div className="theme-story-contrast-label relative" style={{ height: `${sectionViewportCount * 100}dvh` }} />;
+    return <div className="theme-story-contrast-label relative" style={{ height: `${sectionViewportCount * 100}svh` }} />;
   }
 
   return <AspirationTreeInner {...props} />;

@@ -107,9 +107,9 @@ const LandingOnboardingOverlay: React.FC<LandingOnboardingOverlayProps> = ({
     <div className="pointer-events-none absolute inset-0 z-[60]" aria-hidden>
       <div className="sticky top-0 h-[100dvh] w-full">
         <Cue
-          state={hints.navState}
+          state={!isTouch ? hints.navState : "hidden"}
           anchorClassName="absolute inset-x-0 top-0 hidden sm:flex justify-center pt-[max(0.85rem,env(safe-area-inset-top))]"
-          label={navLabel ?? (isTouch ? "Tap or drag up" : "Hover for more")}
+          label={navLabel ?? "Hover for more"}
           direction="up"
         />
 

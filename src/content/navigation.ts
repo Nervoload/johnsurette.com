@@ -79,18 +79,18 @@ export const navigationItems = [
     routeEnabled: false,
   }),
   defineRoute({
-    id: "contact",
-    label: "Connect",
-    color: "#08c5ff",
-    path: "/contact",
-    description: "Ways to contact and follow.",
-  }),
-  defineRoute({
     id: "blog",
     label: "Research Blog",
     color: "#da08ff",
     path: "/blog",
     description: "Essays, notes, and experiments.",
+  }),
+  defineRoute({
+    id: "contact",
+    label: "Connect",
+    color: "#08c5ff",
+    path: "/contact",
+    description: "Ways to contact and follow.",
   }),
 ] satisfies NavigationItem[];
 

@@ -53,17 +53,6 @@ const ComputationalSystemsSection: React.FC<ComputationalSystemsSectionProps> = 
             <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(148,163,184,0.05)_1px,transparent_1px),linear-gradient(rgba(148,163,184,0.04)_1px,transparent_1px)] [background-size:36px_36px] opacity-20" />
             <div className="theme-story-contrast-top-fade absolute inset-x-0 top-0 h-24" />
             <div className="theme-story-contrast-bottom-fade absolute inset-x-0 bottom-0 h-24" />
-
-            <div className="absolute inset-x-6 bottom-6 flex flex-wrap gap-2 sm:inset-x-8 sm:bottom-8">
-              {["small network", "large model", "brain-like dynamics"].map((label) => (
-                <span
-                  key={label}
-                  className="theme-story-contrast-chip rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] backdrop-blur-sm"
-                >
-                  {label}
-                </span>
-              ))}
-            </div>
           </div>
         </motion.div>
 
@@ -139,7 +128,7 @@ const ComputationalSystemsSection: React.FC<ComputationalSystemsSectionProps> = 
             </button>
 
             <span className="theme-story-contrast-muted max-w-[20rem] text-xs uppercase tracking-[0.26em] sm:max-w-none">
-              signal processing • inference • emergent structure
+              modelling • product development • system simulation
             </span>
           </motion.div>
         </motion.div>

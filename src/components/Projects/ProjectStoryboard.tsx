@@ -6,7 +6,7 @@ import { ProjectItem } from "./projectData";
 import { ResolvedThemeMode } from "../theme/themeMode";
 import { createCodexProbeAttributes } from "../../devtools/codexContext/probe";
 import { upsertRuntimeContextEntry, removeRuntimeContextEntry } from "../../devtools/codexContext/runtimeRegistry";
-import { useMediaQuery } from "../../hooks/useMediaQuery";
+import { useCompactViewport } from "../../hooks/useViewport";
 import { getProjectStoryboardPhaseLabel } from "./storyboardPhase";
 import { getProjectLatePhaseTiming, getProjectRawLatePhaseBoundaries, getProjectStoryboardHeight } from "./storyboardTiming";
 
@@ -89,7 +89,7 @@ const ProjectStoryboard: React.FC<ProjectStoryboardProps> = ({
   const sceneRef = useRef<HTMLDivElement>(null);
   const rawRef = useRef(0);
   const snapFramesRef = useRef(0);
-  const compactViewport = useMediaQuery("(max-width: 900px)");
+  const compactViewport = useCompactViewport();
   const storyboardHeight = getProjectStoryboardHeight(items.length, compactViewport);
   const runtimeContextId = "projects:storyboard-scroll";
 

@@ -5,7 +5,7 @@ import * as THREE from "three";
 import CanvasErrorBoundary from "../CanvasErrorBoundary";
 import SceneBloom from "./SceneBloom";
 import { ResolvedThemeMode } from "../theme/themeMode";
-import { useMediaQuery } from "../../hooks/useMediaQuery";
+import { useCompactViewport } from "../../hooks/useViewport";
 import {
   removeRuntimeContextEntry,
   upsertRuntimeContextEntry,
@@ -36,7 +36,7 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
   children,
 }) => {
   const sectionRef = useRef<HTMLElement | null>(null);
-  const mobileViewport = useMediaQuery("(max-width: 900px)");
+  const mobileViewport = useCompactViewport();
   const reducedMotionMode = Boolean(useReducedMotion());
   const sceneActive = useInView(sectionRef, {
     root: scrollContainer,
@@ -45,6 +45,7 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
   });
   const effectiveLowPowerMode = reducedMotionMode || forceLowPower;
   const compactRenderMode = effectiveLowPowerMode || mobileViewport;
+  const reducedCanvasQuality = effectiveLowPowerMode;
   const renderHeight = height;
   const fogColor = useMemo(() => {
     return themeMode === "dark" ? "#0b1326" : "#eef4fb";
@@ -91,13 +92,13 @@ const StoryboardSection: React.FC<StoryboardSectionProps> = ({
           <Canvas
             className="absolute inset-0 h-full w-full"
             camera={{ position: [0, 0.14, 6.15], fov: 43 }}
-            dpr={compactRenderMode ? [0.85, 1.15] : [1, 2]}
+            dpr={reducedCanvasQuality ? [0.85, 1.15] : [1, 2]}
             frameloop={sceneActive ? "always" : "never"}
             shadows={false}
             gl={{
               preserveDrawingBuffer: false,
-              antialias: !compactRenderMode,
-              powerPreference: compactRenderMode ? "low-power" : "high-performance",
+              antialias: !reducedCanvasQuality,
+              powerPreference: reducedCanvasQuality ? "low-power" : "high-performance",
               alpha: true,
             }}
             onCreated={({ gl }) => {

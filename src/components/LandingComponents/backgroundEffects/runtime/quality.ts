@@ -1,4 +1,5 @@
 import { BackgroundQualityPreset } from "../types";
+import { getViewportMetrics, isCompactViewport } from "../../../../hooks/useViewport";
 
 export const BACKGROUND_QUALITY_FACTORS: Record<BackgroundQualityPreset, number> = {
   mobile: 0.55,
@@ -15,10 +16,7 @@ export const resolveBackgroundQuality = (requested?: BackgroundQualityPreset): B
     return "balanced";
   }
 
-  const compact = window.matchMedia("(max-width: 820px)").matches;
-  const coarse = window.matchMedia("(pointer: coarse)").matches;
-
-  return compact || coarse ? "mobile" : "balanced";
+  return isCompactViewport(getViewportMetrics()) ? "mobile" : "balanced";
 };
 
 export const qualityFactor = (quality: BackgroundQualityPreset): number => {

@@ -14,10 +14,8 @@ import { useThemeMode } from "./components/theme/useThemeMode";
 import CodexContextInspector from "./devtools/codexContext/CodexContextInspector";
 
 const LandingPage = lazy(() => import("./pages/LandingPage"));
-const OriginStoryPage = lazy(() => import("./pages/OriginStoryPage"));
 const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
 const ProjectCaseStudyPage = lazy(() => import("./pages/ProjectCaseStudyPage"));
-const AboutPage = lazy(() => import("./pages/AboutPage"));
 const BlogPage = lazy(() => import("./pages/BlogPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 
@@ -166,38 +164,6 @@ function App() {
     setNavInteractionTick((prev) => prev + 1);
   }, []);
 
-  const handleEnterOriginExperience = useCallback(() => {
-    return navigate("/origin", {
-      color: ORIGIN_DEV_ROUTE.color,
-      direction: "down",
-      intensity: "lite",
-      duration: 640,
-    });
-  }, [navigate]);
-
-  const handleOriginExitToHero = useCallback(() => {
-    const accepted = navigate("/", {
-      color: "#dbeafe",
-      direction: "up",
-      intensity: "lite",
-      duration: 640,
-    });
-    if (accepted) {
-      setLandingEntry("hero");
-    }
-  }, [navigate, setLandingEntry]);
-
-  const handleOriginExitToConclusion = useCallback(() => {
-    const accepted = navigate("/", {
-      color: "#ddd6fe",
-      direction: "up",
-      intensity: "lite",
-      duration: 660,
-    });
-    if (accepted) {
-      setLandingEntry("conclusion");
-    }
-  }, [navigate, setLandingEntry]);
 
   const pageNode = useMemo(() => {
     if (path === "/") {
@@ -206,21 +172,12 @@ function App() {
           onNavigate={navigate}
           shadowMode={resolvedMode}
           navInteractionTick={navInteractionTick}
-          onEnterOriginExperience={handleEnterOriginExperience}
           entryTarget={landingEntryTarget}
           entryNonce={landingEntryNonce}
         />
       );
     }
 
-    if (path === "/origin") {
-      return (
-        <OriginStoryPage
-          onExitToLandingHero={handleOriginExitToHero}
-          onExitToLandingConclusion={handleOriginExitToConclusion}
-        />
-      );
-    }
 
     const projectSlug = getProjectSlugFromPath(path);
 
@@ -230,10 +187,6 @@ function App() {
 
     if (projectSlug) {
       return <ProjectCaseStudyPage slug={projectSlug} onNavigate={navigate} themeMode={resolvedMode} />;
-    }
-
-    if (path === "/about") {
-      return <AboutPage onNavigate={navigate} themeMode={resolvedMode} />;
     }
 
     if (path === "/contact") {
@@ -251,15 +204,11 @@ function App() {
         onNavigate={navigate}
         shadowMode={resolvedMode}
         navInteractionTick={navInteractionTick}
-        onEnterOriginExperience={handleEnterOriginExperience}
         entryTarget={landingEntryTarget}
         entryNonce={landingEntryNonce}
       />
     );
   }, [
-    handleEnterOriginExperience,
-    handleOriginExitToConclusion,
-    handleOriginExitToHero,
     landingEntryNonce,
     landingEntryTarget,
     navInteractionTick,

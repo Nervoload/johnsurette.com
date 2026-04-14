@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { SiteRoute } from "../sections";
 import { WipeOptions } from "../Transitions/TransitionWipe";
 import { useIsTouch } from "../../hooks/usePointerDevice";
+import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { ResolvedThemeMode } from "../theme/themeMode";
 import {
   removeRuntimeContextEntry,
@@ -18,13 +19,7 @@ export interface NavBarProps {
   onHintNavInteraction?: (kind: "hover-zone" | "menu-toggle") => void;
 }
 
-const compactLabel = (label: string): string => {
-  if (label === "Overview") return "Home";
-  if (label === "My Projects") return "Projects";
-  if (label === "My Story") return "Story";
-  if (label === "Research Blog") return "Blog";
-  return label;
-};
+const DRAWER_BREAKPOINT_QUERY = "(max-width: 1100px)";
 
 const SunGlyph: React.FC = () => {
   return (
@@ -100,18 +95,26 @@ const NavBar: React.FC<NavBarProps> = ({
   const [open, setOpen] = useState(false);
   const [hoveringTop, setHoveringTop] = useState(false);
   const isTouch = useIsTouch();
+  const compactViewport = useMediaQuery(DRAWER_BREAKPOINT_QUERY);
   const prefersReducedMotion = useReducedMotion();
   const isLandingPage = currentPath === "/";
+  const useDrawerNav = isTouch || compactViewport;
 
-  // On touch devices the hover zone does nothing — only hamburger toggles.
-  // On desktop the nav appears on hover OR toggle.
-  const visible = open || (!isTouch && hoveringTop);
+  // On desktop the nav appears on hover or toggle. On smaller screens it becomes
+  // a dedicated drawer so labels never wrap into a second line.
+  const visible = useDrawerNav ? open : open || hoveringTop;
   const dormantChrome = isLandingPage && !visible;
 
   // Close nav when route changes (important on mobile after tapping a link)
   useEffect(() => {
     setOpen(false);
   }, [currentPath]);
+
+  useEffect(() => {
+    if (useDrawerNav) {
+      setHoveringTop(false);
+    }
+  }, [useDrawerNav]);
 
   useEffect(() => {
     if (!import.meta.env.DEV) return;
@@ -129,15 +132,15 @@ const NavBar: React.FC<NavBarProps> = ({
         open,
         visible,
         isTouch,
+        useDrawerNav,
       },
     });
 
     return () => {
       removeRuntimeContextEntry(currentPath, contextId);
     };
-  }, [currentPath, isTouch, open, visible]);
+  }, [currentPath, isTouch, open, useDrawerNav, visible]);
 
-  // Close nav on outside tap (touch only)
   const handleBackdropTap = useCallback(() => {
     if (open) setOpen(false);
   }, [open]);
@@ -147,10 +150,22 @@ const NavBar: React.FC<NavBarProps> = ({
     onHintNavInteraction?.("hover-zone");
   }, [onHintNavInteraction]);
 
+  const handleMenuToggle = useCallback(() => {
+    setOpen((prev) => !prev);
+    onHintNavInteraction?.("menu-toggle");
+  }, [onHintNavInteraction]);
+
+  const handleNavigate = useCallback((route: SiteRoute) => {
+    setOpen(false);
+    onNavigate(route.path, {
+      color: route.color,
+    });
+  }, [onNavigate]);
+
   return (
     <>
       {/* Hover zone — only active for mouse/trackpad users */}
-      {!isTouch && (
+      {!useDrawerNav && (
         <div
           className="fixed inset-x-0 top-0 z-40 h-14"
           onMouseEnter={handleTopZoneEnter}
@@ -158,24 +173,12 @@ const NavBar: React.FC<NavBarProps> = ({
         />
       )}
 
-      {/* Transparent backdrop to close nav on outside tap (touch) */}
-      {isTouch && open && (
-        <div
-          className="fixed inset-0 z-[68]"
-          aria-hidden
-          onClick={handleBackdropTap}
-        />
-      )}
-
       <motion.button
         type="button"
         aria-label="Toggle navigation"
-        aria-expanded={visible}
-        onClick={() => {
-          setOpen((prev) => !prev);
-          onHintNavInteraction?.("menu-toggle");
-        }}
-        className="theme-nav-fab fixed right-3 top-3 z-[72] flex h-[3.3rem] w-[3.3rem] items-center justify-center rounded-full transition duration-300 active:scale-95"
+        aria-expanded={useDrawerNav ? open : visible}
+        onClick={handleMenuToggle}
+        className="theme-nav-fab fixed right-3 top-3 z-[92] flex h-[3.3rem] w-[3.3rem] items-center justify-center rounded-full transition duration-300 active:scale-95"
         initial={false}
         animate={
           prefersReducedMotion
@@ -207,7 +210,7 @@ const NavBar: React.FC<NavBarProps> = ({
         type="button"
         aria-label={resolvedThemeMode === "dark" ? "Switch to light mode" : "Switch to dark mode"}
         onClick={onToggleTheme}
-        className="theme-nav-fab fixed right-3 top-[4.83rem] z-[72] flex h-[3.3rem] w-[3.3rem] items-center justify-center rounded-full transition duration-300 active:scale-95"
+        className="theme-nav-fab fixed right-3 top-[4.83rem] z-[92] flex h-[3.3rem] w-[3.3rem] items-center justify-center rounded-full transition duration-300 active:scale-95"
         initial={false}
         animate={
           prefersReducedMotion
@@ -223,38 +226,85 @@ const NavBar: React.FC<NavBarProps> = ({
         <ThemeGlyph mode={resolvedThemeMode} />
       </motion.button>
 
-      <div className="pointer-events-none fixed left-1/2 top-3 z-[70] w-[min(92vw,872px)] -translate-x-1/2">
-        <motion.nav
-          className="pointer-events-auto"
-          initial={false}
-          animate={{ y: visible ? 0 : -80, opacity: visible ? 1 : 0 }}
-          transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
-          onMouseEnter={() => !isTouch && setHoveringTop(true)}
-          onMouseLeave={() => !isTouch && setHoveringTop(false)}
-        >
-          <div className="theme-nav-panel mx-auto flex flex-wrap items-center justify-center gap-[0.55rem] rounded-[1.7rem] px-[0.96rem] py-[0.7rem] sm:rounded-full sm:px-[0.72rem] sm:py-[0.4rem]">
-            {routes.map((route) => {
-              const isActive = route.path === currentPath;
-              return (
-                <button
-                  key={route.path}
-                  type="button"
-                  onClick={() => {
-                    setOpen(false);
-                    onNavigate(route.path, {
-                      color: route.color,
-                    });
-                  }}
-                  className={`theme-nav-link rounded-full px-[1.21rem] py-[0.66rem] text-[1.03rem] font-medium tracking-[0.01em] transition active:scale-95 sm:px-[1.05rem] sm:py-[0.58rem] sm:text-[1.01rem] ${isActive ? "is-active" : ""}`}
-                  style={isActive ? { boxShadow: `0 0 0 1px ${route.color}88 inset` } : undefined}
-                >
-                  {compactLabel(route.label)}
-                </button>
-              );
-            })}
-          </div>
-        </motion.nav>
-      </div>
+      {useDrawerNav ? (
+        <AnimatePresence initial={false}>
+          {open ? (
+            <motion.div
+              key="drawer-shell"
+              className="fixed inset-0 z-[80]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <button
+                type="button"
+                aria-label="Close navigation"
+                className="theme-nav-drawer-backdrop absolute inset-0"
+                onClick={handleBackdropTap}
+              />
+
+              <motion.nav
+                aria-label="Primary navigation"
+                className="absolute inset-y-0 right-0 z-[81] w-full"
+                initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: "100%" }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, x: "100%" }}
+                transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div className="theme-nav-drawer-panel flex h-full flex-col justify-center px-8 pb-10 pt-24 sm:px-12">
+                  <div className="theme-text-subtle mb-8 text-right text-[0.78rem] font-semibold uppercase tracking-[0.32em]">
+                    Menu
+                  </div>
+
+                  <div className="ml-auto flex w-full max-w-[30rem] flex-col items-end gap-4 text-right sm:gap-5">
+                    {routes.map((route) => {
+                      const isActive = route.path === currentPath;
+                      return (
+                        <button
+                          key={route.path}
+                          type="button"
+                          onClick={() => handleNavigate(route)}
+                          className={`theme-nav-drawer-link leading-none tracking-[-0.05em] transition active:scale-[0.98] text-[clamp(2.1rem,7vw,4rem)] ${isActive ? "is-active font-semibold" : "font-medium"}`}
+                        >
+                          {route.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </motion.nav>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+      ) : (
+        <div className="pointer-events-none fixed left-1/2 top-4 z-[70] w-[min(96vw,980px)] -translate-x-1/2">
+          <motion.nav
+            className="pointer-events-auto"
+            initial={false}
+            animate={{ y: visible ? 0 : -92, opacity: visible ? 1 : 0 }}
+            transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+            onMouseEnter={() => setHoveringTop(true)}
+            onMouseLeave={() => setHoveringTop(false)}
+          >
+            <div className="theme-nav-panel mx-auto flex items-center justify-center gap-[0.72rem] rounded-full px-[0.94rem] py-[0.58rem]">
+              {routes.map((route) => {
+                const isActive = route.path === currentPath;
+                return (
+                  <button
+                    key={route.path}
+                    type="button"
+                    onClick={() => handleNavigate(route)}
+                    className={`theme-nav-link rounded-full px-[1.32rem] py-[0.76rem] text-[1.09rem] tracking-[0.01em] transition active:scale-95 ${isActive ? "is-active font-semibold" : "font-medium"}`}
+                  >
+                    {route.label}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.nav>
+        </div>
+      )}
     </>
   );
 };

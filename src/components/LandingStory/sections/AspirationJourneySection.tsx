@@ -1,6 +1,6 @@
 import React, { Suspense, lazy } from "react";
 import { LandingAspirationSectionContent } from "../../../content";
-import { useMediaQuery } from "../../../hooks/useMediaQuery";
+import { useCompactViewport } from "../../../hooks/useViewport";
 import { ResolvedThemeMode } from "../../theme/themeMode";
 import { StorySectionData } from "../storySections";
 
@@ -13,7 +13,7 @@ interface AspirationJourneySectionProps {
 }
 
 const AspirationJourneySection: React.FC<AspirationJourneySectionProps> = ({ section, content, themeMode }) => {
-  const compactViewport = useMediaQuery("(max-width: 900px)");
+  const compactViewport = useCompactViewport();
 
   return (
     <div className="relative isolate">
@@ -22,7 +22,7 @@ const AspirationJourneySection: React.FC<AspirationJourneySectionProps> = ({ sec
           fallback={
             <div
               className="theme-story-contrast-label relative overflow-hidden"
-              style={{ height: compactViewport ? "718dvh" : "906dvh" }}
+              style={{ height: compactViewport ? "718svh" : "906svh" }}
             >
               <div className="theme-story-contrast-backdrop absolute inset-0" />
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(34,211,238,0.16),transparent_18%),radial-gradient(circle_at_50%_56%,rgba(168,85,247,0.12),transparent_26%)]" />
