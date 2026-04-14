@@ -43,15 +43,6 @@ const PersonalIntroductionSection: React.FC<PersonalIntroductionSectionProps> = 
           }}
           className="relative max-w-2xl"
         >
-          <motion.div variants={reveal} className="flex items-center gap-4">
-            <span
-              className="block h-px w-12"
-              style={{ backgroundColor: "color-mix(in srgb, var(--theme-text-primary) 16%, transparent)" }}
-            />
-            <p className="theme-story-contrast-accent text-[0.68rem] font-semibold uppercase tracking-[0.34em]">
-              {section.eyebrow}
-            </p>
-          </motion.div>
 
           <motion.h2
             variants={reveal}
@@ -67,10 +58,22 @@ const PersonalIntroductionSection: React.FC<PersonalIntroductionSectionProps> = 
             {content.subtitle}
           </motion.p>
 
+  
+          <motion.div variants={reveal} className="mt-10 space-y-5">
+            {content.body.map((paragraph) => (
+              <p
+                key={paragraph}
+                className="theme-story-contrast-body max-w-xl text-base leading-8 sm:text-[1.45rem]"
+              >
+                {paragraph}
+              </p>
+            ))}
+          </motion.div>
+
           <motion.div variants={reveal} className="theme-border-subtle mt-10 border-y py-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
-              <p className="theme-story-contrast-accent text-[0.68rem] font-semibold uppercase tracking-[0.34em]">
-                Focus areas
+              <p className="theme-story-contrast-accent text-[0.8rem] font-semibold uppercase tracking-[0.34em]">
+                Focus Areas
               </p>
 
               <div className="grid gap-3 sm:min-w-[18rem]">
@@ -89,16 +92,6 @@ const PersonalIntroductionSection: React.FC<PersonalIntroductionSectionProps> = 
             </div>
           </motion.div>
 
-          <motion.div variants={reveal} className="mt-10 space-y-5">
-            {content.body.map((paragraph) => (
-              <p
-                key={paragraph}
-                className="theme-story-contrast-body max-w-xl text-base leading-8 sm:text-[1.05rem]"
-              >
-                {paragraph}
-              </p>
-            ))}
-          </motion.div>
         </motion.div>
 
         <motion.div

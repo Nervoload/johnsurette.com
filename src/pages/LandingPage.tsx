@@ -1,7 +1,6 @@
 import React, { RefObject, useEffect, useRef } from "react";
 import {
   landingHeroIdentityContent,
-  landingOriginLabContent,
   pageVisuals,
 } from "../content";
 import CenterpieceStage from "../components/LandingComponents/CenterpieceStage";

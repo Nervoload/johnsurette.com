@@ -5,7 +5,6 @@ import {
   defineLandingHeroIdentity,
   defineLandingConclusion,
   defineLandingPersonalIntroduction,
-  defineOriginLabContent,
   defineStorySection,
 } from "./define";
 import {
@@ -14,7 +13,6 @@ import {
   LandingConclusionContent,
   LandingComputationalSectionContent,
   LandingHeroIdentityContent,
-  LandingOriginLabContent,
   LandingPersonalIntroductionContent,
   LandingStoryEntry,
   StoryTransitionKind,
@@ -24,16 +22,13 @@ import {
 export const landingStory = [
   defineStorySection({
     id: "personal-introduction",
-    eyebrow: "01 · Introduction",
     title: "Understanding Living Systems with adaptive technology",
     summary:
       "Systems thinking across machine learning, biology, and computation.",
     focusAreas: [
-      "Adaptive technology",
-      "Neuromorphic intuition",
-      "Biological information",
-      "In vivo systems",
-      "In silico systems",
+      "Intelligent Systems",
+      "Emergent complexity",
+      "Modelling Biology",
     ],
     accent: "#22d3ee",
     glow: "#818cf8",
@@ -41,7 +36,6 @@ export const landingStory = [
   }),
   defineStorySection({
     id: "computational-systems",
-    eyebrow: "02 · Computation",
     title: "Simple rules, Complex systems",
     summary:
       "AI systems, emergent behavior, and engineered intelligence.",
@@ -58,7 +52,6 @@ export const landingStory = [
   }),
   defineStorySection({
     id: "biology-intelligence",
-    eyebrow: "03 · Biology",
     title: "Life is intelligent.",
     summary:
       "Cellular signaling, synapses, and the computations of life.",
@@ -75,7 +68,6 @@ export const landingStory = [
   }),
   defineStorySection({
     id: "aspiration-journey",
-    eyebrow: "04 · Aspiration",
     title: "My journey has just started.",
     summary:
       "Branching paths across science, computation, and future research.",
@@ -98,14 +90,6 @@ export const landingStoryTransitions: StoryTransitionKind[] = [
   "synapse-grid",
 ];
 
-export const landingOriginLabContent: LandingOriginLabContent = defineOriginLabContent({
-  eyebrow: "02 · Origin Sequence",
-  title: "Enter the cinematic origin sequence.",
-  summary: "From particles to galaxies, this is a dedicated immersive stage rendered on a separate route.",
-  ctaLabel: "Open Origin Lab",
-  ctaPath: "/origin",
-  isVisible: false,
-});
 
 export const landingHeroIdentityContent: LandingHeroIdentityContent = defineLandingHeroIdentity({
   kicker: "This is",
@@ -224,7 +208,6 @@ export const landingAspirationSectionContent: LandingAspirationSectionContent = 
 });
 
 export const landingConclusionContent: LandingConclusionContent = defineLandingConclusion({
-  eyebrow: "03 · Continue",
   title: "Explore projects, writing, and ongoing research.",
   summary:
     "This site is an evolving lab across longevity science, neuroscience, and design systems. Start anywhere and follow the thread.",

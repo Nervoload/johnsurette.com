@@ -8,7 +8,6 @@ import {
   LandingConclusionContent,
   LandingComputationalSectionContent,
   LandingHeroIdentityContent,
-  LandingOriginLabContent,
   LandingPersonalIntroductionContent,
   LandingStoryEntry,
   NavigationItem,
@@ -56,7 +55,6 @@ export interface ValidateContentInput {
   landingBiologySectionContent: LandingBiologySectionContent;
   landingAspirationSectionContent: LandingAspirationSectionContent;
   landingHeroIdentityContent: LandingHeroIdentityContent;
-  landingOriginLabContent: LandingOriginLabContent;
   landingConclusionContent: LandingConclusionContent;
   timelineEntries: TimelineEntry[];
   contactPageContent: ContactPageContent;
@@ -74,7 +72,6 @@ export const validateContent = ({
   landingBiologySectionContent,
   landingAspirationSectionContent,
   landingHeroIdentityContent,
-  landingOriginLabContent,
   landingConclusionContent,
   timelineEntries,
   contactPageContent,
@@ -246,8 +243,6 @@ export const validateContent = ({
   assertNonEmpty("landingHeroIdentityContent.firstName", landingHeroIdentityContent.firstName);
   assertNonEmpty("landingHeroIdentityContent.lastName", landingHeroIdentityContent.lastName);
   assertNonEmpty("landingHeroIdentityContent.domainSuffix", landingHeroIdentityContent.domainSuffix);
-  assertNonEmpty("landingOriginLabContent.ctaPath", landingOriginLabContent.ctaPath);
-  assertInternalPath(landingOriginLabContent.ctaPath, validInternalPaths, "landingOriginLabContent.ctaPath");
   assertNonEmpty("landingConclusionContent.title", landingConclusionContent.title);
 
   assertUnique(timelineEntries, (item) => item.id, "timeline id");

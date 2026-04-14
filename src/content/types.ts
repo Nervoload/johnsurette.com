@@ -183,22 +183,12 @@ export type StoryTransitionKind =
 
 export interface LandingStoryEntry {
   id: StorySectionId;
-  eyebrow: string;
   title: string;
   summary: string;
   focusAreas: string[];
   accent: string;
   glow: string;
   deep: string;
-}
-
-export interface LandingOriginLabContent {
-  eyebrow: string;
-  title: string;
-  summary: string;
-  ctaLabel: string;
-  ctaPath: string;
-  isVisible?: boolean;
 }
 
 export interface LandingHeroIdentityContent {
@@ -288,7 +278,6 @@ export interface LandingAspirationSectionContent {
 }
 
 export interface LandingConclusionContent {
-  eyebrow: string;
   title: string;
   summary: string;
   highlightedProjectsLabel: string;
@@ -322,7 +311,6 @@ export interface TimelineEntry {
 }
 
 export interface AboutPageContent {
-  eyebrow: string;
   title: string;
   summary: string;
   highlights: string[];

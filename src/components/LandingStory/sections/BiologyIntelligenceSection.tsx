@@ -39,9 +39,9 @@ const BiologyIntelligenceSection: React.FC<BiologyIntelligenceSectionProps> = ({
             transition={{ duration: 0.94, ease: [0.22, 1, 0.36, 1] }}
             className="relative z-20 lg:pr-2"
           >
-            <div className="theme-story-contrast-panel max-w-xl rounded-[2.25rem] border p-8 sm:p-10">
+            <div className="theme-story-contrast-panel w-full max-w-[41rem] rounded-[2.25rem] border p-8 sm:min-w-[24rem] sm:p-10 lg:min-w-[26rem]">
               <p className="theme-story-contrast-accent text-xs uppercase tracking-[0.32em]">Biological computation</p>
-              <p className="theme-story-contrast-body mt-5 max-w-lg text-balance text-[1.2rem] leading-[1.95] sm:text-[1.42rem] lg:text-[1.58rem]">
+              <p className="theme-story-contrast-body mt-5 max-w-[36rem] text-balance text-[1.2rem] leading-[1.95] sm:text-[1.42rem] lg:text-[1.58rem]">
                 {content.body}
               </p>
               <button
@@ -95,7 +95,7 @@ const BiologyIntelligenceSection: React.FC<BiologyIntelligenceSectionProps> = ({
             className="relative z-20 lg:pl-2"
           >
             <div className="theme-story-contrast-panel rounded-[2.35rem] border p-8 sm:p-10">
-              <p className="theme-story-contrast-accent text-xs uppercase tracking-[0.28em]">Life is intelligent.</p>
+              
               <h2 className="theme-story-contrast-title mt-5 max-w-sm text-balance text-[2.9rem] font-semibold leading-[0.96] sm:text-[3.9rem] xl:text-[5rem]">
                 {content.overlayTitle}
               </h2>

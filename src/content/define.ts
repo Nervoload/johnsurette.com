@@ -11,7 +11,6 @@ import {
   LandingConclusionContent,
   LandingComputationalSectionContent,
   LandingHeroIdentityContent,
-  LandingOriginLabContent,
   LandingPersonalIntroductionContent,
   LandingStoryPoster,
   LandingSectionLink,
@@ -252,13 +251,12 @@ export const defineBlogVisualIdentity = (input: BlogVisualIdentity): BlogVisualI
 });
 
 export const defineStorySection = (input: LandingStoryEntry): LandingStoryEntry => {
-  assertNonEmpty(`landing.${input.id}.eyebrow`, input.eyebrow);
+
   assertNonEmpty(`landing.${input.id}.title`, input.title);
   assertNonEmpty(`landing.${input.id}.summary`, input.summary);
 
   return {
     ...input,
-    eyebrow: trim(input.eyebrow),
     title: trim(input.title),
     summary: trim(input.summary),
     focusAreas: normalizeStringArray(input.focusAreas),
@@ -286,7 +284,6 @@ export const defineTimelineScene = (input: TimelineEntry): TimelineEntry => {
 
 export const defineAboutPage = (input: AboutPageContent): AboutPageContent => ({
   ...input,
-  eyebrow: trim(input.eyebrow),
   title: trim(input.title),
   summary: trim(input.summary),
   highlights: normalizeStringArray(input.highlights),
@@ -294,21 +291,11 @@ export const defineAboutPage = (input: AboutPageContent): AboutPageContent => ({
 
 export const defineBlogPage = (input: BlogPageContent): BlogPageContent => ({
   ...input,
-  eyebrow: trim(input.eyebrow),
   title: trim(input.title),
   summary: trim(input.summary),
   emptyLabel: trim(input.emptyLabel),
 });
 
-export const defineOriginLabContent = (input: LandingOriginLabContent): LandingOriginLabContent => ({
-  ...input,
-  eyebrow: trim(input.eyebrow),
-  title: trim(input.title),
-  summary: trim(input.summary),
-  ctaLabel: trim(input.ctaLabel),
-  ctaPath: trim(input.ctaPath),
-  isVisible: input.isVisible ?? true,
-});
 
 export const defineLandingHeroIdentity = (input: LandingHeroIdentityContent): LandingHeroIdentityContent => ({
   ...input,
@@ -397,7 +384,6 @@ export const defineLandingAspirationSection = (
 
 export const defineLandingConclusion = (input: LandingConclusionContent): LandingConclusionContent => ({
   ...input,
-  eyebrow: trim(input.eyebrow),
   title: trim(input.title),
   summary: trim(input.summary),
   highlightedProjectsLabel: trim(input.highlightedProjectsLabel),

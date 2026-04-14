@@ -562,14 +562,21 @@ const buildThreadCurve = (
 const RootAnchor: React.FC<{
   color: string;
   groupRef: (element: SVGGElement | null) => void;
+  glowEnabled?: boolean;
   opacity: MotionValue<number>;
-}> = ({ color, groupRef, opacity }) => {
+}> = ({ color, glowEnabled = true, groupRef, opacity }) => {
   const radii = getNodeRadii(0);
 
   return (
     <motion.g style={{ opacity }} transform={`translate(${ROOT_POINT.x} ${ROOT_POINT.y})`}>
       <g ref={groupRef}>
-        <circle cx="0" cy="0" fill={rgba(color, 0.4)} filter={`url(#${NODE_GLOW_FILTER_ID})`} r={radii.core + radii.glow} />
+        <circle
+          cx="0"
+          cy="0"
+          fill={rgba(color, glowEnabled ? 0.4 : 0.18)}
+          filter={glowEnabled ? `url(#${NODE_GLOW_FILTER_ID})` : undefined}
+          r={glowEnabled ? radii.core + radii.glow : radii.core + radii.glow * 0.56}
+        />
         <circle cx="0" cy="0" fill={color} r={radii.core} stroke={rgba(color, 0.9)} strokeWidth="1.8" />
       </g>
     </motion.g>
@@ -578,18 +585,33 @@ const RootAnchor: React.FC<{
 
 const NodeGlyph: React.FC<{
   color: string;
+  glowEnabled?: boolean;
   groupRef: (element: SVGGElement | null) => void;
   node: LayoutNode;
   reveal: MotionValue<number>;
-}> = ({ color, groupRef, node, reveal }) => {
+  staticMode?: boolean;
+}> = ({ color, glowEnabled = true, groupRef, node, reveal, staticMode = false }) => {
   const radii = getNodeRadii(node.stage);
+  const glyph = (
+    <g ref={groupRef}>
+      <circle
+        cx="0"
+        cy="0"
+        fill={rgba(color, glowEnabled ? 0.38 : 0.16)}
+        filter={glowEnabled ? `url(#${NODE_GLOW_FILTER_ID})` : undefined}
+        r={glowEnabled ? radii.core + radii.glow : radii.core + radii.glow * 0.58}
+      />
+      <circle cx="0" cy="0" fill={color} r={radii.core} stroke={rgba(color, 0.88)} strokeWidth="1.7" />
+    </g>
+  );
+
+  if (staticMode) {
+    return <g transform={`translate(${node.point.x} ${node.point.y})`}>{glyph}</g>;
+  }
 
   return (
     <motion.g style={{ opacity: reveal }} transform={`translate(${node.point.x} ${node.point.y})`}>
-      <g ref={groupRef}>
-        <circle cx="0" cy="0" fill={rgba(color, 0.38)} filter={`url(#${NODE_GLOW_FILTER_ID})`} r={radii.core + radii.glow} />
-        <circle cx="0" cy="0" fill={color} r={radii.core} stroke={rgba(color, 0.88)} strokeWidth="1.7" />
-      </g>
+      {glyph}
     </motion.g>
   );
 };
@@ -601,7 +623,8 @@ const NodeLabel: React.FC<{
   labelScale: number;
   node: LayoutNode;
   reveal: MotionValue<number>;
-}> = ({ color, groupRef, isDark, labelScale, node, reveal }) => {
+  staticMode?: boolean;
+}> = ({ color, groupRef, isDark, labelScale, node, reveal, staticMode = false }) => {
   const localLabel = toLocalLabelGeometry(node);
   const lines = wrapLabel(node.label);
   const labelAnchorX = localLabel.left + localLabel.width / 2;
@@ -609,48 +632,69 @@ const NodeLabel: React.FC<{
   const lineGap = 22.4 * labelScale;
   const firstLineY = textCenterY - ((lines.length - 1) * lineGap) / 2;
   const labelFill = isDark ? "rgba(255,255,255,0.98)" : "rgba(0,0,0,0.94)";
-  const labelFilter = isDark
-    ? `drop-shadow(0 0 12px ${rgba(color, 0.5)}) drop-shadow(0 0 24px ${rgba(color, 0.28)})`
-    : "drop-shadow(0 4px 12px rgba(15,23,42,0.24))";
+  const labelFilter = staticMode
+    ? undefined
+    : isDark
+      ? `drop-shadow(0 0 12px ${rgba(color, 0.5)}) drop-shadow(0 0 24px ${rgba(color, 0.28)})`
+      : "drop-shadow(0 4px 12px rgba(15,23,42,0.24))";
   const fontSize = (lines.length > 1 ? 20.4 : 21.6) * labelScale;
   const letterSpacing = -0.24 * labelScale;
   const leaderStrokeWidth = clamp(1.15 * labelScale, 0.9, 1.5);
+  const labelContent = (
+    <g ref={groupRef}>
+      <line
+        stroke={rgba(color, 0.5)}
+        strokeLinecap="round"
+        strokeWidth={leaderStrokeWidth}
+        x1="0"
+        x2={labelAnchorX}
+        y1="0"
+        y2={textCenterY}
+      />
+      <text
+        fill={labelFill}
+        fontSize={fontSize}
+        fontWeight="650"
+        letterSpacing={letterSpacing}
+        style={labelFilter ? { filter: labelFilter } : undefined}
+        textAnchor="middle"
+        x={labelAnchorX}
+        y={firstLineY}
+      >
+        {lines.map((line, index) => (
+          <tspan dy={index === 0 ? 0 : lineGap} key={`${node.id}-line-${index}`} x={labelAnchorX}>
+            {line}
+          </tspan>
+        ))}
+      </text>
+    </g>
+  );
+
+  if (staticMode) {
+    return <g transform={`translate(${node.point.x} ${node.point.y})`}>{labelContent}</g>;
+  }
 
   return (
     <motion.g style={{ opacity: reveal }} transform={`translate(${node.point.x} ${node.point.y})`}>
-      <g ref={groupRef}>
-        <line
-          stroke={rgba(color, 0.5)}
-          strokeLinecap="round"
-          strokeWidth={leaderStrokeWidth}
-          x1="0"
-          x2={labelAnchorX}
-          y1="0"
-          y2={textCenterY}
-        />
-        <text
-          fill={labelFill}
-          fontSize={fontSize}
-          fontWeight="650"
-          letterSpacing={letterSpacing}
-          style={{ filter: labelFilter }}
-          textAnchor="middle"
-          x={labelAnchorX}
-          y={firstLineY}
-        >
-          {lines.map((line, index) => (
-            <tspan dy={index === 0 ? 0 : lineGap} key={`${node.id}-line-${index}`} x={labelAnchorX}>
-              {line}
-            </tspan>
-          ))}
-        </text>
-      </g>
+      {labelContent}
     </motion.g>
   );
 };
 
-const getRenderedBundleCount = (edge: LayoutEdge, compactMode: boolean) => {
+const getRenderedBundleCount = (edge: LayoutEdge, compactMode: boolean, staticMode = false) => {
   const baseCount = aspirationThreadStyles.getBundleCount(edge.weight, edge.faded);
+
+  if (staticMode) {
+    if (edge.faded) {
+      return 1;
+    }
+
+    if (edge.weight === "trunk") {
+      return Math.min(baseCount, 2);
+    }
+
+    return 1;
+  }
 
   if (!compactMode) {
     return baseCount;
@@ -676,31 +720,44 @@ const EdgeBundle: React.FC<{
   compactMode: boolean;
   edge: LayoutEdge;
   reveal: MotionValue<number>;
+  staticMode?: boolean;
   threadRef: (threadIndex: number, element: SVGPathElement | null) => void;
-}> = ({ color, compactMode, edge, reveal, threadRef }) => {
-  const bundleCount = getRenderedBundleCount(edge, compactMode);
+}> = ({ color, compactMode, edge, reveal, staticMode = false, threadRef }) => {
+  const bundleCount = getRenderedBundleCount(edge, compactMode, staticMode);
   const strokeWidth = aspirationThreadStyles.getThreadWidth(edge.weight, edge.faded) + (compactMode ? 0.24 : 0);
 
   return (
     <g>
       {Array.from({ length: bundleCount }, (_, threadIndex) => (
-        <motion.path
-          d={buildThreadPath(edge.fromPoint, edge.toPoint, threadIndex, bundleCount, 0)}
-          fill="none"
-          key={`${edge.id}-thread-${threadIndex}`}
-          pathLength={1}
-          ref={(element) => threadRef(threadIndex, element)}
-          stroke={rgba(color, edge.faded ? 0.44 : 0.94)}
-          strokeLinecap="round"
-          strokeWidth={strokeWidth}
-          style={{ pathLength: reveal }}
-        />
+        staticMode ? (
+          <path
+            d={buildThreadPath(edge.fromPoint, edge.toPoint, threadIndex, bundleCount, 0)}
+            fill="none"
+            key={`${edge.id}-thread-${threadIndex}`}
+            ref={(element) => threadRef(threadIndex, element)}
+            stroke={rgba(color, edge.faded ? 0.44 : 0.94)}
+            strokeLinecap="round"
+            strokeWidth={strokeWidth}
+          />
+        ) : (
+          <motion.path
+            d={buildThreadPath(edge.fromPoint, edge.toPoint, threadIndex, bundleCount, 0)}
+            fill="none"
+            key={`${edge.id}-thread-${threadIndex}`}
+            pathLength={1}
+            ref={(element) => threadRef(threadIndex, element)}
+            stroke={rgba(color, edge.faded ? 0.44 : 0.94)}
+            strokeLinecap="round"
+            strokeWidth={strokeWidth}
+            style={{ pathLength: reveal }}
+          />
+        )
       ))}
     </g>
   );
 };
 
-const OverlayBeatText: React.FC<OverlaySpec & { compactMode: boolean; isDark: boolean }> = ({
+const OverlayBeatText: React.FC<OverlaySpec & { compactMode: boolean; isDark: boolean; staticMode?: boolean }> = ({
   id,
   maxWidth,
   opacity,
@@ -709,6 +766,7 @@ const OverlayBeatText: React.FC<OverlaySpec & { compactMode: boolean; isDark: bo
   y,
   isDark,
   compactMode,
+  staticMode = false,
 }) => {
   const maxChars = compactMode
     ? id === "between-root-and-majors"
@@ -736,9 +794,11 @@ const OverlayBeatText: React.FC<OverlaySpec & { compactMode: boolean; isDark: bo
   const lineHeight = compactMode ? (id === "root" ? 34 : 29) : id === "root" ? 47 : 39;
   const firstLineY = y - ((lines.length - 1) * lineHeight) / 2;
   const fill = isDark ? "rgba(248,250,252,0.96)" : "rgba(0,0,0,0.96)";
-  const filter = isDark
-    ? "drop-shadow(0 0 18px rgba(34,211,238,0.16))"
-    : "drop-shadow(0 10px 22px rgba(148,163,184,0.22))";
+  const filter = staticMode
+    ? undefined
+    : isDark
+      ? "drop-shadow(0 0 18px rgba(34,211,238,0.16))"
+      : "drop-shadow(0 10px 22px rgba(148,163,184,0.22))";
 
   return (
     <motion.g style={{ opacity }}>
@@ -747,7 +807,7 @@ const OverlayBeatText: React.FC<OverlaySpec & { compactMode: boolean; isDark: bo
         fontSize={fontSize}
         fontWeight={id === "root" ? "700" : "560"}
         letterSpacing={compactMode ? (id === "root" ? "-0.55" : "-0.28") : id === "root" ? "-0.8" : "-0.45"}
-        style={{ filter }}
+        style={filter ? { filter } : undefined}
         textAnchor="middle"
         x={x}
         y={firstLineY}
@@ -793,6 +853,8 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
   const compactViewport = useCompactViewport();
   const mobileStaticMode = useHandheldDevice();
   const prefersReducedMotion = Boolean(useReducedMotion()) || qualityTier === "static";
+  const staticSceneMode = mobileStaticMode;
+  const glowEnabled = !staticSceneMode;
   const compactExperience = compactViewport;
   const reducedDensityMode = compactViewport || qualityTier !== "high" || mobileStaticMode;
   const fullPointerInteractivity = !mobileStaticMode && !prefersReducedMotion;
@@ -1009,7 +1071,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
     const nextThreadStates: Record<string, RuntimeThreadState[]> = {};
     trackedEdges.forEach((edge, id) => {
       nextEdgeStates[id] = edgeRuntimeRef.current[id] ?? createEdgeRuntimeState(id, edge.weight);
-      const bundleCount = getRenderedBundleCount(edge, reducedDensityMode);
+      const bundleCount = getRenderedBundleCount(edge, reducedDensityMode, staticSceneMode);
       const existingThreadStates = threadRuntimeRef.current[id] ?? [];
       nextThreadStates[id] = Array.from({ length: bundleCount }, (_, threadIndex) => (
         existingThreadStates[threadIndex] ?? createThreadRuntimeState(id, threadIndex, edge.weight)
@@ -1023,7 +1085,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
       nextLeafStates[edge.id] = leafRuntimeRef.current[edge.id] ?? createLeafRuntimeState(edge.id);
     });
     leafRuntimeRef.current = nextLeafStates;
-  }, [allLayoutNodes, animatedEdges, layout.edgesByStage, reducedDensityMode]);
+  }, [allLayoutNodes, animatedEdges, layout.edgesByStage, reducedDensityMode, staticSceneMode]);
 
   useEffect(() => {
     if (!mobileStaticMode) {
@@ -1067,7 +1129,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
         edgeState.pluckEnergy = 0;
       }
 
-      const bundleCount = getRenderedBundleCount(edge, reducedDensityMode);
+      const bundleCount = getRenderedBundleCount(edge, reducedDensityMode, staticSceneMode);
       const threadRefs = edgeThreadRefs.current[edge.id] ?? [];
       const edgeColor = getEdgeColor(edge);
       for (let threadIndex = 0; threadIndex < bundleCount; threadIndex += 1) {
@@ -1081,7 +1143,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
         );
       }
     });
-  }, [allLayoutNodes, animatedEdges, mobileStaticMode, reducedDensityMode]);
+  }, [allLayoutNodes, animatedEdges, mobileStaticMode, reducedDensityMode, staticSceneMode]);
 
   const shellOpacity = useTransform(progressUnits, [0, 0.22, RUNWAY_VIEWPORTS], [0.74, 1, 1]);
   const focusGlowOpacity = useTransform(progressUnits, [0, TIMELINE.stageTwo.mid, RUNWAY_VIEWPORTS], [0.18, 0.34, 0.24]);
@@ -1585,7 +1647,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
         const animatedBaseCurve = buildDynamicCurve(fromPoint, toPoint, edge, edgeState, timeSeconds, pointer);
         const edgeColor = getEdgeColor(edge);
         const threadRefs = edgeThreadRefs.current[edge.id] ?? [];
-        const bundleCount = getRenderedBundleCount(edge, reducedDensityMode);
+        const bundleCount = getRenderedBundleCount(edge, reducedDensityMode, staticSceneMode);
         const threadStates = threadRuntimeRef.current[edge.id] ?? [];
 
         for (let threadIndex = 0; threadIndex < bundleCount; threadIndex += 1) {
@@ -1657,17 +1719,19 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
         </div>
         <motion.div
           className="relative h-full w-full overflow-hidden px-4 sm:px-6 lg:px-10"
-          style={{ opacity: shellOpacity }}
+          style={staticSceneMode ? undefined : { opacity: shellOpacity }}
         >
-          <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="absolute left-1/2 top-[10%] h-52 w-52 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
-            <div className="absolute bottom-[16%] left-[16%] h-40 w-40 rounded-full bg-fuchsia-500/10 blur-3xl" />
-            <div className="absolute bottom-[20%] right-[16%] h-40 w-40 rounded-full bg-sky-500/10 blur-3xl" />
-            <motion.div
-              className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.26),rgba(34,211,238,0.08)_44%,transparent_72%)] blur-3xl"
-              style={{ opacity: focusGlowOpacity, scale: focusGlowScale, y: focusGlowY }}
-            />
-          </div>
+          {!staticSceneMode ? (
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              <div className="absolute left-1/2 top-[10%] h-52 w-52 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
+              <div className="absolute bottom-[16%] left-[16%] h-40 w-40 rounded-full bg-fuchsia-500/10 blur-3xl" />
+              <div className="absolute bottom-[20%] right-[16%] h-40 w-40 rounded-full bg-sky-500/10 blur-3xl" />
+              <motion.div
+                className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.26),rgba(34,211,238,0.08)_44%,transparent_72%)] blur-3xl"
+                style={{ opacity: focusGlowOpacity, scale: focusGlowScale, y: focusGlowY }}
+              />
+            </div>
+          ) : null}
 
           <div className="relative z-10 flex h-full flex-col">
             <div className="relative flex flex-1 items-center justify-center">
@@ -1689,7 +1753,10 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                     aspectRatio: `${VIEWBOX_WIDTH} / ${VIEWBOX_HEIGHT}`,
                   }}
                 >
-                  <motion.div className="h-full w-full" style={{ opacity: assetOpacity, scale: assetScale, y: assetTranslateY }}>
+                  <motion.div
+                    className="h-full w-full"
+                    style={staticSceneMode ? { y: assetTranslateY } : { opacity: assetOpacity, scale: assetScale, y: assetTranslateY }}
+                  >
                     <svg
                       aria-hidden
                       className="pointer-events-none h-full w-full"
@@ -1697,14 +1764,17 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                       ref={svgRef}
                       viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
                     >
-                      <defs>
-                        <filter id={NODE_GLOW_FILTER_ID} x="-200%" y="-200%" width="400%" height="400%">
-                          <feGaussianBlur stdDeviation="7.5" />
-                        </filter>
-                      </defs>
+                      {glowEnabled ? (
+                        <defs>
+                          <filter id={NODE_GLOW_FILTER_ID} x="-200%" y="-200%" width="400%" height="400%">
+                            <feGaussianBlur stdDeviation="7.5" />
+                          </filter>
+                        </defs>
+                      ) : null}
 
                       <RootAnchor
                         color={getNodeColor("aspiration-root")}
+                        glowEnabled={glowEnabled}
                         groupRef={(element) => {
                           rootGroupRef.current = element;
                         }}
@@ -1719,6 +1789,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                             edge={edge}
                             key={edge.id}
                             reveal={stageOneReveal}
+                            staticMode={staticSceneMode}
                             threadRef={(threadIndex, element) => {
                               edgeThreadRefs.current[edge.id] = edgeThreadRefs.current[edge.id] ?? [];
                               edgeThreadRefs.current[edge.id][threadIndex] = element;
@@ -1728,12 +1799,14 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                         {layout.nodesByStage[1].map((node) => (
                           <NodeGlyph
                             color={getNodeColor(node.id as SceneNodeId)}
+                            glowEnabled={glowEnabled}
                             groupRef={(element) => {
                               nodeRefs.current[node.id] = element;
                             }}
                             key={node.id}
                             node={node}
                             reveal={stageOneReveal}
+                            staticMode={staticSceneMode}
                           />
                         ))}
                       </motion.g>
@@ -1746,6 +1819,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                             edge={edge}
                             key={edge.id}
                             reveal={stageTwoReveal}
+                            staticMode={staticSceneMode}
                             threadRef={(threadIndex, element) => {
                               edgeThreadRefs.current[edge.id] = edgeThreadRefs.current[edge.id] ?? [];
                               edgeThreadRefs.current[edge.id][threadIndex] = element;
@@ -1755,12 +1829,14 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                         {layout.nodesByStage[2].map((node) => (
                           <NodeGlyph
                             color={getNodeColor(node.id as SceneNodeId)}
+                            glowEnabled={glowEnabled}
                             groupRef={(element) => {
                               nodeRefs.current[node.id] = element;
                             }}
                             key={node.id}
                             node={node}
                             reveal={stageTwoReveal}
+                            staticMode={staticSceneMode}
                           />
                         ))}
                       </motion.g>
@@ -1773,6 +1849,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                             edge={edge}
                             key={edge.id}
                             reveal={stageThreeReveal}
+                            staticMode={staticSceneMode}
                             threadRef={(threadIndex, element) => {
                               edgeThreadRefs.current[edge.id] = edgeThreadRefs.current[edge.id] ?? [];
                               edgeThreadRefs.current[edge.id][threadIndex] = element;
@@ -1782,12 +1859,14 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                         {layout.nodesByStage[3].map((node) => (
                           <NodeGlyph
                             color={getNodeColor(node.id as SceneNodeId)}
+                            glowEnabled={glowEnabled}
                             groupRef={(element) => {
                               nodeRefs.current[node.id] = element;
                             }}
                             key={node.id}
                             node={node}
                             reveal={stageThreeReveal}
+                            staticMode={staticSceneMode}
                           />
                         ))}
                       </motion.g>
@@ -1800,6 +1879,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                             edge={edge}
                             key={edge.id}
                             reveal={stageFourReveal}
+                            staticMode={staticSceneMode}
                             threadRef={(threadIndex, element) => {
                               edgeThreadRefs.current[edge.id] = edgeThreadRefs.current[edge.id] ?? [];
                               edgeThreadRefs.current[edge.id][threadIndex] = element;
@@ -1809,12 +1889,14 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                         {layout.nodesByStage[4].map((node) => (
                           <NodeGlyph
                             color={getNodeColor(node.id as SceneNodeId)}
+                            glowEnabled={glowEnabled}
                             groupRef={(element) => {
                               nodeRefs.current[node.id] = element;
                             }}
                             key={node.id}
                             node={node}
                             reveal={stageFourReveal}
+                            staticMode={staticSceneMode}
                           />
                         ))}
                       </motion.g>
@@ -1827,6 +1909,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                             edge={edge}
                             key={edge.id}
                             reveal={leafReveal}
+                            staticMode={staticSceneMode}
                             threadRef={(threadIndex, element) => {
                               edgeThreadRefs.current[edge.id] = edgeThreadRefs.current[edge.id] ?? [];
                               edgeThreadRefs.current[edge.id][threadIndex] = element;
@@ -1847,6 +1930,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                             labelScale={labelLayoutScale}
                             node={node}
                             reveal={stageOneReveal}
+                            staticMode={staticSceneMode}
                           />
                         ))}
                       </motion.g>
@@ -1863,6 +1947,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                             labelScale={labelLayoutScale}
                             node={node}
                             reveal={stageTwoReveal}
+                            staticMode={staticSceneMode}
                           />
                         ))}
                       </motion.g>
@@ -1879,6 +1964,7 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                             labelScale={labelLayoutScale}
                             node={node}
                             reveal={stageThreeReveal}
+                            staticMode={staticSceneMode}
                           />
                         ))}
                       </motion.g>
@@ -1895,12 +1981,19 @@ const AspirationTreeInner: React.FC<AspirationTreePlaceholderProps> = ({
                             labelScale={labelLayoutScale}
                             node={node}
                             reveal={stageFourReveal}
+                            staticMode={staticSceneMode}
                           />
                         ))}
                       </motion.g>
 
                       {overlaySpecs.map((overlay) => (
-                        <OverlayBeatText {...overlay} compactMode={compactExperience} isDark={isDarkTheme} key={overlay.id} />
+                        <OverlayBeatText
+                          {...overlay}
+                          compactMode={compactExperience}
+                          isDark={isDarkTheme}
+                          key={overlay.id}
+                          staticMode={staticSceneMode}
+                        />
                       ))}
                     </svg>
                   </motion.div>
