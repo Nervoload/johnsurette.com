@@ -3573,6 +3573,16 @@ img.blog-post-cover,
   font-weight: 500;
 }
 
+/* Data credit shown right under the scene that uses the data. */
+.living-credit {
+  max-width: 100%;
+  font-size: 0.7rem;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+  color: var(--theme-text-subtle);
+  text-wrap: pretty;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .living-stage-dot > span {
     transition: none;

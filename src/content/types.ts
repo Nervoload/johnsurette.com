@@ -469,6 +469,6 @@ export interface LandingForwardPassContent {
 export interface LandingBrainScalesContent {
   /** Whole-brain point cloud (see scripts/assets/build_brain_points.py). */
   pointsSrc: string;
-  /** Credit for the brain surface data, read out with the scene description. */
+  /** Credit for the brain surface data, shown under the scene and read out with its description. */
   attribution: string;
 }

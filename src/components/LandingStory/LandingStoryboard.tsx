@@ -5,7 +5,9 @@ import { ResolvedThemeMode } from "../theme/themeMode";
 import {
   landingAspirationSectionContent,
   landingBiologySectionContent,
+  landingBrainScalesContent,
   landingComputationalSectionContent,
+  landingForwardPassContent,
   landingPersonalIntroductionContent,
 } from "../../content";
 import PersonalIntroductionSection from "./sections/PersonalIntroductionSection";
@@ -36,6 +38,8 @@ const StorySectionRenderer: React.FC<StorySectionRendererProps> = ({ section, on
       <ComputationalSystemsSection
         section={section}
         content={landingComputationalSectionContent}
+        forwardPassContent={landingForwardPassContent}
+        themeMode={themeMode}
         onNavigate={onNavigate}
       />
     );
@@ -46,6 +50,8 @@ const StorySectionRenderer: React.FC<StorySectionRendererProps> = ({ section, on
       <BiologyIntelligenceSection
         section={section}
         content={landingBiologySectionContent}
+        brainScalesContent={landingBrainScalesContent}
+        themeMode={themeMode}
         onNavigate={onNavigate}
       />
     );

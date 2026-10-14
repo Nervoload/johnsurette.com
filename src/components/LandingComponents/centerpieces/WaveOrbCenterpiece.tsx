@@ -417,7 +417,7 @@ const OrbScene: React.FC<CoreSceneProps> = ({
   );
 };
 
-const WaveOrbCenterpiece: React.FC<CenterpieceProps> = ({ activeSection, ...rest }) => {
+const WaveOrbCenterpiece: React.FC<CenterpieceProps> = ({ activeSection, active = true, ...rest }) => {
   const basePalette = useMemo(() => buildBasePalette(activeSection), [activeSection]);
   const loadProfile = useWaveOrbLoadProfile("landing-wave-orb-profile");
 
@@ -481,6 +481,7 @@ const WaveOrbCenterpiece: React.FC<CenterpieceProps> = ({ activeSection, ...rest
     <CanvasErrorBoundary>
       <Canvas
         camera={{ position: [0, 0, 5], fov: 45 }}
+        frameloop={active ? "always" : "never"}
         dpr={[1, 2]}
         gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
         className="h-full w-full"

@@ -124,6 +124,9 @@ pre-cropped WebP, so phones never decode the full-size original.
 { id: "code", src: "/images/landing/forward-pass/code.webp", alt: "John at his desk, writing code", outputId: "computer-science" }
 ```
 
+Computer Science currently uses a generated code-editor placeholder (`"placeholder": "code"` in the crops
+file). Replace that entry with a `source` and `crop` once you have a photo.
+
 Preview it at `/origin` (dev server only); `npm run check:living` checks the network and simulations.
 
 ## Notes

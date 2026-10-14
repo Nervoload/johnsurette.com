@@ -14,4 +14,6 @@ export interface CenterpieceProps {
   introProgress: number;
   shadowMode: ShadowMode;
   shadowAssetId?: ShadowAssetId;
+  /** False while the hero is scrolled out of view; the centerpiece should stop rendering frames. */
+  active?: boolean;
 }

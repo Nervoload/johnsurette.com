@@ -1,20 +1,27 @@
-import React from "react";
+import React, { Suspense, useRef } from "react";
 import { motion } from "framer-motion";
-import { LandingComputationalSectionContent } from "../../../content";
+import { LandingComputationalSectionContent, LandingForwardPassContent } from "../../../content";
 import { StorySectionData } from "../storySections";
 import { WipeOptions } from "../../Transitions/TransitionWipe";
-import { useSectionActivity } from "../runtime/LandingStoryRuntime";
+import { ResolvedThemeMode } from "../../theme/themeMode";
+import { useHandheldDevice } from "../../../hooks/useHandheldDevice";
+import { useLandingStoryRuntime, useSectionActivity } from "../runtime/LandingStoryRuntime";
 import ComputationalMatrixBackdrop from "../visuals/computation/ComputationalMatrixBackdrop";
+import { ForwardPassStage, loadForwardPassStage, useDeferredLivingStage } from "../visuals/living/livingStages";
 
 interface ComputationalSystemsSectionProps {
   section: StorySectionData;
   content: LandingComputationalSectionContent;
+  forwardPassContent: LandingForwardPassContent;
+  themeMode: ResolvedThemeMode;
   onNavigate: (path: string, opts?: WipeOptions) => void;
 }
 
 const ComputationalSystemsSection: React.FC<ComputationalSystemsSectionProps> = ({
   section,
   content,
+  forwardPassContent,
+  themeMode,
   onNavigate,
 }) => {
   const activity = useSectionActivity<HTMLElement>({
@@ -23,11 +30,15 @@ const ComputationalSystemsSection: React.FC<ComputationalSystemsSectionProps> = 
     primaryAmount: 0.38,
     primaryMargin: "-14% 0px -14% 0px",
   });
+  const { scrollContainerRef } = useLandingStoryRuntime();
+  const handheld = useHandheldDevice();
+  const slotRef = useRef<HTMLDivElement>(null);
+  const showScene = useDeferredLivingStage(slotRef, scrollContainerRef, loadForwardPassStage);
 
   return (
     <section
       ref={activity.sectionRef as React.RefObject<HTMLElement>}
-      className="relative isolate min-h-[108dvh] overflow-hidden px-4 py-20 xs:px-6 sm:px-10 sm:py-24 lg:min-h-[116dvh] lg:px-16 lg:py-28"
+      className="relative isolate min-h-[108dvh] overflow-x-clip px-4 py-20 xs:px-6 sm:px-10 sm:py-24 lg:min-h-[116dvh] lg:px-16 lg:py-28"
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_14%_16%,rgba(34,211,238,0.18),transparent_26%),radial-gradient(circle_at_84%_20%,rgba(99,102,241,0.16),transparent_22%),radial-gradient(circle_at_74%_80%,rgba(20,184,166,0.12),transparent_28%)]" />
       <ComputationalMatrixBackdrop active={activity.isNearViewport} qualityTier={activity.qualityTier} />
@@ -40,24 +51,26 @@ const ComputationalSystemsSection: React.FC<ComputationalSystemsSectionProps> = 
           viewport={{ once: true, amount: 0.16 }}
           transition={{ duration: 0.96, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="relative h-[76vh] min-h-[34rem] overflow-hidden rounded-[2.4rem] shadow-[0_0_120px_rgba(15,23,42,0.18)] sm:h-[80vh] lg:h-[86vh]">
-            <div className="theme-story-contrast-canvas absolute inset-0" />
-            <img
-              src={content.poster.src}
-              alt={content.poster.alt}
-              className="absolute inset-0 h-full w-full object-cover"
-              loading="lazy"
-              decoding="async"
-            />
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,6,23,0.12),rgba(2,6,23,0.02)_30%,rgba(2,6,23,0.16))]" />
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(148,163,184,0.05)_1px,transparent_1px),linear-gradient(rgba(148,163,184,0.04)_1px,transparent_1px)] [background-size:36px_36px] opacity-20" />
-            <div className="theme-story-contrast-top-fade absolute inset-x-0 top-0 h-24" />
-            <div className="theme-story-contrast-bottom-fade absolute inset-x-0 bottom-0 h-24" />
+          {/* The live "Forward pass" network; it spills past this slot. The poster is its no-WebGL fallback. */}
+          <div ref={slotRef} className="relative h-[76vh] min-h-[34rem] sm:h-[80vh] lg:h-[86vh]">
+            {showScene ? (
+              <Suspense fallback={null}>
+                <ForwardPassStage
+                  content={forwardPassContent}
+                  themeMode={themeMode}
+                  qualityTier={activity.qualityTier}
+                  handheld={handheld}
+                  scrollRootRef={scrollContainerRef}
+                  fallback={content.poster}
+                  className="h-full w-full"
+                />
+              </Suspense>
+            ) : null}
           </div>
         </motion.div>
 
         <motion.div
-          className="relative mx-auto max-w-3xl lg:mx-0 lg:pt-10"
+          className="relative z-20 mx-auto max-w-3xl lg:mx-0 lg:pt-10"
           initial={{ opacity: 0, x: 34 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, amount: 0.18 }}

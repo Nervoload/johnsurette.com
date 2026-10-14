@@ -232,6 +232,14 @@ export const landingForwardPassContent: LandingForwardPassContent = defineLandin
       outputId: "life-science",
     },
     {
+      // TODO(John): placeholder until there's a photo of you programming. Swap the "computer-science" entry in
+      // scripts/assets/forward-pass-crops.json for a real crop, rerun the script, and update this alt text.
+      id: "computer-science",
+      src: "/images/landing/forward-pass/computer-science.webp",
+      alt: "Placeholder: an abstract code editor, standing in for a photo of John programming",
+      outputId: "computer-science",
+    },
+    {
       id: "velocity",
       src: "/images/landing/forward-pass/velocity.webp",
       alt: "John at Cornerstone Velocity in Waterloo",

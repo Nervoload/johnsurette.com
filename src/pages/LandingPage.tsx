@@ -1,4 +1,5 @@
 import React, { RefObject, useEffect, useRef } from "react";
+import { useInView } from "framer-motion";
 import {
   landingHeroIdentityContent,
   pageVisuals,
@@ -62,6 +63,8 @@ const LandingContent: React.FC<LandingContentProps> = ({
   const heroSectionRef = useRef<HTMLElement>(null);
   const storySectionRef = useRef<HTMLDivElement>(null);
   const lastEntryNonceRef = useRef<number>(-1);
+  // Stop drawing the orb once the hero has scrolled away, so the story's own 3D scenes get the GPU.
+  const heroInView = useInView(heroSectionRef, { root: scrollContainerRef, margin: "10% 0px 10% 0px", initial: true });
 
   useEffect(() => {
     const container = scrollContainerRef.current;
@@ -136,6 +139,7 @@ const LandingContent: React.FC<LandingContentProps> = ({
               centerpiece={ActiveCenterpiece}
               shadowMode={shadowMode}
               shadowAssetId={shadowAssetId}
+              active={heroInView}
             />
           </div>
         </section>

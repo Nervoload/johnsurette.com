@@ -10,6 +10,7 @@ interface CenterpieceStageProps {
   centerpiece: React.ComponentType<CenterpieceProps>;
   shadowMode: ShadowMode;
   shadowAssetId?: ShadowAssetId;
+  active?: boolean;
 }
 
 const INTRO_MS = 1700;
@@ -21,6 +22,7 @@ const CenterpieceStage: React.FC<CenterpieceStageProps> = ({
   centerpiece: Centerpiece,
   shadowMode,
   shadowAssetId = "heroCenterpiece",
+  active = true,
 }) => {
   const stageProbe = createCodexProbeAttributes({
     componentName: "CenterpieceStage",
@@ -91,6 +93,7 @@ const CenterpieceStage: React.FC<CenterpieceStageProps> = ({
             introProgress={introProgress}
             shadowMode={shadowMode}
             shadowAssetId={shadowAssetId}
+            active={active}
           />
         </div>
       </div>
