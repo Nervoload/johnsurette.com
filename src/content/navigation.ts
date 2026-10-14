@@ -51,7 +51,8 @@ export const getNavigationMatchPath = (path: string): string => {
 };
 
 export const internalNavigationPaths = ["/origin"] as const;
-export const disabledInternalNavigationPaths = ["/origin"] as const;
+// The /origin lab (src/pages/OriginLabPage.tsx) only exists in dev builds.
+export const disabledInternalNavigationPaths: readonly string[] = import.meta.env.DEV ? [] : ["/origin"];
 
 // EDIT HERE: update the public site navigation and route metadata.
 export const navigationItems = [

@@ -311,6 +311,7 @@ export interface TimelineEntry {
 }
 
 export interface AboutPageContent {
+  eyebrow?: string;
   title: string;
   summary: string;
   highlights: string[];
@@ -442,4 +443,32 @@ export interface PageVisuals {
   about: PageVisualConfig;
   blog: PageVisualConfig;
   contact: PageVisualConfig;
+}
+
+export interface LandingForwardPassInput {
+  id: string;
+  /** Pre-cropped 128×128 photo (see scripts/assets/forward-pass-crops.json). */
+  src: string;
+  alt: string;
+  /** Which output this photo should light up. */
+  outputId: string;
+}
+
+export interface LandingForwardPassOutput {
+  id: string;
+  label: string;
+  /** The paths-tree node this output stands for. */
+  aspirationNodeId: string;
+}
+
+export interface LandingForwardPassContent {
+  inputs: LandingForwardPassInput[];
+  outputs: LandingForwardPassOutput[];
+}
+
+export interface LandingBrainScalesContent {
+  /** Whole-brain point cloud (see scripts/assets/build_brain_points.py). */
+  pointsSrc: string;
+  /** Credit for the brain surface data, read out with the scene description. */
+  attribution: string;
 }

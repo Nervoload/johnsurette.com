@@ -1,0 +1,8 @@
+{
+  "size": 128,
+  "inputs": [
+    { "id": "lab", "source": "public/images/landing/labboy.JPEG", "crop": [330, 40, 1236, 946] },
+    { "id": "velocity", "source": "public/images/landing/velocity.jpg", "crop": [1330, 420, 2390, 1480] },
+    { "id": "formal", "source": "public/images/landing/formal.JPG", "crop": [800, 450, 2800, 2450] }
+  ]
+}

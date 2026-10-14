@@ -5,7 +5,7 @@ export type { StorySectionId, StoryTransitionKind };
 
 export interface StorySectionData {
   id: StorySectionId;
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
   summary: string;
   focusAreas: string[];

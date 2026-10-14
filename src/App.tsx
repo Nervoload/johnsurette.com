@@ -18,6 +18,7 @@ const ProjectsPage = lazy(() => import("./pages/ProjectsPage"));
 const ProjectCaseStudyPage = lazy(() => import("./pages/ProjectCaseStudyPage"));
 const BlogPage = lazy(() => import("./pages/BlogPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
+const OriginLabPage = import.meta.env.DEV ? lazy(() => import("./pages/OriginLabPage")) : null;
 
 const ROUTE_TRANSITION_FULL_MS = 760;
 const ROUTE_TRANSITION_LITE_MS = 620;
@@ -191,6 +192,10 @@ function App() {
 
     if (path === "/contact") {
       return <ContactPage themeMode={resolvedMode} />;
+    }
+
+    if (path === "/origin" && OriginLabPage) {
+      return <OriginLabPage themeMode={resolvedMode} />;
     }
 
     const blogSlug = getBlogPostSlugFromPath(path);

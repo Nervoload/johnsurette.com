@@ -108,6 +108,24 @@ Add an item to `contactPageContent.socialPosts` in `src/content/contact.ts`.
 }
 ```
 
+## Add a photo to the "Forward pass" network
+
+The landing's In silico visual runs a small neural network on photos of you. Each photo is a tiny
+pre-cropped WebP, so phones never decode the full-size original.
+
+1. Add a crop to `scripts/assets/forward-pass-crops.json`. `crop` is `[left, top, right, bottom]` in
+   pixels of the source photo (after EXIF rotation). Keep it square, with your face roughly centred.
+2. Run `python3 scripts/assets/build_forward_pass_inputs.py` (needs Pillow). This writes
+   `public/images/landing/forward-pass/<id>.webp`.
+3. Add the input to `landingForwardPassContent.inputs` in `src/content/landing.ts`. `outputId` names the
+   output it should land on. Outputs are paths-tree nodes, set in `landingForwardPassContent.outputs`.
+
+```ts
+{ id: "code", src: "/images/landing/forward-pass/code.webp", alt: "John at his desk, writing code", outputId: "computer-science" }
+```
+
+Preview it at `/origin` (dev server only); `npm run check:living` checks the network and simulations.
+
 ## Notes
 
 - Keep IDs unique.

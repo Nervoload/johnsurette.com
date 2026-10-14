@@ -1,5 +1,7 @@
 import {
   defineLandingAspirationSection,
+  defineLandingBrainScales,
+  defineLandingForwardPass,
   defineLandingBiologySection,
   defineLandingComputationalSection,
   defineLandingHeroIdentity,
@@ -12,6 +14,8 @@ import {
   LandingBiologySectionContent,
   LandingConclusionContent,
   LandingComputationalSectionContent,
+  LandingBrainScalesContent,
+  LandingForwardPassContent,
   LandingHeroIdentityContent,
   LandingPersonalIntroductionContent,
   LandingStoryEntry,
@@ -214,4 +218,47 @@ export const landingConclusionContent: LandingConclusionContent = defineLandingC
   highlightedProjectsLabel: "Highlighted Projects",
   highlightedPostsLabel: "Recent Research Notes",
   routePillsLabel: "Continue To",
+});
+
+// EDIT HERE: photos the "Forward pass" network runs on, and the outputs it can light up.
+// Outputs mirror nodes of the paths tree at the end of the page. To add a photo, add a crop to
+// scripts/assets/forward-pass-crops.json, run scripts/assets/build_forward_pass_inputs.py, then list it here.
+export const landingForwardPassContent: LandingForwardPassContent = defineLandingForwardPass({
+  inputs: [
+    {
+      id: "lab",
+      src: "/images/landing/forward-pass/lab.webp",
+      alt: "John at a microscope in the genetics lab",
+      outputId: "life-science",
+    },
+    {
+      id: "velocity",
+      src: "/images/landing/forward-pass/velocity.webp",
+      alt: "John at Cornerstone Velocity in Waterloo",
+      outputId: "entrepreneurship",
+    },
+    {
+      id: "formal",
+      src: "/images/landing/forward-pass/formal.webp",
+      alt: "John at the Science Student Association formal",
+      outputId: "science-student-association",
+    },
+  ],
+  outputs: [
+    { id: "life-science", label: "Life Science", aspirationNodeId: "life-science-major" },
+    { id: "computer-science", label: "Computer Science", aspirationNodeId: "computer-science-major" },
+    { id: "entrepreneurship", label: "Entrepreneurship", aspirationNodeId: "entrepreneurship" },
+    {
+      id: "science-student-association",
+      label: "Science Student Association",
+      aspirationNodeId: "science-student-association",
+    },
+  ],
+});
+
+// EDIT HERE: data for the "Scales of mind" zoom (neuron → circuit → cortex → brain).
+export const landingBrainScalesContent: LandingBrainScalesContent = defineLandingBrainScales({
+  pointsSrc: "/models/brain-points.v1.bin",
+  attribution:
+    "Brain surface derived from the MNI ICBM152 2009 template (Fonov et al. 2009, 2011; Collins et al. 1999), McConnell Brain Imaging Centre, Montreal Neurological Institute.",
 });

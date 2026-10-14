@@ -1,0 +1,25 @@
+brain-points.v1.bin — whole-brain surface point sample used by the "Scales of mind" scene.
+
+Derived from the MNI ICBM152 2009a nonlinear symmetric grey- and white-matter probability maps
+(as bundled in the nilearn package, nilearn/datasets/data/mni_icbm152_*_tal_nlin_sym_09a_converted.nii.gz)
+by scripts/assets/build_brain_points.py: outer-surface voxels of the tissue mask, 20,000 points,
+quantized, with estimated normals and approximate lobe labels (coordinate heuristics, not an atlas).
+
+References:
+  Fonov V, Evans AC, McKinstry RC, Almli CR, Collins DL. Unbiased nonlinear average age-appropriate
+    brain templates from birth to adulthood. NeuroImage 2009;47:S102.
+  Fonov V, Evans AC, Botteron K, Almli CR, McKinstry RC, Collins DL. Unbiased average age-appropriate
+    atlases for pediatric studies. NeuroImage 2011;54(1):313-327.
+  Collins DL, Zijdenbos AP, Baaré WFC, Evans AC. ANIMAL+INSECT: Improved Cortical Structure
+    Segmentation. IPMI 1999.
+
+Original notice (MNI ICBM152 templates):
+
+Copyright (C) 1993-2004 Louis Collins, McConnell Brain Imaging Centre, Montreal Neurological Institute,
+McGill University.
+Permission to use, copy, modify, and distribute this software and its documentation for any purpose and
+without fee is hereby granted, provided that the above copyright notice appear in all copies. The authors
+and McGill University make no representations about the suitability of this software for any purpose.
+It is provided "as is" without express or implied warranty. The authors are not responsible for any data
+loss, equipment damage, property loss, or injury to subjects or patients resulting from the use or misuse
+of this software package.

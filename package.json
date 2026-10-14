@@ -12,6 +12,7 @@
     "build": "BROWSERSLIST_IGNORE_OLD_DATA=true vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "check:living": "node --experimental-strip-types --no-warnings scripts/checks/run.mjs",
     "cf:dev": "npm run build && wrangler dev",
     "deploy": "npm run build && wrangler deploy"
   },

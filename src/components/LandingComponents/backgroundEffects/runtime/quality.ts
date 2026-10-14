@@ -34,13 +34,11 @@ export const detectWebGLSupport = (): boolean => {
 
   try {
     const canvas = document.createElement("canvas");
-    const webgl2 = canvas.getContext("webgl2");
-    if (webgl2) {
-      return true;
-    }
-
-    const webgl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-    return Boolean(webgl);
+    const context =
+      canvas.getContext("webgl2") || canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+    // Release the probe context right away; browsers cap how many can exist at once.
+    (context as WebGLRenderingContext | null)?.getExtension("WEBGL_lose_context")?.loseContext();
+    return Boolean(context);
   } catch {
     return false;
   }

@@ -22,6 +22,8 @@ import {
   ProjectEntry,
   SiteMeta,
   TimelineEntry,
+  LandingForwardPassContent,
+  LandingBrainScalesContent,
 } from "./types";
 
 const trim = (value: string) => value.trim();
@@ -354,6 +356,25 @@ export const defineLandingBiologySection = (
   body: trim(input.body),
   cta: defineLandingSectionLink(input.cta),
   poster: defineLandingStoryPoster(input.poster),
+});
+
+export const defineLandingForwardPass = (input: LandingForwardPassContent): LandingForwardPassContent => ({
+  inputs: input.inputs.map((item) => ({
+    id: trim(item.id),
+    src: trim(item.src),
+    alt: trim(item.alt),
+    outputId: trim(item.outputId),
+  })),
+  outputs: input.outputs.map((item) => ({
+    id: trim(item.id),
+    label: trim(item.label),
+    aspirationNodeId: trim(item.aspirationNodeId),
+  })),
+});
+
+export const defineLandingBrainScales = (input: LandingBrainScalesContent): LandingBrainScalesContent => ({
+  pointsSrc: trim(input.pointsSrc),
+  attribution: trim(input.attribution),
 });
 
 export const defineLandingAspirationSection = (

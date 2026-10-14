@@ -3,6 +3,7 @@ import React, { Component, ErrorInfo, ReactNode } from "react";
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  onError?: (error: Error) => void;
 }
 
 interface State {
@@ -32,6 +33,7 @@ class CanvasErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error("[CanvasErrorBoundary] 3D scene crashed:", error, info.componentStack);
+    this.props.onError?.(error);
   }
 
   render(): ReactNode {

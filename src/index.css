@@ -3437,3 +3437,144 @@ img.blog-post-cover,
     transition: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Living scenes (landing "Forward pass" and "Scales of mind")
+   --------------------------------------------------------------------------- */
+.living-frame {
+  --living-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.living-hit {
+  cursor: grab;
+}
+
+.living-hit:active {
+  cursor: grabbing;
+}
+
+.living-labels {
+  overflow: visible;
+}
+
+.living-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  white-space: nowrap;
+  font-family: var(--living-mono);
+  font-size: 0.72rem;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: var(--theme-text-muted);
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.living-label[data-align="left"] {
+  translate: 0 -50%;
+}
+
+.living-label[data-align="center"] {
+  translate: -50% -50%;
+}
+
+.living-label[data-align="right"] {
+  translate: -100% -50%;
+}
+
+.living-label[data-tone="ink"] {
+  color: var(--theme-text-primary);
+  font-weight: 500;
+}
+
+.living-label[data-tone="accent"] {
+  color: var(--theme-accent);
+  font-weight: 500;
+}
+
+/* Projection labels share their arc colours (LIVING_THEME_TOKENS warm / amber). */
+.living-label[data-tone="warm"] {
+  color: #be185d;
+}
+
+.living-label[data-tone="amber"] {
+  color: #b45309;
+}
+
+[data-theme="dark"] .living-label[data-tone="warm"] {
+  color: #f472b6;
+}
+
+[data-theme="dark"] .living-label[data-tone="amber"] {
+  color: #fbbf24;
+}
+
+.living-control-button,
+.living-stage-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
+.living-control-button {
+  border: 1px solid var(--theme-border-subtle);
+  background: color-mix(in srgb, var(--theme-bg-root) 55%, transparent);
+}
+
+.living-control-button:hover,
+.living-stage-dot:hover {
+  color: var(--theme-text-primary);
+}
+
+.living-control-button:focus-visible,
+.living-stage-dot:focus-visible {
+  outline: 2px solid var(--theme-accent);
+  outline-offset: 2px;
+}
+
+.living-stage-dot > span {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.45;
+  transition: width 220ms ease, opacity 220ms ease, background-color 220ms ease;
+}
+
+.living-stage-dot[data-active="true"] > span {
+  width: 1.1rem;
+  opacity: 1;
+  background: var(--theme-accent);
+}
+
+.living-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.6rem;
+  font-family: var(--living-mono);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--theme-text-muted);
+}
+
+.living-caption-label {
+  color: var(--theme-text-primary);
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .living-stage-dot > span {
+    transition: none;
+  }
+}

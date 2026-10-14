@@ -6,7 +6,9 @@ import {
   LandingAspirationSectionContent,
   LandingBiologySectionContent,
   LandingConclusionContent,
+  LandingBrainScalesContent,
   LandingComputationalSectionContent,
+  LandingForwardPassContent,
   LandingHeroIdentityContent,
   LandingPersonalIntroductionContent,
   LandingStoryEntry,
@@ -56,6 +58,8 @@ export interface ValidateContentInput {
   landingAspirationSectionContent: LandingAspirationSectionContent;
   landingHeroIdentityContent: LandingHeroIdentityContent;
   landingConclusionContent: LandingConclusionContent;
+  landingForwardPassContent: LandingForwardPassContent;
+  landingBrainScalesContent: LandingBrainScalesContent;
   timelineEntries: TimelineEntry[];
   contactPageContent: ContactPageContent;
   pageVisuals: PageVisuals;
@@ -73,6 +77,8 @@ export const validateContent = ({
   landingAspirationSectionContent,
   landingHeroIdentityContent,
   landingConclusionContent,
+  landingForwardPassContent,
+  landingBrainScalesContent,
   timelineEntries,
   contactPageContent,
   pageVisuals,
@@ -243,6 +249,25 @@ export const validateContent = ({
   assertNonEmpty("landingHeroIdentityContent.firstName", landingHeroIdentityContent.firstName);
   assertNonEmpty("landingHeroIdentityContent.lastName", landingHeroIdentityContent.lastName);
   assertNonEmpty("landingHeroIdentityContent.domainSuffix", landingHeroIdentityContent.domainSuffix);
+  assertUnique(landingForwardPassContent.outputs, (item) => item.id, "forward pass output id");
+  assertUnique(landingForwardPassContent.inputs, (item) => item.id, "forward pass input id");
+  assert(landingForwardPassContent.inputs.length > 0, "landingForwardPassContent needs at least one input photo.");
+  const forwardPassOutputIds = new Set(landingForwardPassContent.outputs.map((item) => item.id));
+  landingForwardPassContent.outputs.forEach((output) => {
+    assert(
+      aspirationNodeIds.has(output.aspirationNodeId),
+      `forward pass output ${output.id} references unknown paths-tree node ${output.aspirationNodeId}`,
+    );
+  });
+  landingForwardPassContent.inputs.forEach((input) => {
+    assert(input.src.startsWith("/"), `forward pass input ${input.id} src must be a site path.`);
+    assertNonEmpty(`forward pass input ${input.id} alt`, input.alt);
+    assert(forwardPassOutputIds.has(input.outputId), `forward pass input ${input.id} targets unknown output ${input.outputId}`);
+  });
+
+  assert(landingBrainScalesContent.pointsSrc.startsWith("/"), "landingBrainScalesContent.pointsSrc must be a site path.");
+  assertNonEmpty("landingBrainScalesContent.attribution", landingBrainScalesContent.attribution);
+
   assertNonEmpty("landingConclusionContent.title", landingConclusionContent.title);
 
   assertUnique(timelineEntries, (item) => item.id, "timeline id");
